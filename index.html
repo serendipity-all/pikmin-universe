@@ -387,10 +387,18 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
     <!-- 輔助照片 -->
     <div class="fg">
       <label class="fl">📸 輔助照片（可多張）</label>
-      <div class="upload-area" onclick="document.getElementById('auxImgInput').click()">
-        <input type="file" id="auxImgInput" accept="image/*" multiple style="display:none">
-        <div style="font-size:1.4rem;opacity:.4">📸</div>
-        <p>點擊上傳或拖曳多張照片</p>
+      <div style="display:flex;gap:6px">
+        <div class="upload-area" style="flex:1" onclick="document.getElementById('auxImgInput').click()">
+          <input type="file" id="auxImgInput" accept="image/*" multiple style="display:none">
+          <div style="font-size:1.4rem;opacity:.4">📸</div>
+          <p>點擊上傳或拖曳多張照片</p>
+        </div>
+        <button type="button" class="btn" onclick="openDrivePickerModal()"
+          style="flex-shrink:0;flex-direction:column;gap:3px;padding:8px 12px;height:auto"
+          title="從 Drive 選取">
+          <span style="font-size:1.4rem;opacity:.6">📁</span>
+          <span style="font-size:.65rem">從 Drive</span>
+        </button>
       </div>
     </div>
 
@@ -499,6 +507,38 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
     <button class="copy-last-btn" onclick="copyLastCard()">📋 沿用上一筆</button>
     <button class="btn-cancel" onclick="closeModal('cardOverlay')">取消</button>
     <button class="btn-save" onclick="saveCard()">🌱 儲存</button>
+  </div>
+</div>
+</div>
+
+<!-- ══ DRIVE PICKER MODAL（輔助照片選取）══ -->
+<div class="overlay" id="drivePickerOverlay" onclick="overlayClick(event,'drivePickerOverlay')">
+<div class="modal" style="max-width:500px">
+  <div class="mhead" style="background:linear-gradient(135deg,#2d7a4a,#1a5c35)">
+    <div class="mtitle">📁 從 Drive 選取輔助照片</div>
+    <button class="xbtn" onclick="closeModal('drivePickerOverlay')">✕</button>
+  </div>
+  <div class="mbody" style="padding:12px 16px">
+    <div id="drivePickerStatus" style="font-size:.82rem;color:var(--muted);margin-bottom:10px">載入中…</div>
+    <div style="display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap">
+      <button class="btn active" id="dpFilterAll" onclick="setDpFilter('all')" style="padding:4px 10px;font-size:.72rem">全部</button>
+      <button class="btn" id="dpFilterNew" onclick="setDpFilter('new')" style="padding:4px 10px;font-size:.72rem">未建檔</button>
+      <button class="btn" id="dpFilterExists" onclick="setDpFilter('exists')" style="padding:4px 10px;font-size:.72rem">已存在</button>
+      <div style="margin-left:auto;display:flex;gap:4px">
+        <button class="btn" onclick="dpSelectAll(true)" style="padding:4px 10px;font-size:.72rem">☑ 全選</button>
+        <button class="btn" onclick="dpSelectAll(false)" style="padding:4px 10px;font-size:.72rem">☐ 取消</button>
+      </div>
+    </div>
+    <div id="dpPager" style="display:none;align-items:center;gap:6px;margin-bottom:8px;font-size:.78rem;color:var(--muted)">
+      <button class="btn" id="dpPrevBtn" onclick="changeDpPage(-1)" style="padding:3px 10px;font-size:.75rem">‹ 上頁</button>
+      <span id="dpPageInfo"></span>
+      <button class="btn" id="dpNextBtn" onclick="changeDpPage(1)" style="padding:3px 10px;font-size:.75rem">下頁 ›</button>
+    </div>
+    <div id="drivePickerList" style="display:flex;flex-direction:column;gap:6px"></div>
+  </div>
+  <div class="mfoot">
+    <button class="btn-cancel" onclick="closeModal('drivePickerOverlay')">取消</button>
+    <button class="btn-save" onclick="confirmDrivePick()">✅ 加入輔助照片</button>
   </div>
 </div>
 </div>
@@ -1179,6 +1219,123 @@ async function importScannedPhotos() {
   renderCountrySelect();
   closeModal('scanOverlay');
   showToast(`已匯入 ${count} 張明信片`);
+}
+
+// ═══════════════════════════════════════════════
+//  DRIVE PICKER（輔助照片從 Drive 選取）
+// ═══════════════════════════════════════════════
+const DP_PAGE_SIZE = 30;
+let dpPhotos = [];      // Drive 所有照片
+let dpFilter = 'all';
+let dpPage = 0;
+
+async function openDrivePickerModal() {
+  if (!CFG.scriptUrl) { alert('請先在設定中填入 GAS 網址'); return; }
+  dpFilter = 'all'; dpPage = 0;
+  document.getElementById('drivePickerList').innerHTML = '';
+  document.getElementById('drivePickerStatus').textContent = '掃描 Drive 中…';
+  document.getElementById('dpPager').style.display = 'none';
+  document.getElementById('drivePickerOverlay').classList.add('open');
+
+  // 若 scannedPhotos 已有資料就直接用，否則重新掃描
+  if (scannedPhotos.length > 0) {
+    dpPhotos = scannedPhotos;
+    renderDpList();
+  } else {
+    const result = await callGAS('scan', {});
+    if (!result || !result.success) {
+      document.getElementById('drivePickerStatus').textContent = '掃描失敗：' + (result?.error || '網路錯誤');
+      return;
+    }
+    dpPhotos = result.photos || [];
+    renderDpList();
+  }
+}
+
+function getDpFiltered() {
+  if (dpFilter === 'new') return dpPhotos.filter(p => !cards.find(c => c.mainImg?.fileId === p.fileId));
+  if (dpFilter === 'exists') return dpPhotos.filter(p => !!cards.find(c => c.mainImg?.fileId === p.fileId));
+  return dpPhotos;
+}
+
+function setDpFilter(f) {
+  dpFilter = f; dpPage = 0;
+  ['all','new','exists'].forEach(k => {
+    document.getElementById('dpFilter' + k.charAt(0).toUpperCase() + k.slice(1))
+      ?.classList.toggle('active', k === f);
+  });
+  renderDpList();
+}
+
+function changeDpPage(dir) {
+  const filtered = getDpFiltered();
+  const maxPage = Math.max(0, Math.ceil(filtered.length / DP_PAGE_SIZE) - 1);
+  dpPage = Math.min(maxPage, Math.max(0, dpPage + dir));
+  renderDpList();
+}
+
+function dpSelectAll(checked) {
+  document.querySelectorAll('#drivePickerList input[type="checkbox"]')
+    .forEach(chk => chk.checked = checked);
+}
+
+function renderDpList() {
+  const filtered = getDpFiltered();
+  const totalPages = Math.max(1, Math.ceil(filtered.length / DP_PAGE_SIZE));
+  dpPage = Math.min(dpPage, totalPages - 1);
+  const start = dpPage * DP_PAGE_SIZE;
+  const pageItems = filtered.slice(start, start + DP_PAGE_SIZE);
+
+  document.getElementById('drivePickerStatus').textContent =
+    `共 ${dpPhotos.length} 張，顯示 ${filtered.length} 張`;
+
+  const pager = document.getElementById('dpPager');
+  if (filtered.length > DP_PAGE_SIZE) {
+    pager.style.display = 'flex';
+    document.getElementById('dpPageInfo').textContent = `第 ${dpPage+1} / ${totalPages} 頁`;
+    document.getElementById('dpPrevBtn').disabled = dpPage === 0;
+    document.getElementById('dpNextBtn').disabled = dpPage >= totalPages - 1;
+  } else {
+    pager.style.display = 'none';
+  }
+
+  document.getElementById('drivePickerList').innerHTML = pageItems.map(p => {
+    const globalIdx = dpPhotos.indexOf(p);
+    const isNew = !cards.find(c => c.mainImg?.fileId === p.fileId);
+    // 已加入輔助照片的標示
+    const alreadyAdded = currentAuxImgs.find(a => a.fileId === p.fileId);
+    return `<div style="display:flex;align-items:center;gap:8px;padding:7px 8px;background:${alreadyAdded?'#e8f5e0':'#f8fff4'};border:1.5px solid var(--border);border-radius:8px">
+      <div style="width:50px;height:50px;flex-shrink:0;border-radius:6px;overflow:hidden;background:#e0f0d8;display:flex;align-items:center;justify-content:center;font-size:1.3rem">
+        <img src="${p.thumbUrl||p.url}" alt="" style="width:100%;height:100%;object-fit:cover" onerror="this.parentNode.innerHTML='🖼️'">
+      </div>
+      <div style="flex:1;min-width:0;font-size:.75rem">
+        <div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(p.filename)}</div>
+        <div style="color:var(--muted);font-size:.68rem;margin-top:2px">${isNew?'未建檔':'已建檔'}${alreadyAdded?' · ✅ 已加入':''}</div>
+      </div>
+      <input type="checkbox" data-fileid="${p.fileId}" data-url="${p.url}"
+        data-filename="${escapeHtml(p.filename)}"
+        ${alreadyAdded ? 'checked' : ''}
+        style="width:16px;height:16px;cursor:pointer;flex-shrink:0">
+    </div>`;
+  }).join('');
+}
+
+function confirmDrivePick() {
+  const checkboxes = document.querySelectorAll('#drivePickerList input[type="checkbox"]:checked');
+  let added = 0;
+  checkboxes.forEach(chk => {
+    const fileId = chk.dataset.fileid;
+    const url = chk.dataset.url;
+    const filename = chk.dataset.filename;
+    // 避免重複加入
+    if (!currentAuxImgs.find(a => a.fileId === fileId)) {
+      currentAuxImgs.push({ url, fileId, filename, role: 'aux' });
+      added++;
+    }
+  });
+  renderPhotoGallery();
+  closeModal('drivePickerOverlay');
+  if (added > 0) showToast(`已加入 ${added} 張輔助照片`);
 }
 
 // ═══════════════════════════════════════════════
