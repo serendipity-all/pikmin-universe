@@ -808,6 +808,8 @@ function deleteFavorite(idx) {
 function saveFavorites() {
   localStorage.setItem('pkm_favorites', JSON.stringify(favorites));
 }
+
+function renderSettingsFriendList() {
   const el = document.getElementById('settingsFriendList');
   if (!el) return;
   if (!friends.length) {
@@ -1292,7 +1294,7 @@ async function importScannedPhotos() {
       obtainedDate: new Date().toISOString().split('T')[0],
       obtainedMethod: ai.obtainedMethod || '',
       sourceFriend: friendName,
-      rarity: ai.rarity || '普通',
+      rarity: ai.rarity || '',
       dupes: '1',
       status: friendName ? 'kept' : 'pending',
       sentDate: '',
@@ -2159,7 +2161,7 @@ function saveAndSync(){
 }
 
 function exportJSON(){
-  const data={cards,friends,methods,tags:tagMap,countries,exportedAt:new Date().toISOString()};
+  const data={cards,friends,methods,tags:tagMap,countries,favorites,exportedAt:new Date().toISOString()};
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
   a.download=`pikmin_backup_${new Date().toISOString().slice(0,10)}.json`;
@@ -2177,11 +2179,13 @@ function importJSON(e){
       if(data.methods) methods=data.methods;
       if(data.tags) tagMap=data.tags;
       if(data.countries) countries=data.countries;
+      if(data.favorites) favorites=data.favorites;
       saveLocal();
       localStorage.setItem('pkm_methods',JSON.stringify(methods));
       localStorage.setItem('pkm_tags',JSON.stringify(tagMap));
       localStorage.setItem('pkm_countries',JSON.stringify(countries));
-      renderLibrary(); renderFriendSelects(); renderMethodTags();
+      localStorage.setItem('pkm_favorites',JSON.stringify(favorites));
+      renderLibrary(); renderFriendSelects(); renderMethodTags(); renderFavoriteList();
       alert(`✅ 匯入成功！共 ${cards.length} 張明信片`);
       if(CFG.scriptUrl) syncAll(); // 匯入後同步到雲端
     }catch(err){ alert('⚠️ 匯入失敗：檔案格式錯誤'); }
