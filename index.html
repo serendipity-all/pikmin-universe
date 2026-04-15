@@ -1,0 +1,1921 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌸 Pikmin 明信片收藏</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{--g:#4a9a4a;--gl:#7cc56e;--gd:#2d6b2d;--y:#f5c518;--r:#e05555;--b:#4d8ef0;--pu:#9966cc;--or:#f08040;--sky:#d4eef7;--sky2:#a8d8ea;--bg:#edf7e7;--card:#fffef5;--text:#1e3414;--muted:#5a7a4a;--border:#c5e0b0;--sh:rgba(45,107,45,.13)}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column;background-image:radial-gradient(ellipse at 10% 30%,rgba(124,197,110,.1) 0%,transparent 55%),radial-gradient(ellipse at 90% 10%,rgba(168,216,234,.13) 0%,transparent 45%)}
+header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));height:56px;padding:0 20px;display:flex;align-items:center;gap:10px;box-shadow:0 3px 20px rgba(45,107,45,.3);z-index:300;flex-shrink:0}
+.logo{width:36px;height:36px;background:var(--y);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.2);animation:bob 3s ease-in-out infinite;flex-shrink:0}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+.h-title{font-family:'Nunito',sans-serif;font-weight:900;font-size:1.15rem;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.2);white-space:nowrap}
+.h-nav{display:flex;gap:3px;margin-left:8px}
+.ntab{padding:5px 12px;border-radius:16px;border:none;background:rgba(255,255,255,.15);color:rgba(255,255,255,.85);font-family:'Nunito',sans-serif;font-weight:700;font-size:.78rem;cursor:pointer;transition:all .18s;white-space:nowrap}
+.ntab:hover{background:rgba(255,255,255,.25);color:#fff}
+.ntab.active{background:rgba(255,255,255,.32);color:#fff;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.5)}
+.h-space{flex:1}
+.stat-pills{display:flex;gap:5px}
+.sp{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.22);border-radius:12px;padding:2px 9px;text-align:center}
+.sp .n{font-family:'Nunito',sans-serif;font-weight:900;font-size:.85rem;color:var(--y);display:block}
+.sp .l{font-size:.55rem;color:rgba(255,255,255,.8)}
+#syncBar{display:flex;align-items:center;gap:8px;padding:4px 18px;background:rgba(255,255,255,.65);border-bottom:1px solid var(--border);font-size:.7rem;color:var(--muted);flex-shrink:0;flex-wrap:wrap}
+.sdot{width:6px;height:6px;border-radius:50%;background:#bbb;flex-shrink:0}
+.sdot.ok{background:#4caf50}.sdot.ing{background:var(--y);animation:blink 1s infinite}.sdot.err{background:var(--r)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+#syncBar button{background:none;border:none;cursor:pointer;color:var(--g);font-size:.7rem;font-weight:700;font-family:inherit}
+#syncBar .sync-actions{margin-left:auto;display:flex;gap:8px}
+.pages{flex:1;overflow:hidden;position:relative}
+.page{position:absolute;inset:0;overflow-y:auto;display:none;padding:18px 20px}
+.page.active{display:block}
+.setup-card{background:linear-gradient(135deg,#fffbe6,#fff8d0);border:2px solid var(--y);border-radius:16px;padding:18px 20px;margin-bottom:18px;display:flex;gap:14px}
+.setup-card .icon{font-size:1.8rem;flex-shrink:0}
+.setup-card h3{font-family:'Nunito',sans-serif;font-weight:900;color:#7a5c00;margin-bottom:6px;font-size:.95rem}
+.setup-card p{font-size:.76rem;color:#5c4800;line-height:1.8}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.search-box{flex:1;min-width:160px;position:relative}
+.search-box input{width:100%;padding:8px 12px 8px 34px;border:2px solid var(--border);border-radius:20px;background:#fff;font-size:.85rem;font-family:inherit;color:var(--text);outline:none;transition:border .2s}
+.search-box input:focus{border-color:var(--g)}
+.si{position:absolute;left:11px;top:50%;transform:translateY(-50%);opacity:.4;font-size:.85rem}
+.btn{padding:7px 14px;border-radius:18px;border:2px solid var(--border);background:#fff;font-size:.78rem;font-family:inherit;cursor:pointer;color:var(--muted);font-weight:600;transition:all .18s;display:flex;align-items:center;gap:5px;white-space:nowrap}
+.btn:hover{border-color:var(--g);color:var(--g)}
+.btn.active{background:var(--g);border-color:var(--g);color:#fff}
+.btn.primary{background:linear-gradient(135deg,var(--g),var(--gd));border-color:transparent;color:#fff;box-shadow:0 3px 10px var(--sh)}
+.btn.primary:hover{transform:translateY(-1px);box-shadow:0 5px 16px var(--sh);color:#fff}
+.btn.danger{background:linear-gradient(135deg,var(--r),#c03030);border-color:transparent;color:#fff}
+.view-toggle{display:flex;border:2px solid var(--border);border-radius:18px;overflow:hidden;background:#fff}
+.view-toggle button{padding:6px 12px;border:none;background:none;cursor:pointer;font-size:.8rem;color:var(--muted);font-family:inherit;transition:all .15s}
+.view-toggle button.active{background:var(--g);color:#fff}
+.filter-panel{background:white;border:2px solid var(--border);border-radius:14px;padding:14px;margin-bottom:14px;display:none}
+.filter-panel.open{display:block}
+.filter-header{display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:.82rem;font-weight:700;color:var(--gd);flex-wrap:wrap}
+.filter-rows{display:flex;flex-direction:column;gap:7px}
+.filter-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.filter-row select,.filter-row input{padding:5px 9px;border:1.5px solid var(--border);border-radius:8px;font-size:.78rem;font-family:inherit;outline:none;background:#fff;color:var(--text)}
+.filter-row select:focus,.filter-row input:focus{border-color:var(--g)}
+.filter-logic{padding:3px 10px;border-radius:10px;font-size:.7rem;font-weight:700;border:1.5px solid var(--border);background:#f5f5f5;cursor:pointer;font-family:'Nunito',sans-serif}
+.filter-logic.and{border-color:var(--b);color:var(--b);background:#eef4ff}
+.filter-logic.or{border-color:var(--or);color:var(--or);background:#fff4ec}
+.rm-filter{background:none;border:none;cursor:pointer;color:#ccc;font-size:1rem;line-height:1;padding:2px 4px}
+.rm-filter:hover{color:var(--r)}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+.card-list{display:flex;flex-direction:column;gap:8px}
+.empty-state{text-align:center;padding:50px 20px;opacity:.5}
+.empty-state .ei{font-size:3rem;margin-bottom:8px;animation:bob 2s ease-in-out infinite}
+.pcard{background:var(--card);border-radius:14px;overflow:hidden;border:2px solid var(--border);box-shadow:0 3px 14px var(--sh);transition:transform .18s,box-shadow .18s;position:relative;animation:fadeIn .25s ease;cursor:pointer}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.pcard:hover{transform:translateY(-3px);box-shadow:0 8px 24px var(--sh)}
+.pcard-img{width:100%;height:160px;object-fit:cover;display:block;background:linear-gradient(135deg,#e0f0d8,var(--sky))}
+.pcard-noimg{width:100%;height:160px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;background:linear-gradient(135deg,#e8f5e0,var(--sky));color:var(--muted);font-size:.75rem;position:relative}
+.pcard-noimg span{font-size:2rem;opacity:.4}
+.photo-count{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.6);color:#fff;padding:3px 8px;border-radius:8px;font-size:.65rem;font-weight:700}
+.status-badge{position:absolute;top:8px;right:8px;padding:2px 8px;border-radius:8px;font-size:.62rem;font-weight:700;font-family:'Nunito',sans-serif}
+.rare-badge{position:absolute;top:8px;left:8px;font-size:.9rem}
+.sb-sent{background:#4caf50;color:#fff}.sb-pending{background:var(--y);color:#444}.sb-kept{background:var(--sky2);color:#224}
+.pcard-body{padding:10px 12px 8px}
+.pcard-name{font-family:'Nunito',sans-serif;font-weight:900;font-size:.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px}
+.pcard-region{font-size:.7rem;color:var(--muted);margin-bottom:6px}
+.ptags{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:7px}
+.ptag{padding:1px 7px;border-radius:8px;font-size:.62rem;font-weight:700;font-family:'Nunito',sans-serif}
+.pt-type{background:#fff3cd;color:#7a5c00;border:1px solid #f0d060}
+.pt-loc{background:#d4edda;color:#1a5c2a;border:1px solid #a8dbb8}
+.pcard-meta{font-size:.68rem;color:var(--muted);line-height:1.7;border-top:1px dashed var(--border);padding-top:6px}
+.pcard-actions{display:flex;gap:5px;padding:7px 10px;border-top:1px solid var(--border);background:rgba(0,0,0,.01)}
+.act{flex:1;padding:4px;border:1.5px solid var(--border);border-radius:8px;background:#fff;font-size:.7rem;cursor:pointer;font-family:inherit;color:var(--muted);transition:all .15s;font-weight:600}
+.act:hover{border-color:var(--g);color:var(--g)}
+.act.del:hover{border-color:var(--r);color:var(--r)}
+.prow{background:var(--card);border-radius:12px;border:2px solid var(--border);display:flex;align-items:center;gap:10px;padding:8px 12px;box-shadow:0 2px 8px var(--sh);transition:transform .15s;cursor:pointer;animation:fadeIn .2s ease}
+.prow:hover{transform:translateX(3px)}
+.prow-img{width:56px;height:56px;object-fit:cover;border-radius:8px;flex-shrink:0;background:linear-gradient(135deg,#e8f5e0,var(--sky))}
+.prow-noimg{width:56px;height:56px;border-radius:8px;flex-shrink:0;background:linear-gradient(135deg,#e8f5e0,var(--sky));display:flex;align-items:center;justify-content:center;font-size:1.4rem;opacity:.5}
+.prow-info{flex:1;min-width:0}
+.prow-name{font-family:'Nunito',sans-serif;font-weight:900;font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prow-sub{font-size:.7rem;color:var(--muted);margin-top:1px}
+.prow-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0}
+.prow-acts{display:flex;gap:4px}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#2d3a2a;color:#fff;padding:10px 18px;border-radius:24px;font-size:.82rem;display:flex;align-items:center;gap:12px;box-shadow:0 6px 20px rgba(0,0,0,.3);transition:transform .3s;z-index:999;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast button{background:var(--y);border:none;color:#333;padding:3px 10px;border-radius:12px;font-family:'Nunito',sans-serif;font-weight:800;font-size:.75rem;cursor:pointer}
+.overlay{display:none;position:fixed;inset:0;background:rgba(15,30,10,.52);backdrop-filter:blur(4px);z-index:500;align-items:center;justify-content:center;padding:12px}
+.overlay.open{display:flex}
+.modal{background:var(--card);border-radius:20px;width:100%;max-width:600px;max-height:94vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);animation:slideUp .2s ease}
+@keyframes slideUp{from{transform:translateY(16px);opacity:0}to{transform:none;opacity:1}}
+.mhead{background:linear-gradient(135deg,var(--g),var(--gd));padding:14px 18px;display:flex;align-items:center;justify-content:space-between;border-radius:18px 18px 0 0;position:sticky;top:0;z-index:10}
+.mtitle{font-family:'Nunito',sans-serif;font-weight:900;font-size:1rem;color:#fff;display:flex;align-items:center;gap:7px}
+.xbtn{background:rgba(255,255,255,.2);border:none;border-radius:50%;width:28px;height:28px;font-size:.9rem;cursor:pointer;color:#fff;display:flex;align-items:center;justify-content:center}
+.xbtn:hover{background:rgba(255,255,255,.35)}
+.mbody{padding:16px 18px}
+.fg{margin-bottom:12px}
+.fl{display:block;font-size:.77rem;font-weight:700;color:var(--gd);margin-bottom:4px}
+.fi,.fta,.fsel{width:100%;padding:8px 11px;border:2px solid var(--border);border-radius:9px;font-size:.84rem;font-family:inherit;color:var(--text);background:#fff;outline:none;transition:border .18s}
+.fi:focus,.fta:focus,.fsel:focus{border-color:var(--g)}
+.fta{min-height:68px;resize:vertical}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mfoot{padding:12px 18px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;align-items:center;flex-wrap:wrap}
+.btn-cancel{padding:8px 16px;border:2px solid var(--border);border-radius:10px;background:#fff;font-family:'Nunito',sans-serif;font-weight:700;font-size:.84rem;cursor:pointer;color:var(--muted)}
+.btn-save{padding:8px 20px;background:linear-gradient(135deg,var(--g),var(--gd));border:none;border-radius:10px;color:#fff;font-family:'Nunito',sans-serif;font-weight:800;font-size:.84rem;cursor:pointer;box-shadow:0 2px 8px var(--sh)}
+.btn-save:hover{transform:translateY(-1px)}
+.copy-last-btn{padding:6px 12px;border:1.5px dashed var(--border);border-radius:8px;background:#fafff8;font-size:.73rem;font-family:inherit;cursor:pointer;color:var(--muted)}
+.copy-last-btn:hover{border-color:var(--g);color:var(--g)}
+.upload-area{border:2px dashed var(--border);border-radius:12px;padding:14px;text-align:center;cursor:pointer;transition:all .18s;background:#f8fff4;position:relative}
+.upload-area:hover{border-color:var(--g);background:#f0fae8}
+.up-icon{font-size:1.8rem;opacity:.38}
+.upload-area p{font-size:.74rem;color:var(--muted);margin-top:4px}
+.photo-gallery{background:#f8fff4;border:2px solid var(--border);border-radius:10px;padding:10px;margin-bottom:12px;display:none}
+.photo-gallery.show{display:block}
+.photo-gallery h4{font-size:.78rem;font-weight:700;color:var(--gd);margin-bottom:8px}
+.photo-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:6px}
+.photo-item{position:relative;border-radius:8px;overflow:hidden;background:#ddd;aspect-ratio:1}
+.photo-item img{width:100%;height:100%;object-fit:cover}
+.photo-main-badge{position:absolute;top:2px;left:2px;background:var(--g);color:#fff;font-size:.55rem;font-weight:700;padding:1px 5px;border-radius:4px;font-family:'Nunito',sans-serif}
+.photo-aux-badge{position:absolute;top:2px;left:2px;background:var(--muted);color:#fff;font-size:.55rem;font-weight:700;padding:1px 5px;border-radius:4px;font-family:'Nunito',sans-serif}
+.photo-acts{position:absolute;bottom:2px;right:2px;display:flex;gap:2px}
+.photo-act{background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:4px;padding:2px 5px;font-size:.55rem;cursor:pointer;font-weight:700}
+.photo-act:hover{background:rgba(0,0,0,.8)}
+.ai-btn{width:100%;margin-top:7px;padding:8px;background:linear-gradient(135deg,var(--b),#2255bb);color:#fff;border:none;border-radius:9px;font-family:'Nunito',sans-serif;font-weight:800;font-size:.8rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .18s}
+.ai-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(77,142,240,.4)}
+.ai-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+.ai-box{background:linear-gradient(135deg,#eef3ff,#e8f0ff);border:2px solid #b8ccff;border-radius:9px;padding:10px 13px;margin-top:7px;font-size:.75rem;color:#334;line-height:1.8;display:none}
+.ai-box strong{color:#3355cc;font-family:'Nunito',sans-serif}
+.apply-btn{margin-top:7px;padding:5px 12px;background:var(--b);color:#fff;border:none;border-radius:7px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.74rem;cursor:pointer}
+.tag-grid{display:flex;flex-wrap:wrap;gap:6px}
+.tc{position:relative}
+.tc input{position:absolute;opacity:0;width:0}
+.tc label{display:inline-block;padding:3px 10px;border:2px solid var(--border);border-radius:12px;font-size:.72rem;font-weight:700;cursor:pointer;transition:all .14s;font-family:'Nunito',sans-serif;color:var(--muted);background:#fff}
+.tc input:checked+label{background:var(--g);border-color:var(--g);color:#fff}
+.rare-select{display:flex;gap:6px}
+.rare-opt{position:relative}
+.rare-opt input{position:absolute;opacity:0;width:0}
+.rare-opt label{display:inline-block;padding:3px 11px;border:2px solid var(--border);border-radius:12px;font-size:.72rem;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;color:var(--muted);background:#fff;transition:all .14s}
+.rare-opt input:checked+label{border-color:var(--y);background:#fff8d0;color:#7a5c00}
+.friend-select-wrap{position:relative}
+.friend-select-wrap select{width:100%}
+.friend-add-inline{font-size:.72rem;color:var(--b);cursor:pointer;margin-top:3px;display:inline-block}
+.friend-add-inline:hover{text-decoration:underline}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:20px}
+.stat-card{background:var(--card);border-radius:14px;border:2px solid var(--border);padding:16px;box-shadow:0 3px 12px var(--sh)}
+.stat-card h3{font-family:'Nunito',sans-serif;font-weight:900;font-size:.88rem;color:var(--gd);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.chart-wrap{position:relative;height:200px}
+.friend-rank{display:flex;flex-direction:column;gap:6px}
+.frank-row{display:flex;align-items:center;gap:8px;font-size:.78rem}
+.frank-bar-bg{flex:1;height:8px;background:#eee;border-radius:4px;overflow:hidden}
+.frank-bar{height:100%;background:linear-gradient(90deg,var(--g),var(--gl));border-radius:4px;transition:width .5s}
+.frank-name{width:70px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.frank-num{width:24px;text-align:right;font-weight:700;color:var(--gd);font-family:'Nunito',sans-serif}
+.big-stat{font-family:'Nunito',sans-serif;font-weight:900;font-size:2.5rem;color:var(--g);text-align:center;margin:8px 0}
+.big-label{text-align:center;font-size:.75rem;color:var(--muted)}
+.friend-list{display:flex;flex-direction:column;gap:8px}
+.friend-card{background:var(--card);border-radius:12px;border:2px solid var(--border);padding:12px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 8px var(--sh)}
+.friend-avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--gl),var(--g));display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:#fff;font-family:'Nunito',sans-serif;font-weight:900;flex-shrink:0}
+.friend-info{flex:1;min-width:0}
+.friend-name{font-family:'Nunito',sans-serif;font-weight:800;font-size:.9rem}
+.friend-note{font-size:.72rem;color:var(--muted);margin-top:1px}
+.friend-stats{font-size:.7rem;color:var(--g);margin-top:3px;font-weight:600}
+.friend-acts{display:flex;gap:5px}
+.settings-section{background:var(--card);border-radius:14px;border:2px solid var(--border);padding:16px;margin-bottom:14px;box-shadow:0 2px 10px var(--sh)}
+.settings-section h3{font-family:'Nunito',sans-serif;font-weight:900;color:var(--gd);margin-bottom:12px;font-size:.9rem;display:flex;align-items:center;gap:6px}
+.setting-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.setting-row label{font-size:.8rem;font-weight:600;color:var(--gd);min-width:100px}
+.setting-row input{flex:1;min-width:200px;padding:7px 11px;border:2px solid var(--border);border-radius:8px;font-size:.8rem;font-family:inherit;outline:none}
+.setting-row input:focus{border-color:var(--g)}
+/* Drive Scan Modal */
+.scan-item{background:#f8fff4;border:2px solid var(--border);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.scan-item img{width:60px;height:60px;object-fit:cover;border-radius:6px;flex-shrink:0;background:#ddd}
+.scan-item-info{flex:1;min-width:0;font-size:.78rem}
+.scan-item-name{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.scan-item-status{font-size:.7rem;margin-top:2px}
+.scan-item-status.new{color:var(--g)}
+.scan-item-status.exists{color:var(--muted)}
+.scan-actions{display:flex;gap:4px;flex-shrink:0}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+@media(max-width:600px){.stat-pills{display:none}.frow{grid-template-columns:1fr}.h-title{font-size:.95rem}.ntab{font-size:.7rem;padding:4px 9px}}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">🌸</div>
+  <span class="h-title">Pikmin 明信片</span>
+  <nav class="h-nav">
+    <button class="ntab active" onclick="showPage('library',this)">📚 收藏庫</button>
+    <button class="ntab" onclick="showPage('stats',this)">📊 統計</button>
+    <button class="ntab" onclick="showPage('friends',this)">👥 好友</button>
+    <button class="ntab" onclick="showPage('settings',this)">⚙️ 設定</button>
+  </nav>
+  <span class="h-space"></span>
+  <div class="stat-pills">
+    <div class="sp"><span class="n" id="hTot">0</span><span class="l">總數</span></div>
+    <div class="sp"><span class="n" id="hSent">0</span><span class="l">已送出</span></div>
+    <div class="sp"><span class="n" id="hPend">0</span><span class="l">未送出</span></div>
+  </div>
+</header>
+
+<!-- SYNC BAR -->
+<div id="syncBar">
+  <span class="sdot" id="syncDot"></span>
+  <span id="syncMsg">離線模式</span>
+  <div class="sync-actions">
+    <button onclick="syncAll()">↻ 同步到 Google</button>
+    <button onclick="openScanModal()">📁 掃描 Drive 新照片</button>
+  </div>
+</div>
+
+<!-- PAGES -->
+<div class="pages">
+
+  <!-- ══ LIBRARY PAGE ══ -->
+  <div class="page active" id="page-library">
+    <div id="setupCard" style="display:none">
+      <div class="setup-card">
+        <div class="icon">⚙️</div>
+        <div>
+          <h3>設定你的 Google Apps Script 網址</h3>
+          <p>請在「⚙️ 設定」頁面填入 Google Apps Script 的網址，就能開啟雲端同步、Drive 掃描等功能！</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="search-box">
+        <span class="si">🔍</span>
+        <input type="text" id="searchInput" placeholder="搜尋名稱、地點、好友、備註…" oninput="renderLibrary()">
+      </div>
+      <div class="view-toggle">
+        <button id="vGrid" class="active" onclick="setView('grid')">⊞ 卡片</button>
+        <button id="vList" onclick="setView('list')">☰ 列表</button>
+      </div>
+      <button class="btn" onclick="toggleFilterPanel()">🔧 篩選 <span id="filterCount"></span></button>
+      <button class="btn primary" onclick="openCardModal()">＋ 新增明信片</button>
+    </div>
+
+    <!-- FILTER PANEL -->
+    <div class="filter-panel" id="filterPanel">
+      <div class="filter-header">
+        <span>🔧 自訂篩選條件</span>
+        <span style="font-size:.72rem;font-weight:400;color:var(--muted);margin-left:4px">條件之間：</span>
+        <button class="filter-logic and" id="logicBtn" onclick="toggleLogic()">AND</button>
+        <button class="btn" style="margin-left:auto;font-size:.72rem;padding:4px 10px" onclick="addFilterRow()">＋ 新增條件</button>
+        <button class="btn danger" style="font-size:.72rem;padding:4px 10px" onclick="clearFilters()">清除全部</button>
+      </div>
+      <div class="filter-rows" id="filterRows"></div>
+    </div>
+
+    <div id="cardGrid" class="card-grid"></div>
+  </div>
+
+  <!-- ══ STATS PAGE ══ -->
+  <div class="page" id="page-stats">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <h3>📮 總收藏</h3>
+        <div class="big-stat" id="statTotal">0</div>
+        <div class="big-label">張明信片</div>
+        <div style="display:flex;justify-content:center;gap:20px;margin-top:12px;font-size:.78rem">
+          <div style="text-align:center"><div style="font-family:'Nunito',sans-serif;font-weight:900;font-size:1.3rem;color:var(--g)" id="statSent">0</div><div style="color:var(--muted)">已送出</div></div>
+          <div style="text-align:center"><div style="font-family:'Nunito',sans-serif;font-weight:900;font-size:1.3rem;color:var(--y)" id="statPend">0</div><div style="color:var(--muted)">未送出</div></div>
+          <div style="text-align:center"><div style="font-family:'Nunito',sans-serif;font-weight:900;font-size:1.3rem;color:var(--sky2)" id="statKept">0</div><div style="color:var(--muted)">自留</div></div>
+        </div>
+      </div>
+      <div class="stat-card"><h3>🎯 取得方式分布</h3><div class="chart-wrap"><canvas id="chartMethod"></canvas></div></div>
+      <div class="stat-card"><h3>📅 每月收藏趨勢</h3><div class="chart-wrap"><canvas id="chartMonthly"></canvas></div></div>
+      <div class="stat-card"><h3>🏷️ 類型標籤分布</h3><div class="chart-wrap"><canvas id="chartTags"></canvas></div></div>
+      <div class="stat-card"><h3>⭐ 稀有度分布</h3><div class="chart-wrap"><canvas id="chartRare"></canvas></div></div>
+      <div class="stat-card"><h3>👥 好友互動排行（收到）</h3><div class="friend-rank" id="rankReceived"></div></div>
+      <div class="stat-card"><h3>💌 好友互動排行（送出）</h3><div class="friend-rank" id="rankSent"></div></div>
+    </div>
+  </div>
+
+  <!-- ══ FRIENDS PAGE ══ -->
+  <div class="page" id="page-friends">
+    <div class="toolbar">
+      <div class="search-box">
+        <span class="si">🔍</span>
+        <input type="text" id="friendSearch" placeholder="搜尋好友…" oninput="renderFriends()">
+      </div>
+      <button class="btn primary" onclick="openFriendModal()">＋ 新增好友</button>
+    </div>
+    <div class="friend-list" id="friendList"></div>
+  </div>
+
+  <!-- ══ SETTINGS PAGE ══ -->
+  <div class="page" id="page-settings">
+    <div class="settings-section">
+      <h3>☁️ Google Apps Script 設定</h3>
+      <div class="setting-row">
+        <label>Script 網址</label>
+        <input type="text" id="cfgScriptUrl" placeholder="https://script.google.com/macros/s/…/exec">
+      </div>
+      <button class="btn primary" onclick="saveSettings()" style="margin-top:4px">💾 儲存設定</button>
+    </div>
+
+    <div class="settings-section">
+      <h3>👥 好友管理</h3>
+      <div id="settingsFriendList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px"></div>
+      <div style="display:flex;gap:6px">
+        <input type="text" class="fi" id="cfgNewFriendName" placeholder="新增好友名稱" style="flex:1;padding:6px 10px;font-size:.8rem">
+        <button class="btn primary" onclick="addFriendFromSettings()" style="padding:6px 12px;font-size:.78rem">＋新增</button>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h3>🏷️ 類型標籤管理</h3>
+      <div id="tagList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px"></div>
+      <div style="margin-top:12px">
+        <label style="font-size:.77rem;font-weight:700;color:var(--gd);display:block;margin-bottom:8px">新增標籤：</label>
+        <input type="text" class="fi" id="cfgNewTagInput" placeholder="輸入標籤名稱" style="width:100%;padding:6px 10px;font-size:.8rem;margin-bottom:8px">
+        <div id="cfgEmojiGrid" style="display:grid;grid-template-columns:repeat(8,1fr);gap:4px;padding:10px;background:#f8fff4;border:2px solid var(--border);border-radius:10px;max-height:200px;overflow-y:auto"></div>
+        <div style="margin-top:8px">
+          <button class="btn primary" onclick="saveNewTag()" style="width:100%;padding:8px;font-size:.78rem">＋ 新增標籤</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h3>🎯 取得方式管理</h3>
+      <div id="methodList" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
+      <div style="display:flex;gap:6px">
+        <input type="text" class="fi" id="newMethodInput" placeholder="新增取得方式…" style="flex:1;padding:6px 10px;font-size:.8rem">
+        <button class="btn primary" onclick="addMethod()" style="padding:6px 12px;font-size:.78rem">新增</button>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h3>🌍 取得國家管理</h3>
+      <div id="countryList" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
+      <div style="display:flex;gap:6px">
+        <input type="text" class="fi" id="cfgNewCountryInput" placeholder="新增國家名稱" style="flex:1;padding:6px 10px;font-size:.8rem">
+        <button class="btn primary" onclick="saveNewCountry()" style="padding:6px 12px;font-size:.78rem">＋新增</button>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h3>💾 資料管理</h3>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" onclick="exportJSON()">📤 匯出 JSON 備份</button>
+        <button class="btn" onclick="document.getElementById('importFile').click()">📥 匯入 JSON 備份</button>
+        <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(event)">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ POSTCARD MODAL ══ -->
+<div class="overlay" id="cardOverlay" onclick="overlayClick(event,'cardOverlay')">
+<div class="modal">
+  <div class="mhead">
+    <div class="mtitle">🌸 <span id="cardModalTitle">新增明信片</span></div>
+    <button class="xbtn" onclick="closeModal('cardOverlay')">✕</button>
+  </div>
+  <div class="mbody">
+    <!-- 照片上傳 -->
+    <div class="fg">
+      <label class="fl">📷 明信片照片（主照片）</label>
+      <div class="upload-area" id="uploadArea" onclick="document.getElementById('imgInput').click()">
+        <input type="file" id="imgInput" accept="image/*" style="display:none">
+        <div id="upPrompt"><div class="up-icon">🖼️</div><p>點擊上傳主照片</p></div>
+      </div>
+    </div>
+
+    <!-- 輔助照片 -->
+    <div class="fg">
+      <label class="fl">📸 輔助照片（可多張）</label>
+      <div class="upload-area" onclick="document.getElementById('auxImgInput').click()">
+        <input type="file" id="auxImgInput" accept="image/*" multiple style="display:none">
+        <div style="font-size:1.4rem;opacity:.4">📸</div>
+        <p>點擊上傳或拖曳多張照片</p>
+      </div>
+    </div>
+
+    <!-- 照片預覽 -->
+    <div class="photo-gallery" id="photoGallery">
+      <h4>已上傳的照片</h4>
+      <div class="photo-list" id="photoList"></div>
+    </div>
+
+    <!-- AI 掃描 -->
+    <button class="ai-btn" id="aiBtnEl" onclick="aiScan()" disabled>🤖 AI 辨識地點・標籤・取得方式</button>
+    <div class="ai-box" id="aiBox">
+      <div id="aiText"></div>
+      <button class="apply-btn" onclick="applyAI()">✅ 套用建議</button>
+    </div>
+
+    <!-- 明信片名稱 地點名稱 -->
+    <div class="frow">
+      <div class="fg"><label class="fl">🎴 明信片名稱</label><input type="text" class="fi" id="fCardName" placeholder="小灰色蕈菇"></div>
+      <div class="fg"><label class="fl">📍 取得地點</label><input type="text" class="fi" id="fName" placeholder="東海里 竹北市"></div>
+    </div>
+
+    <!-- 遊戲地區 -->
+    <div class="fg">
+      <label class="fl">🌍 取得國家</label>
+      <div style="display:flex;gap:6px">
+        <select class="fsel" id="fCountry" style="flex:1"></select>
+        <input type="text" class="fi" id="newCountryInput" placeholder="新增國家" style="flex:0.8;padding:6px 10px;font-size:.8rem">
+        <button class="btn primary" onclick="addCountryFromModal()" style="padding:6px 12px;font-size:.78rem;white-space:nowrap">＋新增</button>
+      </div>
+    </div>
+
+    <!-- 取得日期 方式 -->
+    <div class="frow">
+      <div class="fg"><label class="fl">📅 取得日期</label><input type="date" class="fi" id="fObtDate"></div>
+      <div class="fg">
+        <label class="fl">🎯 取得方式</label>
+        <select class="fsel" id="fObtMethod"></select>
+      </div>
+    </div>
+
+    <!-- 來源好友 -->
+    <div class="fg">
+      <label class="fl">🤝 來源好友 <span style="font-weight:400;font-size:.7rem;color:var(--muted)">（邀我打菇／直接送我的人）</span></label>
+      <div class="friend-select-wrap">
+        <select class="fsel" id="fSourceFriend"><option value="">（無）</option></select>
+      </div>
+      <span class="friend-add-inline" onclick="quickAddFriend('source')">＋ 新增好友到名單</span>
+    </div>
+
+    <!-- 稀有度 重複張數 -->
+    <div class="frow">
+      <div class="fg">
+        <label class="fl">⭐ 稀有度</label>
+        <div class="rare-select">
+          <div class="rare-opt"><input type="radio" name="rare" id="r0" value="普通" checked><label for="r0">普通</label></div>
+          <div class="rare-opt"><input type="radio" name="rare" id="r1" value="稀有"><label for="r1">⭐ 稀有</label></div>
+          <div class="rare-opt"><input type="radio" name="rare" id="r2" value="超稀有"><label for="r2">✨ 超稀有</label></div>
+        </div>
+      </div>
+      <div class="fg">
+        <label class="fl">🔢 重複張數</label>
+        <input type="number" class="fi" id="fDupes" min="1" value="1" placeholder="1">
+      </div>
+    </div>
+
+    <!-- 狀態 送出日期 -->
+    <div class="frow">
+      <div class="fg">
+        <label class="fl">📬 送出狀態</label>
+        <select class="fsel" id="fStatus" onchange="toggleSentFields()">
+          <option value="pending">未送出</option>
+          <option value="sent">已送出</option>
+          <option value="kept">自留收藏</option>
+        </select>
+      </div>
+      <div class="fg" id="sentDateGrp" style="display:none">
+        <label class="fl">📅 送出日期</label>
+        <input type="date" class="fi" id="fSentDate">
+      </div>
+    </div>
+
+    <!-- 送給誰 -->
+    <div class="fg" id="recipGrp" style="display:none">
+      <label class="fl">💌 送給誰</label>
+      <div class="friend-select-wrap">
+        <select class="fsel" id="fRecipFriend"><option value="">（請選擇）</option></select>
+      </div>
+      <span class="friend-add-inline" onclick="quickAddFriend('recip')">＋ 新增好友到名單</span>
+    </div>
+
+    <!-- 類型標籤 -->
+    <div class="fg">
+      <label class="fl">🏷️ 類型標籤（可多選）</label>
+      <div class="tag-grid" id="tagGrid"></div>
+      <div style="font-size:.7rem;color:var(--muted);margin-top:8px">💡 提示：新增/編輯標籤請到「⚙️ 設定」頁面</div>
+    </div>
+
+    <!-- 備註 -->
+    <div class="fg">
+      <label class="fl">💬 備註/心得</label>
+      <textarea class="fta" id="fNotes" placeholder="記下這張明信片的故事…"></textarea>
+    </div>
+  </div>
+  <div class="mfoot">
+    <button class="copy-last-btn" onclick="copyLastCard()">📋 沿用上一筆</button>
+    <button class="btn-cancel" onclick="closeModal('cardOverlay')">取消</button>
+    <button class="btn-save" onclick="saveCard()">🌱 儲存</button>
+  </div>
+</div>
+</div>
+
+<!-- ══ FRIEND MODAL ══ -->
+<div class="overlay" id="friendOverlay" onclick="overlayClick(event,'friendOverlay')">
+<div class="modal" style="max-width:400px">
+  <div class="mhead">
+    <div class="mtitle">👥 <span id="friendModalTitle">新增好友</span></div>
+    <button class="xbtn" onclick="closeModal('friendOverlay')">✕</button>
+  </div>
+  <div class="mbody">
+    <div class="fg"><label class="fl">姓名 / 暱稱</label><input type="text" class="fi" id="fFriendName" placeholder="輸入好友名稱"></div>
+    <div class="fg"><label class="fl">備註</label><textarea class="fta" id="fFriendNote" placeholder="例：台南同好會認識" style="min-height:55px"></textarea></div>
+  </div>
+  <div class="mfoot">
+    <button class="btn-cancel" onclick="closeModal('friendOverlay')">取消</button>
+    <button class="btn-save" onclick="saveFriend()">💾 儲存</button>
+  </div>
+</div>
+</div>
+
+<!-- ══ DETAIL MODAL ══ -->
+<div class="overlay" id="detailOverlay" onclick="overlayClick(event,'detailOverlay')">
+<div class="modal" style="max-width:480px">
+  <div class="mhead" style="background:linear-gradient(135deg,#3a6a9a,#2255aa)">
+    <div class="mtitle">🔍 明信片詳情</div>
+    <button class="xbtn" onclick="closeModal('detailOverlay')">✕</button>
+  </div>
+  <div class="mbody" id="detailBody"></div>
+  <div class="mfoot">
+    <button class="btn-cancel" onclick="closeModal('detailOverlay')">關閉</button>
+    <button class="btn-save" id="detailEditBtn">✏️ 編輯</button>
+  </div>
+</div>
+</div>
+
+<!-- ══ DRIVE SCAN MODAL ══ -->
+<div class="overlay" id="scanOverlay" onclick="overlayClick(event,'scanOverlay')">
+<div class="modal" style="max-width:600px">
+  <div class="mhead" style="background:linear-gradient(135deg,#7a4a9a,#4a2a7a)">
+    <div class="mtitle">📁 Drive 照片掃描</div>
+    <button class="xbtn" onclick="closeModal('scanOverlay')">✕</button>
+  </div>
+  <div class="mbody" style="padding:12px 16px">
+    <!-- 狀態列 -->
+    <div id="scanStatus" style="font-size:.82rem;color:var(--muted);margin-bottom:10px"></div>
+
+    <!-- 工具列：篩選 + 全選 -->
+    <div id="scanToolbar" style="display:none;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px;padding:8px 10px;background:#f8fff4;border:1.5px solid var(--border);border-radius:10px">
+      <!-- 篩選 -->
+      <div style="display:flex;gap:4px">
+        <button class="btn active" id="scanFilterAll" onclick="setScanFilter('all')" style="padding:4px 10px;font-size:.72rem">全部</button>
+        <button class="btn" id="scanFilterNew" onclick="setScanFilter('new')" style="padding:4px 10px;font-size:.72rem">✅ 未建檔</button>
+        <button class="btn" id="scanFilterExists" onclick="setScanFilter('exists')" style="padding:4px 10px;font-size:.72rem">⚠️ 已存在</button>
+      </div>
+      <!-- 全選/取消 -->
+      <div style="display:flex;gap:4px;margin-left:auto">
+        <button class="btn" onclick="scanSelectAll(true)" style="padding:4px 10px;font-size:.72rem">☑ 全選</button>
+        <button class="btn" onclick="scanSelectAll(false)" style="padding:4px 10px;font-size:.72rem">☐ 取消</button>
+      </div>
+    </div>
+
+    <!-- 分頁導覽 -->
+    <div id="scanPager" style="display:none;align-items:center;gap:6px;margin-bottom:8px;font-size:.78rem;color:var(--muted)">
+      <button class="btn" id="scanPrevBtn" onclick="changeScanPage(-1)" style="padding:3px 10px;font-size:.75rem">‹ 上頁</button>
+      <span id="scanPageInfo"></span>
+      <button class="btn" id="scanNextBtn" onclick="changeScanPage(1)" style="padding:3px 10px;font-size:.75rem">下頁 ›</button>
+    </div>
+
+    <div id="scanList"></div>
+  </div>
+  <div class="mfoot">
+    <button class="btn-cancel" onclick="closeModal('scanOverlay')">關閉</button>
+    <button class="btn-save" id="scanImportBtn" onclick="importScannedPhotos()" style="display:none">📥 匯入選取</button>
+    <button class="btn-save" id="scanAIBtn" onclick="batchAIScan()" style="display:none;background:linear-gradient(135deg,var(--b),#2255bb)">🤖 批次 AI 辨識</button>
+  </div>
+</div>
+</div>
+
+<!-- UNDO TOAST -->
+<div class="toast" id="toast">
+  <span id="toastMsg">已刪除</span>
+  <button onclick="undoDelete()">撤銷</button>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  STATE & CONFIG
+// ═══════════════════════════════════════════════
+let CFG = JSON.parse(localStorage.getItem('pkm_cfg') || '{}');
+let cards = JSON.parse(localStorage.getItem('pkm_cards') || '[]');
+let friends = JSON.parse(localStorage.getItem('pkm_friends') || '[]');
+let methods = JSON.parse(localStorage.getItem('pkm_methods') || '["打菇","好友送","開花","探險","其他"]');
+let tagMap = JSON.parse(localStorage.getItem('pkm_tags') || '{"裝置藝術":"🎨","看板標示到此一遊":"🏷️","宗教信仰教堂":"⛩️","公園廣場洗手池":"🌳","商店":"🏪","單位交通":"🚗","景點":"🗿","餐廳":"🍽️","特殊款":"⭐","旅遊卡":"🎫","地標":"🏛️","咖啡廳":"☕","活動限定":"🎉","季節限定":"🌸","恐怖留":"👻","地方":"📍","建築物":"🏢"}');
+let countries = JSON.parse(localStorage.getItem('pkm_countries') || '["日本","台灣","南韓","泰國","馬來西亞","新加坡","美國","英國","法國","德國","澳洲"]');
+
+let editingCardId = null;
+let editingFriendId = null;
+let currentView = 'grid';
+let filterLogic = 'AND';
+let filterConditions = [];
+let deletedCard = null;
+let toastTimer = null;
+let aiSuggestion = null;
+let currentMainImg = null;
+let currentAuxImgs = [];
+let pendingFriendTarget = null;
+let chartInstances = {};
+let scannedPhotos = []; // for drive scan modal
+
+const EMOJI_LIST = ['🎨','🏷️','⛩️','🌳','🏪','🚗','🗿','🍽️','⭐','🎫','🏛️','☕','🎉','🌸','👻','📍','🏢','🌲','🏖️','🌺','🎭','🎪','🏰','🗼','🌊','⛰️','🦌','🌻','🍕','🍜','🍣','🥘','🎂','🍰','🚀','🎸','📚','🎮','🏆','💎','🌙','☀️','❄️','🌈','💝','🎎','🛕','🎌','🚂','✈️','🚢','🚁','🎓','⚽','🏀','🎾','🏐','🎳','🎿','⛷️','🏊','🚴','🧘','💐','❤️','💚','💙','💛','😀','😂','🥰','😍'];
+
+const FILTER_FIELDS = [
+  {v:'status',l:'狀態',type:'select',opts:['sent','pending','kept'],labels:['已送出','未送出','自留']},
+  {v:'obtainedMethod',l:'取得方式',type:'dynamic',src:'methods'},
+  {v:'obtainedDate',l:'取得日期',type:'date'},
+  {v:'sentDate',l:'送出日期',type:'date'},
+  {v:'sourceFriend',l:'來源好友',type:'dynamic',src:'friends'},
+  {v:'recipFriend',l:'送給誰',type:'dynamic',src:'friends'},
+  {v:'rarity',l:'稀有度',type:'select',opts:['普通','稀有','超稀有'],labels:['普通','⭐稀有','✨超稀有']},
+  {v:'tags',l:'標籤',type:'dynamic',src:'tags'},
+  {v:'name',l:'地點名稱',type:'text'},
+  {v:'cardName',l:'明信片名稱',type:'text'},
+  {v:'region',l:'取得國家',type:'text'},
+];
+
+const RARITY_ICON = {'普通':'','稀有':'⭐','超稀有':'✨'};
+const STATUS_MAP = {sent:{l:'已送出',c:'sb-sent'},pending:{l:'未送出',c:'sb-pending'},kept:{l:'自留',c:'sb-kept'}};
+
+// ═══════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════
+window.onload = async () => {
+  buildEmojiGrid();
+  loadSettings();
+  renderMethodSelect();
+  renderFriendSelects();
+  updateSetupCard();
+
+  if (CFG.scriptUrl) {
+    // 有設定 GAS → 從雲端載入最新資料
+    setSyncStatus('ing', '載入雲端資料中…');
+    const result = await callGAS('loadData', {});
+    if (result && result.success) {
+      cards = result.cards || [];
+      friends = result.friends || [];
+      // 同時更新 localStorage 作為離線備份
+      saveLocal();
+      setSyncStatus('ok', `已從雲端載入 ${cards.length} 張明信片`);
+    } else {
+      // 雲端失敗 → fallback 到 localStorage
+      setSyncStatus('err', '雲端載入失敗，使用本地資料');
+    }
+  } else {
+    setSyncStatus('', '離線模式');
+  }
+
+  renderLibrary();
+  renderFriendSelects();
+};
+
+function updateSetupCard() {
+  document.getElementById('setupCard').style.display = CFG.scriptUrl ? 'none' : 'block';
+}
+
+// ═══════════════════════════════════════════════
+//  PAGE NAV
+// ═══════════════════════════════════════════════
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.ntab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (id === 'stats') renderStats();
+  if (id === 'friends') renderFriends();
+  if (id === 'settings') loadSettings();
+}
+
+// ═══════════════════════════════════════════════
+//  SETTINGS
+// ═══════════════════════════════════════════════
+function loadSettings() {
+  document.getElementById('cfgScriptUrl').value = CFG.scriptUrl || '';
+  renderMethodTags();
+  renderTagManagement();
+  renderCountryManagement();
+  renderCountrySelect();
+  renderSettingsFriendList();
+}
+
+function renderSettingsFriendList() {
+  const el = document.getElementById('settingsFriendList');
+  if (!el) return;
+  if (!friends.length) {
+    el.innerHTML = '<div style="font-size:.78rem;color:var(--muted)">尚無好友</div>';
+    return;
+  }
+  el.innerHTML = friends.map(f => `
+    <div style="display:flex;align-items:center;gap:8px;padding:8px;background:#f5f5f5;border-radius:8px">
+      <span style="font-size:1.1rem">👤</span>
+      <input type="text" value="${escapeHtml(f.name)}" data-friend-id="${f.id}"
+        style="flex:1;padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:.8rem"
+        onchange="updateFriendName(this.dataset.friendId, this.value)">
+      <button type="button" data-friend-id="${f.id}" onclick="deleteFriendFromSettings(this.dataset.friendId)"
+        style="background:none;border:none;cursor:pointer;color:var(--r);font-size:1rem">🗑️</button>
+    </div>`).join('');
+}
+
+function addFriendFromSettings() {
+  const name = document.getElementById('cfgNewFriendName').value.trim();
+  if (!name) { alert('請輸入好友名稱'); return; }
+  if (friends.find(f => f.name === name)) { alert('好友已存在'); return; }
+  friends.push({ id: Date.now().toString(), name, note: '' });
+  saveAndSync();
+  document.getElementById('cfgNewFriendName').value = '';
+  renderSettingsFriendList();
+  renderFriendSelects();
+}
+
+function updateFriendName(id, newName) {
+  newName = newName.trim();
+  if (!newName) return;
+  if (friends.find(f => f.name === newName && f.id !== id)) { alert('好友名稱已存在'); return; }
+  const oldName = friends.find(f => f.id === id)?.name;
+  const f = friends.find(f => f.id === id);
+  if (f) f.name = newName;
+  // 同步更新卡片裡的好友名稱
+  if (oldName) {
+    cards.forEach(c => {
+      if (c.sourceFriend === oldName) c.sourceFriend = newName;
+      if (c.recipFriend === oldName) c.recipFriend = newName;
+    });
+  }
+  saveAndSync();
+  renderSettingsFriendList();
+  renderFriendSelects();
+  renderLibrary();
+}
+
+function deleteFriendFromSettings(id) {
+  const f = friends.find(x => x.id === id);
+  if (!f) return;
+  if (!confirm(`確定要刪除好友「${f.name}」嗎？相關明信片記錄不受影響。`)) return;
+  friends = friends.filter(x => x.id !== id);
+  saveAndSync();
+  renderSettingsFriendList();
+  renderFriendSelects();
+}
+
+// 確保好友存在名單，若不存在則自動新增，回傳好友名稱
+function ensureFriendExists(name) {
+  if (!name) return;
+  if (!friends.find(f => f.name === name)) {
+    friends.push({ id: Date.now().toString(), name, note: '' });
+    saveAndSync();
+    renderFriendSelects();
+    renderSettingsFriendList();
+  }
+}
+
+function saveSettings() {
+  const url = document.getElementById('cfgScriptUrl').value.trim();
+  if (!url) { alert('請輸入 Google Apps Script 網址'); return; }
+  CFG.scriptUrl = url;
+  localStorage.setItem('pkm_cfg', JSON.stringify(CFG));
+  updateSetupCard();
+  alert('✅ 設定已儲存！');
+}
+
+function buildEmojiGrid() {
+  const grid = document.getElementById('cfgEmojiGrid');
+  if (!grid) return;
+  grid.innerHTML = EMOJI_LIST.map(e =>
+    `<button type="button" onclick="selectCfgTagEmoji('${e}',this)"
+      style="padding:6px;border:2px solid transparent;border-radius:6px;background:#fff;cursor:pointer;font-size:1rem;transition:all .2s">${e}</button>`
+  ).join('');
+}
+
+function renderMethodTags() {
+  const el = document.getElementById('methodList');
+  const DEFAULT_METHODS = ['打菇','好友送','開花','探險','其他'];
+  el.innerHTML = methods.map(m => `
+    <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:#f0fae8;
+      border:1.5px solid var(--border);border-radius:12px;font-size:.76rem;font-weight:600">
+      ${m}
+      ${DEFAULT_METHODS.includes(m) ? '' :
+        `<button type="button" onclick="removeMethod('${m}')" style="background:none;border:none;cursor:pointer;color:#ccc;font-size:.85rem;padding:0 0 0 2px">✕</button>`}
+    </span>`).join('');
+  renderMethodSelect();
+}
+
+function addMethod() {
+  const v = document.getElementById('newMethodInput').value.trim();
+  if (!v || methods.includes(v)) return;
+  methods.push(v);
+  localStorage.setItem('pkm_methods', JSON.stringify(methods));
+  document.getElementById('newMethodInput').value = '';
+  renderMethodTags();
+}
+
+function removeMethod(m) {
+  methods = methods.filter(x => x !== m);
+  localStorage.setItem('pkm_methods', JSON.stringify(methods));
+  renderMethodTags();
+}
+
+function renderMethodSelect() {
+  const sel = document.getElementById('fObtMethod');
+  if (!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">請選擇</option>' + methods.map(m => `<option value="${m}">${m}</option>`).join('');
+  if (cur) sel.value = cur;
+}
+
+function renderTagManagement() {
+  const el = document.getElementById('tagList');
+  el.innerHTML = Object.entries(tagMap).map(([name, emoji]) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:8px;background:#f5f5f5;border-radius:8px">
+      <span style="font-size:1.2rem;min-width:30px">${emoji}</span>
+      <input type="text" value="${name}" data-oldname="${name}" style="flex:1;padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:.8rem"
+        onchange="updateTagName('${name}',this.value)">
+      <button type="button" onclick="deleteTag('${name}')" style="background:none;border:none;cursor:pointer;color:var(--r);font-size:1rem">🗑️</button>
+    </div>`).join('');
+}
+
+function renderTagGrid() {
+  const grid = document.getElementById('tagGrid');
+  if (!grid) return;
+  const cur = Array.from(document.querySelectorAll('#tagGrid input:checked')).map(cb => cb.value);
+  grid.innerHTML = Object.entries(tagMap).map(([name, emoji]) =>
+    `<div class="tc"><input type="checkbox" id="tg_${name}" value="${name}" ${cur.includes(name)?'checked':''}><label for="tg_${name}">${emoji} ${name}</label></div>`
+  ).join('');
+}
+
+function selectCfgTagEmoji(emoji, btn) {
+  window.selectedCfgTagEmoji = emoji;
+  document.querySelectorAll('#cfgEmojiGrid button').forEach(b => b.style.borderColor = 'transparent');
+  if (btn) btn.style.borderColor = 'var(--g)';
+}
+
+function saveNewTag() {
+  const name = document.getElementById('cfgNewTagInput').value.trim();
+  const emoji = window.selectedCfgTagEmoji;
+  if (!name) { alert('請輸入標籤名稱'); return; }
+  if (!emoji) { alert('請選擇圖案'); return; }
+  if (tagMap[name]) { alert('標籤已存在'); return; }
+  tagMap[name] = emoji;
+  localStorage.setItem('pkm_tags', JSON.stringify(tagMap));
+  document.getElementById('cfgNewTagInput').value = '';
+  window.selectedCfgTagEmoji = null;
+  document.querySelectorAll('#cfgEmojiGrid button').forEach(b => b.style.borderColor = 'transparent');
+  renderTagManagement();
+  renderTagGrid();
+}
+
+function updateTagName(oldName, newName) {
+  newName = newName.trim();
+  if (!newName || newName === oldName) return;
+  if (tagMap[newName]) { alert('標籤名稱已存在'); return; }
+  const emoji = tagMap[oldName];
+  delete tagMap[oldName];
+  tagMap[newName] = emoji;
+  cards.forEach(c => { if (c.tags) c.tags = c.tags.map(t => t === oldName ? newName : t); });
+  localStorage.setItem('pkm_tags', JSON.stringify(tagMap));
+  saveAndSync();
+  renderTagManagement();
+  renderTagGrid();
+}
+
+function deleteTag(name) {
+  if (!confirm(`確定要刪除標籤「${name}」？`)) return;
+  delete tagMap[name];
+  cards.forEach(c => { if (c.tags) c.tags = c.tags.filter(t => t !== name); });
+  localStorage.setItem('pkm_tags', JSON.stringify(tagMap));
+  saveAndSync();
+  renderTagManagement();
+  renderTagGrid();
+  renderLibrary();
+}
+
+function renderCountryManagement() {
+  const el = document.getElementById('countryList');
+  el.innerHTML = countries.map(c => `
+    <span style="display:inline-flex;align-items:center;gap:4px;padding:6px 10px;background:#f0fae8;border:1.5px solid var(--border);border-radius:12px;font-size:.76rem;font-weight:600">
+      ${c}
+      <button type="button" onclick="deleteCountry('${c}')" style="background:none;border:none;cursor:pointer;color:#ccc;font-size:.85rem;padding:0 0 0 2px">✕</button>
+    </span>`).join('');
+}
+
+function renderCountrySelect() {
+  const sel = document.getElementById('fCountry');
+  if (!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">請選擇</option>' + countries.map(c => `<option value="${c}">${c}</option>`).join('');
+  if (cur) sel.value = cur;
+}
+
+function addCountryFromModal() {
+  const v = document.getElementById('newCountryInput').value.trim();
+  if (!v) return;
+  if (!countries.includes(v)) {
+    countries.push(v);
+    localStorage.setItem('pkm_countries', JSON.stringify(countries));
+    renderCountryManagement();
+  }
+  renderCountrySelect();
+  document.getElementById('fCountry').value = v;
+  document.getElementById('newCountryInput').value = '';
+}
+
+function saveNewCountry() {
+  const name = document.getElementById('cfgNewCountryInput').value.trim();
+  if (!name || countries.includes(name)) return;
+  countries.push(name);
+  localStorage.setItem('pkm_countries', JSON.stringify(countries));
+  document.getElementById('cfgNewCountryInput').value = '';
+  renderCountryManagement();
+  renderCountrySelect();
+}
+
+function deleteCountry(name) {
+  if (!confirm(`確定要刪除「${name}」？`)) return;
+  countries = countries.filter(c => c !== name);
+  localStorage.setItem('pkm_countries', JSON.stringify(countries));
+  renderCountryManagement();
+  renderCountrySelect();
+}
+
+// ═══════════════════════════════════════════════
+//  GOOGLE APPS SCRIPT API
+// ═══════════════════════════════════════════════
+async function callGAS(action, data) {
+  if (!CFG.scriptUrl) return null;
+  try {
+    const res = await fetch(CFG.scriptUrl + '?action=' + action, {
+      method: 'POST',
+      headers: {'Content-Type': 'text/plain'},
+      body: JSON.stringify(data)
+    });
+    return await res.json();
+  } catch (e) {
+    console.error('GAS 呼叫失敗:', e);
+    return null;
+  }
+}
+
+async function syncAll() {
+  if (!CFG.scriptUrl) { setSyncStatus('', '離線模式'); return; }
+  setSyncStatus('ing', '同步中…');
+  const result = await callGAS('sync', { cards, friends });
+  if (result && result.success) {
+    setSyncStatus('ok', `已同步（${new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'})}）`);
+  } else {
+    setSyncStatus('err', '同步失敗：' + (result?.error || '網路錯誤'));
+  }
+}
+
+function setSyncStatus(state, msg) {
+  const d = document.getElementById('syncDot');
+  d.className = 'sdot' + (state ? ' '+state : '');
+  document.getElementById('syncMsg').textContent = msg;
+}
+
+// ═══════════════════════════════════════════════
+//  DRIVE SCAN MODAL
+// ═══════════════════════════════════════════════
+const SCAN_PAGE_SIZE = 30;
+let scanFilter = 'all';   // 'all' | 'new' | 'exists'
+let scanPage = 0;         // 目前頁碼（0-based）
+
+async function openScanModal() {
+  if (!CFG.scriptUrl) { alert('請先在「⚙️ 設定」填入 Google Apps Script 網址'); return; }
+  scanFilter = 'all';
+  scanPage = 0;
+  document.getElementById('scanList').innerHTML = '';
+  document.getElementById('scanStatus').textContent = '掃描中…';
+  document.getElementById('scanImportBtn').style.display = 'none';
+  document.getElementById('scanAIBtn').style.display = 'none';
+  document.getElementById('scanToolbar').style.display = 'none';
+  document.getElementById('scanPager').style.display = 'none';
+  document.getElementById('scanOverlay').classList.add('open');
+
+  setSyncStatus('ing', '掃描 Drive 中…');
+  const result = await callGAS('scan', {});
+  if (!result || !result.success) {
+    document.getElementById('scanStatus').textContent = '掃描失敗：' + (result?.error || '網路錯誤');
+    setSyncStatus('err', '掃描失敗');
+    return;
+  }
+
+  scannedPhotos = result.photos || [];
+  setSyncStatus('ok', '掃描完成');
+  renderScanModal();
+}
+
+// 取得目前篩選後的照片清單
+function getFilteredPhotos() {
+  if (scanFilter === 'new') return scannedPhotos.filter(p => !cards.find(c => c.mainImg?.fileId === p.fileId));
+  if (scanFilter === 'exists') return scannedPhotos.filter(p => !!cards.find(c => c.mainImg?.fileId === p.fileId));
+  return scannedPhotos;
+}
+
+function setScanFilter(f) {
+  scanFilter = f;
+  scanPage = 0;
+  ['all','new','exists'].forEach(k => {
+    document.getElementById('scanFilter' + k.charAt(0).toUpperCase() + k.slice(1))
+      ?.classList.toggle('active', k === f);
+  });
+  renderScanList();
+}
+
+function changeScanPage(dir) {
+  const filtered = getFilteredPhotos();
+  const maxPage = Math.max(0, Math.ceil(filtered.length / SCAN_PAGE_SIZE) - 1);
+  scanPage = Math.min(maxPage, Math.max(0, scanPage + dir));
+  renderScanList();
+}
+
+function scanSelectAll(checked) {
+  const filtered = getFilteredPhotos();
+  const start = scanPage * SCAN_PAGE_SIZE;
+  const pageItems = filtered.slice(start, start + SCAN_PAGE_SIZE);
+  pageItems.forEach(p => {
+    const isNew = !cards.find(c => c.mainImg?.fileId === p.fileId);
+    if (!isNew) return; // 已存在的沒有 checkbox
+    const globalIdx = scannedPhotos.indexOf(p);
+    const chk = document.getElementById(`scanChk_${globalIdx}`);
+    if (chk) chk.checked = checked;
+  });
+}
+
+function renderScanModal() {
+  const newCount = scannedPhotos.filter(p => !cards.find(c => c.mainImg?.fileId === p.fileId)).length;
+  document.getElementById('scanStatus').textContent =
+    `掃描完成，共 ${scannedPhotos.length} 張，其中 ${newCount} 張尚未建檔`;
+
+  if (!scannedPhotos.length) return;
+
+  document.getElementById('scanToolbar').style.display = 'flex';
+  if (newCount > 0) {
+    document.getElementById('scanImportBtn').style.display = '';
+    document.getElementById('scanAIBtn').style.display = '';
+  }
+  renderScanList();
+}
+
+function renderScanList() {
+  const filtered = getFilteredPhotos();
+  const totalPages = Math.max(1, Math.ceil(filtered.length / SCAN_PAGE_SIZE));
+  scanPage = Math.min(scanPage, totalPages - 1);
+  const start = scanPage * SCAN_PAGE_SIZE;
+  const pageItems = filtered.slice(start, start + SCAN_PAGE_SIZE);
+
+  // 分頁導覽
+  const pager = document.getElementById('scanPager');
+  if (filtered.length > SCAN_PAGE_SIZE) {
+    pager.style.display = 'flex';
+    document.getElementById('scanPageInfo').textContent = `第 ${scanPage+1} / ${totalPages} 頁（共 ${filtered.length} 張）`;
+    document.getElementById('scanPrevBtn').disabled = scanPage === 0;
+    document.getElementById('scanNextBtn').disabled = scanPage >= totalPages - 1;
+  } else {
+    pager.style.display = 'none';
+  }
+
+  document.getElementById('scanList').innerHTML = pageItems.map(p => {
+    const globalIdx = scannedPhotos.indexOf(p);
+    const isNew = !cards.find(c => c.mainImg?.fileId === p.fileId);
+    return `<div class="scan-item" id="scanItem_${globalIdx}">
+      <div style="width:60px;height:60px;flex-shrink:0;border-radius:6px;overflow:hidden;background:#e8f5e0;display:flex;align-items:center;justify-content:center;font-size:1.6rem">
+        <img src="${p.thumbUrl||p.url}" alt="" style="width:100%;height:100%;object-fit:cover"
+          onerror="this.parentNode.innerHTML='🖼️'">
+      </div>
+      <div class="scan-item-info">
+        <div class="scan-item-name">${escapeHtml(p.filename)}</div>
+        <div class="scan-item-status ${isNew?'new':''}">${isNew?'✅ 尚未建檔':'⚠️ 已存在'}</div>
+        <div id="scanAIResult_${globalIdx}" style="font-size:.68rem;color:var(--b);margin-top:2px"></div>
+      </div>
+      ${isNew ? `<div class="scan-actions">
+        <input type="checkbox" id="scanChk_${globalIdx}" checked style="width:16px;height:16px;cursor:pointer">
+      </div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+async function batchAIScan() {
+  const btn = document.getElementById('scanAIBtn');
+  btn.disabled = true;
+
+  // 只處理當頁有勾選的項目
+  const filtered = getFilteredPhotos();
+  const start = scanPage * SCAN_PAGE_SIZE;
+  const pageItems = filtered.slice(start, start + SCAN_PAGE_SIZE);
+  const selected = pageItems
+    .map(p => ({ p, idx: scannedPhotos.indexOf(p) }))
+    .filter(({ idx }) => document.getElementById(`scanChk_${idx}`)?.checked);
+
+  btn.textContent = `⏳ AI 辨識中… 0/${selected.length}`;
+
+  for (let i = 0; i < selected.length; i++) {
+    const {p, idx} = selected[i];
+    btn.textContent = `⏳ AI 辨識中… ${i+1}/${selected.length}`;
+    const resultEl = document.getElementById(`scanAIResult_${idx}`);
+    if (resultEl) resultEl.textContent = '辨識中…';
+
+    try {
+      const res = await callGAS('aiScan', { fileId: p.fileId, methods, tags: tagMap });
+      if (res && res.success && res.data) {
+        p._ai = res.data;
+        const d = res.data;
+        if (resultEl) resultEl.textContent =
+          `🤖 ${d.cardName||'?'} | ${d.country||''} | ${d.obtainedMethod||'?'} | ${d.rarity||'?'}`;
+      } else {
+        if (resultEl) resultEl.textContent = '❌ 辨識失敗：' + (res?.error || '未知錯誤');
+      }
+    } catch(e) {
+      if (resultEl) resultEl.textContent = '❌ 辨識失敗：' + e.message;
+    }
+  }
+
+  btn.disabled = false; btn.textContent = '🤖 批次 AI 辨識';
+}
+
+async function importScannedPhotos() {
+  let count = 0;
+  // 只處理當頁有勾選的項目
+  const filtered = getFilteredPhotos();
+  const start = scanPage * SCAN_PAGE_SIZE;
+  const pageItems = filtered.slice(start, start + SCAN_PAGE_SIZE);
+
+  for (const p of pageItems) {
+    const globalIdx = scannedPhotos.indexOf(p);
+    const chk = document.getElementById(`scanChk_${globalIdx}`);
+    if (!chk || !chk.checked) continue;
+    if (cards.find(c => c.mainImg?.fileId === p.fileId)) continue;
+
+    const ai = p._ai || {};
+
+    // 自動新增國家到清單
+    if (ai.country && !countries.includes(ai.country)) {
+      countries.push(ai.country);
+      localStorage.setItem('pkm_countries', JSON.stringify(countries));
+    }
+
+    // 自動新增好友到名單
+    if (ai.friendName) ensureFriendExists(ai.friendName);
+
+    cards.unshift({
+      id: Date.now().toString() + '_' + globalIdx,
+      cardName: ai.cardName || '',
+      name: ai.location || p.filename.replace(/\.[^/.]+$/,''),
+      region: ai.country || '',
+      obtainedDate: new Date().toISOString().split('T')[0],
+      obtainedMethod: ai.obtainedMethod || '',
+      sourceFriend: ai.friendName || '',
+      rarity: ai.rarity || '普通',
+      dupes: '1',
+      // 好友送的卡片遊戲機制不允許轉送，自動設為自留收藏
+      status: ai.friendName ? 'kept' : 'pending',
+      sentDate: '',
+      recipFriend: '',
+      tags: (ai.tags || []).filter(t => tagMap[t]),
+      notes: p._ai ? '' : '(自 Drive 掃描建立，請編輯補充資訊)',
+      mainImg: {
+        url: p.url,
+        fileId: p.fileId,
+        role: 'main'
+      },
+      auxImgs: [],
+      createdAt: new Date().toISOString()
+    });
+    count++;
+  }
+  saveAndSync();
+  renderLibrary();
+  renderCountryManagement();
+  renderCountrySelect();
+  closeModal('scanOverlay');
+  showToast(`已匯入 ${count} 張明信片`);
+}
+
+// ═══════════════════════════════════════════════
+//  IMAGE UPLOAD
+// ═══════════════════════════════════════════════
+function initImageListeners() {
+  // Use named functions to avoid duplicate listeners
+  const imgInput = document.getElementById('imgInput');
+  const auxInput = document.getElementById('auxImgInput');
+  imgInput.onchange = (e) => handleImg(e, 'main');
+  auxInput.onchange = (e) => handleImg(e, 'aux');
+}
+
+function handleImg(e, role) {
+  const files = Array.from(e.target.files);
+  if (!files.length) return;
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = async ev => {
+      const base64 = ev.target.result;
+      const mime = file.type || 'image/jpeg';
+      const timestamp = Date.now();
+      const filename = `${new Date().toISOString().split('T')[0]}_${timestamp}_${role}.${file.name.split('.').pop()}`;
+
+      if (role === 'main') {
+        currentMainImg = { base64, filename, mime, url: base64 };
+        document.getElementById('upPrompt').style.display = 'none';
+        document.getElementById('aiBtnEl').disabled = false;
+      } else {
+        currentAuxImgs.push({ base64, filename, mime, url: base64 });
+      }
+      renderPhotoGallery();
+
+      if (CFG.scriptUrl) {
+        try {
+          const res = await callGAS('uploadPhoto', { base64, mimeType: mime, filename });
+          if (res && res.success) {
+            if (role === 'main') {
+              currentMainImg.driveUrl = res.url; // 備存 Drive URL，base64 仍保留供 AI 用
+            } else {
+              const aux = currentAuxImgs.find(x => x.filename === filename);
+              if (aux) aux.driveUrl = res.url;
+            }
+            // 不需要重繪，base64 已可顯示
+          }
+        } catch(err) { console.error('上傳 Drive 失敗:', err); }
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+  e.target.value = '';
+}
+
+function renderPhotoGallery() {
+  const gallery = document.getElementById('photoGallery');
+  const list = document.getElementById('photoList');
+  const hasPhotos = !!currentMainImg || currentAuxImgs.length > 0;
+  gallery.classList.toggle('show', hasPhotos);
+
+  const photos = [];
+  if (currentMainImg) photos.push({...currentMainImg, role:'main'});
+  currentAuxImgs.forEach(p => photos.push({...p, role:'aux'}));
+
+  list.innerHTML = photos.map((p, idx) => `
+    <div class="photo-item">
+      <img src="${p.base64||p.url}" alt="" style="width:100%;height:100%;object-fit:cover">
+      ${p.role==='main'?`<span class="photo-main-badge">主</span>`:`<span class="photo-aux-badge">輔</span>`}
+      <div class="photo-acts">
+        <button class="photo-act" onclick="removePhoto(${idx})" type="button">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+function removePhoto(idx) {
+  if (idx === 0 && currentMainImg) {
+    currentMainImg = null;
+    document.getElementById('upPrompt').style.display = 'block';
+    document.getElementById('aiBtnEl').disabled = true;
+  } else {
+    const auxIdx = currentMainImg ? idx - 1 : idx;
+    currentAuxImgs.splice(auxIdx, 1);
+  }
+  renderPhotoGallery();
+}
+
+// ═══════════════════════════════════════════════
+//  AI SCAN (透過 GAS 中繼，避免 CORS 問題)
+//  支援三種來源：
+//    1. 手動上傳的 base64
+//    2. Drive 掃描匯入的 fileId
+//    3. Drive 掃描匯入的 url（fallback）
+// ═══════════════════════════════════════════════
+async function aiScan() {
+  if (!currentMainImg) { alert('請先上傳照片'); return; }
+  if (!CFG.scriptUrl) { alert('請先在設定中填入 GAS 網址，AI 辨識需透過後端中繼'); return; }
+
+  const btn = document.getElementById('aiBtnEl');
+  const box = document.getElementById('aiBox');
+  btn.disabled = true; btn.textContent = '⏳ 辨識中…';
+  box.style.display = 'none'; aiSuggestion = null;
+
+  let payload = { methods, tags: tagMap };
+  if (currentMainImg.base64) {
+    let base64 = currentMainImg.base64;
+    if (base64.startsWith('data:')) base64 = base64.split(',')[1];
+    payload.base64 = base64;
+    payload.mime = currentMainImg.mime || 'image/jpeg';
+  } else if (currentMainImg.fileId) {
+    payload.fileId = currentMainImg.fileId;
+  } else {
+    btn.disabled = false; btn.textContent = '🤖 AI 辨識地點・標籤・取得方式';
+    alert('此卡片沒有可辨識的圖片資料，請重新上傳照片');
+    return;
+  }
+
+  // 最多自動重試 1 次（應對偶發錯誤）
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const res = await callGAS('aiScan', payload);
+
+      if (!res?.success && attempt === 0 && (
+        res?.error?.includes('high demand') ||
+        res?.error?.includes('overloaded') ||
+        res?.error?.includes('quota') ||
+        res?.error?.includes('Quota')
+      )) {
+        // 付費方案遇到偶發限制，等 5 秒重試一次
+        btn.textContent = '⏳ 重試中…';
+        await new Promise(r => setTimeout(r, 5000));
+        continue;
+      }
+
+      if (!res || !res.success) throw new Error(res?.error || '辨識失敗');
+
+      aiSuggestion = res.data;
+      const d = aiSuggestion;
+      document.getElementById('aiText').innerHTML = `
+        <strong>🤖 AI 辨識結果</strong><br>
+        🎴 卡牌名稱：<b>${d.cardName||'—'}</b><br>
+        📍 取得地點：<b>${d.location||'—'}</b><br>
+        🌍 推測國家：<b>${d.country||'—'}</b><br>
+        🎯 取得方式：<b>${d.obtainedMethod||'—'}</b>${d.friendName?` (${d.friendName})`:''}<br>
+        ⭐ 稀有度：<b>${d.rarity||'—'}</b><br>
+        🏷️ 標籤：<b>${(d.tags||[]).join('、')||'—'}</b><br>
+        💭 <i>${d.reason||''}</i>`;
+      box.style.display = 'block';
+      break; // 成功，跳出重試迴圈
+
+    } catch(e) {
+      document.getElementById('aiText').innerHTML = `<b>⚠️ 辨識失敗：</b>${e.message}`;
+      box.style.display = 'block';
+      break;
+    }
+  }
+
+  renderPhotoGallery();
+  btn.disabled = false; btn.textContent = '🤖 AI 辨識地點・標籤・取得方式';
+}
+
+function applyAI() {
+  if (!aiSuggestion) return;
+  const d = aiSuggestion;
+  if (d.cardName) document.getElementById('fCardName').value = d.cardName;
+  if (d.location) document.getElementById('fName').value = d.location;
+  if (d.obtainedMethod) document.getElementById('fObtMethod').value = d.obtainedMethod;
+
+  // 好友送：自動新增到名單，再選取，並設定狀態為自留收藏
+  if (d.friendName) {
+    ensureFriendExists(d.friendName);
+    setTimeout(() => {
+      document.getElementById('fSourceFriend').value = d.friendName;
+    }, 50);
+    // 好友送的卡片遊戲機制不允許轉送，預設自留收藏
+    document.getElementById('fStatus').value = 'kept';
+    toggleSentFields();
+  }
+
+  if (d.rarity) {
+    const el = document.querySelector(`input[name="rare"][value="${d.rarity}"]`);
+    if (el) el.checked = true;
+  }
+  if (d.tags) document.querySelectorAll('#tagGrid input').forEach(cb => { cb.checked = d.tags.includes(cb.value); });
+
+  // 自動填入國家，若不在清單則自動新增
+  if (d.country) {
+    if (!countries.includes(d.country)) {
+      countries.push(d.country);
+      localStorage.setItem('pkm_countries', JSON.stringify(countries));
+      renderCountryManagement();
+      renderCountrySelect();
+    }
+    document.getElementById('fCountry').value = d.country;
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  CARD MODAL
+// ═══════════════════════════════════════════════
+function openCardModal(id=null) {
+  editingCardId = id; currentMainImg = null; currentAuxImgs = []; aiSuggestion = null;
+  document.getElementById('cardModalTitle').textContent = id ? '編輯明信片' : '新增明信片';
+  clearCardForm();
+  if (id) { const c = cards.find(x=>x.id===id); if(c) fillCardForm(c); }
+  toggleSentFields();
+  document.getElementById('aiBox').style.display = 'none';
+  renderFriendSelects();
+  renderCountrySelect();
+  renderTagGrid();
+  initImageListeners(); // Use onchange instead of addEventListener to avoid duplicates
+  document.getElementById('cardOverlay').classList.add('open');
+}
+
+function clearCardForm() {
+  ['fCardName','fName','fObtDate','fSentDate','fNotes'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.value = '';
+  });
+  document.getElementById('fDupes').value = '1';
+  document.getElementById('fCountry').value = '';
+  document.getElementById('fObtMethod').value = '';
+  document.getElementById('fStatus').value = 'pending';
+  document.getElementById('fSourceFriend').value = '';
+  document.getElementById('fRecipFriend').value = '';
+  document.querySelector('input[name="rare"][value="普通"]').checked = true;
+  renderTagGrid();
+  document.getElementById('upPrompt').style.display = 'block';
+  document.getElementById('imgInput').value = '';
+  document.getElementById('auxImgInput').value = '';
+  document.getElementById('aiBtnEl').disabled = true;
+  currentMainImg = null; currentAuxImgs = [];
+  renderPhotoGallery();
+}
+
+function fillCardForm(c) {
+  document.getElementById('fCardName').value = c.cardName || '';
+  document.getElementById('fName').value = c.name || '';
+  document.getElementById('fCountry').value = c.region || '';
+  document.getElementById('fObtDate').value = c.obtainedDate || '';
+  document.getElementById('fObtMethod').value = c.obtainedMethod || '';
+  document.getElementById('fStatus').value = c.status || 'pending';
+  document.getElementById('fSentDate').value = c.sentDate || '';
+  document.getElementById('fSourceFriend').value = c.sourceFriend || '';
+  document.getElementById('fRecipFriend').value = c.recipFriend || '';
+  document.getElementById('fDupes').value = c.dupes || '1';
+  document.getElementById('fNotes').value = c.notes || '';
+  const rareEl = document.querySelector(`input[name="rare"][value="${c.rarity||'普通'}"]`);
+  if(rareEl) rareEl.checked = true;
+  renderTagGrid();
+  (c.tags||[]).forEach(t => { const cb = document.querySelector(`#tagGrid input[value="${t}"]`); if(cb) cb.checked = true; });
+  if (c.mainImg) { currentMainImg = c.mainImg; document.getElementById('upPrompt').style.display='none'; document.getElementById('aiBtnEl').disabled=false; }
+  if (c.auxImgs) currentAuxImgs = [...c.auxImgs];
+  renderPhotoGallery();
+}
+
+function toggleSentFields() {
+  const s = document.getElementById('fStatus').value;
+  document.getElementById('sentDateGrp').style.display = s==='sent' ? '' : 'none';
+  document.getElementById('recipGrp').style.display = s==='sent' ? '' : 'none';
+}
+
+function copyLastCard() {
+  if (!cards.length) return;
+  const last = cards[0];
+  document.getElementById('fObtMethod').value = last.obtainedMethod || '';
+  document.getElementById('fObtDate').value = last.obtainedDate || '';
+}
+
+async function saveCard() {
+  const selectedTags = Array.from(document.querySelectorAll('#tagGrid input:checked')).map(cb => cb.value);
+  const status = document.getElementById('fStatus').value;
+  const data = {
+    id: editingCardId || Date.now().toString(),
+    cardName: document.getElementById('fCardName').value.trim(),
+    name: document.getElementById('fName').value.trim(),
+    region: document.getElementById('fCountry').value,
+    obtainedDate: document.getElementById('fObtDate').value,
+    obtainedMethod: document.getElementById('fObtMethod').value,
+    sourceFriend: document.getElementById('fSourceFriend').value,
+    rarity: document.querySelector('input[name="rare"]:checked')?.value || '普通',
+    dupes: document.getElementById('fDupes').value || '1',
+    status,
+    sentDate: status==='sent' ? document.getElementById('fSentDate').value : '',
+    recipFriend: status==='sent' ? document.getElementById('fRecipFriend').value : '',
+    tags: selectedTags,
+    notes: document.getElementById('fNotes').value.trim(),
+    mainImg: currentMainImg ? {
+      url: currentMainImg.driveUrl || currentMainImg.base64 || currentMainImg.url,
+      base64: currentMainImg.base64,
+      role: 'main'
+    } : null,
+    auxImgs: currentAuxImgs.map(p => ({
+      url: p.driveUrl || p.base64 || p.url,
+      base64: p.base64,
+      role: 'aux'
+    })),
+    createdAt: editingCardId ? (cards.find(c=>c.id===editingCardId)||{}).createdAt || new Date().toISOString() : new Date().toISOString()
+  };
+  if (editingCardId) { const i=cards.findIndex(c=>c.id===editingCardId); if(i>=0) cards[i]=data; }
+  else cards.unshift(data);
+  saveAndSync(); renderLibrary(); closeModal('cardOverlay');
+}
+
+// ═══════════════════════════════════════════════
+//  DELETE WITH UNDO
+// ═══════════════════════════════════════════════
+function deleteCard(id) {
+  deletedCard = cards.find(c => c.id===id);
+  if (!deletedCard) return;
+  cards = cards.filter(c => c.id!==id);
+  saveAndSync(); renderLibrary();
+  showToast('已刪除：' + (deletedCard.cardName || deletedCard.name || '明信片'));
+}
+
+function undoDelete() {
+  if (!deletedCard) return;
+  cards.unshift(deletedCard); deletedCard = null;
+  saveAndSync(); renderLibrary(); hideToast();
+}
+
+function showToast(msg) {
+  document.getElementById('toastMsg').textContent = msg;
+  document.getElementById('toast').classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(hideToast, 5000);
+}
+
+function hideToast() {
+  document.getElementById('toast').classList.remove('show');
+  deletedCard = null;
+}
+
+// ═══════════════════════════════════════════════
+//  FRIENDS
+// ═══════════════════════════════════════════════
+function renderFriendSelects() {
+  const opts = '<option value="">（無）</option>' + friends.map(f=>`<option value="${f.name}">${f.name}</option>`).join('');
+  const sf=document.getElementById('fSourceFriend'), rf=document.getElementById('fRecipFriend');
+  if(sf){ const v=sf.value; sf.innerHTML=opts; sf.value=v; }
+  if(rf){ const v=rf.value; rf.innerHTML='<option value="">（請選擇）</option>'+friends.map(f=>`<option value="${f.name}">${f.name}</option>`).join(''); rf.value=v; }
+}
+
+function renderFriends() {
+  const q=(document.getElementById('friendSearch')?.value||'').toLowerCase();
+  const fl=document.getElementById('friendList');
+  const filtered=friends.filter(f=>!q||f.name.toLowerCase().includes(q)||((f.note||'').toLowerCase().includes(q)));
+  if(!filtered.length){ fl.innerHTML=`<div class="empty-state"><div class="ei">👥</div><p>尚無好友，快新增吧！</p></div>`; return; }
+  fl.innerHTML=filtered.map(f=>{
+    const sent=cards.filter(c=>c.recipFriend===f.name).length;
+    const recv=cards.filter(c=>c.sourceFriend===f.name).length;
+    const initial=(f.name||'?').charAt(0).toUpperCase();
+    return `<div class="friend-card">
+      <div class="friend-avatar">${initial}</div>
+      <div class="friend-info">
+        <div class="friend-name">${escapeHtml(f.name)}</div>
+        ${f.note?`<div class="friend-note">${escapeHtml(f.note)}</div>`:''}
+        <div class="friend-stats">收到 ${recv} 張 · 送出 ${sent} 張</div>
+      </div>
+      <div class="friend-acts">
+        <button class="act" data-friend-id="${f.id}" onclick="openFriendModal(this.dataset.friendId)">✏️</button>
+        <button class="act del" data-friend-id="${f.id}" onclick="deleteFriend(this.dataset.friendId)">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openFriendModal(id=null) {
+  editingFriendId=id;
+  document.getElementById('friendModalTitle').textContent=id?'編輯好友':'新增好友';
+  document.getElementById('fFriendName').value='';
+  document.getElementById('fFriendNote').value='';
+  if(id){ const f=friends.find(x=>x.id===id); if(f){ document.getElementById('fFriendName').value=f.name; document.getElementById('fFriendNote').value=f.note||''; } }
+  document.getElementById('friendOverlay').classList.add('open');
+}
+
+function saveFriend() {
+  const name=document.getElementById('fFriendName').value.trim();
+  if(!name){ alert('請輸入好友名稱'); return; }
+  const data={id:editingFriendId||Date.now().toString(),name,note:document.getElementById('fFriendNote').value.trim()};
+  if(editingFriendId){ const i=friends.findIndex(f=>f.id===editingFriendId); if(i>=0) friends[i]=data; }
+  else friends.push(data);
+  saveAndSync();
+  renderFriends(); renderFriendSelects(); closeModal('friendOverlay');
+  if(pendingFriendTarget){
+    setTimeout(()=>{
+      renderFriendSelects();
+      const sel=document.getElementById(pendingFriendTarget==='source'?'fSourceFriend':'fRecipFriend');
+      if(sel) sel.value=name;
+      pendingFriendTarget=null;
+      document.getElementById('cardOverlay').classList.add('open');
+    },50);
+  }
+}
+
+function deleteFriend(id) {
+  if(!confirm('確定要刪除這位好友嗎？相關明信片記錄不受影響。')) return;
+  friends=friends.filter(f=>f.id!==id);
+  saveAndSync();
+  renderFriends(); renderFriendSelects();
+}
+
+function quickAddFriend(target) {
+  pendingFriendTarget=target;
+  closeModal('cardOverlay');
+  setTimeout(()=>openFriendModal(),100);
+}
+
+// ═══════════════════════════════════════════════
+//  FILTER BUILDER
+// ═══════════════════════════════════════════════
+function toggleFilterPanel() {
+  const p=document.getElementById('filterPanel');
+  p.classList.toggle('open');
+  if(p.classList.contains('open') && !filterConditions.length) addFilterRow();
+}
+
+function toggleLogic() {
+  filterLogic=filterLogic==='AND'?'OR':'AND';
+  const btn=document.getElementById('logicBtn');
+  btn.textContent=filterLogic;
+  btn.className='filter-logic '+(filterLogic==='AND'?'and':'or');
+  renderLibrary();
+}
+
+function addFilterRow() {
+  const id=Date.now().toString();
+  filterConditions.push({id,field:'status',op:'eq',value:''});
+  renderFilterRows();
+}
+
+function removeFilterRow(id) {
+  filterConditions=filterConditions.filter(c=>c.id!==id);
+  renderFilterRows(); renderLibrary();
+}
+
+function clearFilters() {
+  filterConditions=[];
+  renderFilterRows(); renderLibrary();
+  updateFilterCount();
+}
+
+function renderFilterRows() {
+  const container=document.getElementById('filterRows');
+  container.innerHTML=filterConditions.map((cond,idx)=>{
+    const field=FILTER_FIELDS.find(f=>f.v===cond.field)||FILTER_FIELDS[0];
+    let valueEl='';
+    if(field.type==='select'||field.type==='dynamic'){
+      let opts=[];
+      if(field.type==='select') opts=field.opts.map((o,i)=>`<option value="${o}" ${cond.value===o?'selected':''}>${field.labels?.[i]||o}</option>`);
+      else if(field.src==='friends') opts=friends.map(f=>`<option value="${f.name}" ${cond.value===f.name?'selected':''}>${f.name}</option>`);
+      else if(field.src==='methods') opts=methods.map(m=>`<option value="${m}" ${cond.value===m?'selected':''}>${m}</option>`);
+      else if(field.src==='tags') opts=Object.keys(tagMap).map(t=>`<option value="${t}" ${cond.value===t?'selected':''}>${tagMap[t]} ${t}</option>`);
+      valueEl=`<select onchange="updateFilter('${cond.id}','value',this.value);renderLibrary()"><option value="">請選擇</option>${opts.join('')}</select>`;
+    } else if(field.type==='date'){
+      valueEl=`<input type="date" value="${cond.value||''}" onchange="updateFilter('${cond.id}','value',this.value);renderLibrary()">
+               <select onchange="updateFilter('${cond.id}','op',this.value);renderLibrary()">
+                 <option value="eq" ${cond.op==='eq'?'selected':''}>當天</option>
+                 <option value="gte" ${cond.op==='gte'?'selected':''}>此日期之後</option>
+                 <option value="lte" ${cond.op==='lte'?'selected':''}>此日期之前</option>
+               </select>`;
+    } else {
+      valueEl=`<input type="text" placeholder="輸入關鍵字" value="${cond.value||''}" oninput="updateFilter('${cond.id}','value',this.value);renderLibrary()">`;
+    }
+    return `<div class="filter-row">
+      <select onchange="updateFilter('${cond.id}','field',this.value);renderFilterRows();renderLibrary()">
+        ${FILTER_FIELDS.map(f=>`<option value="${f.v}" ${cond.field===f.v?'selected':''}>${f.l}</option>`).join('')}
+      </select>
+      ${valueEl}
+      <button class="rm-filter" onclick="removeFilterRow('${cond.id}')">✕</button>
+    </div>`;
+  }).join('');
+  updateFilterCount();
+}
+
+function updateFilter(id,key,val){const c=filterConditions.find(x=>x.id===id);if(c)c[key]=val;updateFilterCount();}
+
+function updateFilterCount(){
+  const active=filterConditions.filter(c=>c.value).length;
+  document.getElementById('filterCount').textContent=active?`(${active})`:'';
+}
+
+function applyFilters(list) {
+  const active=filterConditions.filter(c=>c.value);
+  if(!active.length) return list;
+  return list.filter(card=>{
+    const results=active.map(cond=>{
+      const val=cond.value; const field=cond.field;
+      if(field==='tags') return (card.tags||[]).includes(val);
+      const cv=(card[field]||'').toString();
+      if(cond.op==='gte') return cv>=val;
+      if(cond.op==='lte') return cv<=val;
+      return cv===val || cv.toLowerCase().includes(val.toLowerCase());
+    });
+    return filterLogic==='AND'?results.every(Boolean):results.some(Boolean);
+  });
+}
+
+// ═══════════════════════════════════════════════
+//  LIBRARY RENDER
+// ═══════════════════════════════════════════════
+function setView(v){
+  currentView=v;
+  document.getElementById('vGrid').classList.toggle('active',v==='grid');
+  document.getElementById('vList').classList.toggle('active',v==='list');
+  const g=document.getElementById('cardGrid');
+  g.className=v==='grid'?'card-grid':'card-list';
+  renderLibrary();
+}
+
+function renderLibrary(){
+  const q=(document.getElementById('searchInput')?.value||'').toLowerCase();
+  let list=cards.filter(c=>!q||[c.cardName,c.name,c.region,c.sourceFriend,c.recipFriend,c.notes,...(c.tags||[])].some(x=>x&&x.toLowerCase().includes(q)));
+  list=applyFilters(list);
+
+  document.getElementById('hTot').textContent=cards.length;
+  document.getElementById('hSent').textContent=cards.filter(c=>c.status==='sent').length;
+  document.getElementById('hPend').textContent=cards.filter(c=>c.status==='pending').length;
+
+  const grid=document.getElementById('cardGrid');
+  if(!list.length){
+    grid.innerHTML=`<div class="empty-state"><div class="ei">${cards.length?'🔍':'🌼'}</div><p>${cards.length?'找不到符合條件的明信片':'還沒有明信片，快去冒險收集吧！'}</p></div>`;
+    return;
+  }
+  if(currentView==='grid') grid.innerHTML=list.map(cardGridHTML).join('');
+  else grid.innerHTML=list.map(cardListHTML).join('');
+}
+
+function cardGridHTML(c){
+  const st=STATUS_MAP[c.status]||STATUS_MAP.pending;
+  const ricon=RARITY_ICON[c.rarity]||'';
+  // FIX: use cardTagMap (global tagMap) not local variable named 'tags'
+  const tagHtml=(c.tags||[]).map(t=>`<span class="ptag pt-type">${tagMap[t]||'#'} ${t}</span>`).join('');
+  const region=c.region?`<span class="ptag pt-loc">🌍${c.region}</span>`:'';
+  const src=c.mainImg?.url;
+  const photoCount=(c.auxImgs||[]).length;
+  const imgEl=src?`<img class="pcard-img" src="${src}" alt="" loading="lazy">`:`<div class="pcard-noimg"><span>🖼️</span>尚無照片</div>`;
+  return `<div class="pcard" onclick="openDetail('${c.id}')">
+    ${ricon?`<span class="rare-badge">${ricon}</span>`:''}
+    <span class="status-badge ${st.c}">${st.l}</span>
+    ${photoCount>0?`<span class="photo-count">+${photoCount}</span>`:''}
+    ${imgEl}
+    <div class="pcard-body">
+      <div class="pcard-name">${c.cardName||'（未命名）'}</div>
+      <div class="pcard-region">📍 ${c.name||'未知地點'}</div>
+      <div class="ptags">${tagHtml}${region}</div>
+      <div class="pcard-meta">
+        ${c.obtainedDate?`<div>📅 ${c.obtainedDate}${c.obtainedMethod?'　🎯 '+c.obtainedMethod:''}</div>`:''}
+        ${c.sourceFriend?`<div>🤝 ${c.sourceFriend}</div>`:''}
+        ${c.status==='sent'&&c.recipFriend?`<div>💌 → ${c.recipFriend}</div>`:''}
+        ${c.dupes&&c.dupes>1?`<div>🔢 重複 ${c.dupes} 張</div>`:''}
+      </div>
+    </div>
+    <div class="pcard-actions" onclick="event.stopPropagation()">
+      <button class="act" onclick="openCardModal('${c.id}')">✏️ 編輯</button>
+      <button class="act del" onclick="deleteCard('${c.id}')">🗑️ 刪除</button>
+    </div>
+  </div>`;
+}
+
+function cardListHTML(c){
+  const st=STATUS_MAP[c.status]||STATUS_MAP.pending;
+  const ricon=RARITY_ICON[c.rarity]||'';
+  const src=c.mainImg?.url;
+  const imgEl=src?`<img class="prow-img" src="${src}" alt="" loading="lazy">`:`<div class="prow-noimg">🖼️</div>`;
+  return `<div class="prow" onclick="openDetail('${c.id}')">
+    ${imgEl}
+    <div class="prow-info">
+      <div class="prow-name">${ricon} ${c.cardName||'（未命名）'}</div>
+      <div class="prow-sub">📍 ${c.name||'—'} · 📅 ${c.obtainedDate||'—'} · 🎯 ${c.obtainedMethod||'—'}</div>
+      <div class="prow-tags" style="margin-top:3px;display:flex;flex-wrap:wrap;gap:3px">
+        <span class="status-badge ${st.c}" style="position:static;font-size:.6rem">${st.l}</span>
+        ${(c.tags||[]).slice(0,3).map(t=>`<span class="ptag pt-type">${tagMap[t]||'#'} ${t}</span>`).join('')}
+      </div>
+    </div>
+    <div class="prow-right">
+      ${c.sourceFriend?`<span style="font-size:.68rem;color:var(--muted)">🤝 ${c.sourceFriend}</span>`:''}
+      ${c.recipFriend?`<span style="font-size:.68rem;color:var(--muted)">💌 ${c.recipFriend}</span>`:''}
+      <div class="prow-acts" onclick="event.stopPropagation()">
+        <button class="act" onclick="openCardModal('${c.id}')">✏️</button>
+        <button class="act del" onclick="deleteCard('${c.id}')">🗑️</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════
+//  DETAIL VIEW
+// ═══════════════════════════════════════════════
+function openDetail(id){
+  const c=cards.find(x=>x.id===id); if(!c) return;
+  const st=STATUS_MAP[c.status]||STATUS_MAP.pending;
+  const ricon=RARITY_ICON[c.rarity]||'';
+  const src=c.mainImg?.url;
+  let photoHtml='';
+  if(src) photoHtml=`<img src="${src}" style="width:100%;max-height:240px;object-fit:cover;border-radius:0 0 4px 4px;display:block;margin-bottom:12px" alt="">`;
+  if((c.auxImgs||[]).length>0){
+    photoHtml+=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px">
+      ${(c.auxImgs||[]).map(p=>`<img src="${p.url}" style="width:100%;height:80px;object-fit:cover;border-radius:6px" alt="">`).join('')}
+    </div>`;
+  }
+  const tagList=(c.tags||[]).map(t=>`${tagMap[t]||'#'} ${t}`).join('、');
+  document.getElementById('detailBody').innerHTML=`
+    ${photoHtml}
+    <div style="padding:0 4px">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <span style="font-size:1.2rem;font-family:'Nunito',sans-serif;font-weight:900">${ricon} ${c.cardName||'（未命名）'}</span>
+      <span class="status-badge ${st.c}" style="position:static">${st.l}</span>
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:.8rem;line-height:2">
+      <tr><td style="color:var(--gd);font-weight:700;width:90px">明信片名稱</td><td>${c.cardName||'—'}</td></tr>
+      <tr><td style="color:var(--gd);font-weight:700">取得地點</td><td>${c.name||'—'}</td></tr>
+      <tr><td style="color:var(--gd);font-weight:700">取得國家</td><td>${c.region||'—'}</td></tr>
+      <tr><td style="color:var(--gd);font-weight:700">取得日期</td><td>${c.obtainedDate||'—'}</td></tr>
+      <tr><td style="color:var(--gd);font-weight:700">取得方式</td><td>${c.obtainedMethod||'—'}</td></tr>
+      <tr><td style="color:var(--gd);font-weight:700">來源好友</td><td>${c.sourceFriend||'—'}</td></tr>
+      <tr><td style="color:var(--gd);font-weight:700">稀有度</td><td>${ricon} ${c.rarity||'普通'}</td></tr>
+      <tr><td style="color:var(--gd);font-weight:700">重複張數</td><td>${c.dupes||1} 張</td></tr>
+      ${c.status==='sent'?`<tr><td style="color:var(--gd);font-weight:700">送出日期</td><td>${c.sentDate||'—'}</td></tr>
+      <tr><td style="color:var(--gd);font-weight:700">送給誰</td><td>${c.recipFriend||'—'}</td></tr>`:''}
+      <tr><td style="color:var(--gd);font-weight:700">標籤</td><td>${tagList||'—'}</td></tr>
+      ${c.notes?`<tr><td style="color:var(--gd);font-weight:700;vertical-align:top">備註</td><td>${c.notes}</td></tr>`:''}
+    </table>
+    </div>`;
+  document.getElementById('detailEditBtn').onclick=()=>{ closeModal('detailOverlay'); openCardModal(id); };
+  document.getElementById('detailOverlay').classList.add('open');
+}
+
+// ═══════════════════════════════════════════════
+//  STATS
+// ═══════════════════════════════════════════════
+function renderStats(){
+  document.getElementById('statTotal').textContent=cards.length;
+  document.getElementById('statSent').textContent=cards.filter(c=>c.status==='sent').length;
+  document.getElementById('statPend').textContent=cards.filter(c=>c.status==='pending').length;
+  document.getElementById('statKept').textContent=cards.filter(c=>c.status==='kept').length;
+
+  const mc={};
+  cards.forEach(c=>{ if(c.obtainedMethod) mc[c.obtainedMethod]=(mc[c.obtainedMethod]||0)+1; });
+  buildChart('chartMethod','doughnut',Object.keys(mc),Object.values(mc),['#4a9a4a','#f5c518','#4d8ef0','#e05555','#9966cc','#f08040','#7cc56e','#a8d8ea']);
+
+  const mm={};
+  cards.forEach(c=>{ if(c.obtainedDate){ const m=c.obtainedDate.slice(0,7); mm[m]=(mm[m]||0)+1; } });
+  const months=Object.keys(mm).sort().slice(-12);
+  buildChart('chartMonthly','bar',months,months.map(m=>mm[m]),['#7cc56e']);
+
+  const tc={};
+  cards.forEach(c=>(c.tags||[]).forEach(t=>tc[t]=(tc[t]||0)+1));
+  buildChart('chartTags','doughnut',Object.keys(tc),Object.values(tc),['#4a9a4a','#f5c518','#4d8ef0','#e05555','#9966cc','#f08040','#7cc56e','#a8d8ea']);
+
+  const rc={'普通':0,'稀有':0,'超稀有':0};
+  cards.forEach(c=>{ if(c.rarity) rc[c.rarity]=(rc[c.rarity]||0)+1; });
+  buildChart('chartRare','doughnut',['普通','⭐稀有','✨超稀有'],[rc['普通'],rc['稀有'],rc['超稀有']],['#c5e0b0','#f5c518','#f08040']);
+
+  renderFriendRank('rankReceived',friends.map(f=>({name:f.name,count:cards.filter(c=>c.sourceFriend===f.name).length})));
+  renderFriendRank('rankSent',friends.map(f=>({name:f.name,count:cards.filter(c=>c.recipFriend===f.name).length})));
+}
+
+function buildChart(id,type,labels,data,colors){
+  const ctx=document.getElementById(id); if(!ctx) return;
+  if(chartInstances[id]) chartInstances[id].destroy();
+  chartInstances[id]=new Chart(ctx,{
+    type,data:{labels,datasets:[{data,backgroundColor:colors,borderWidth:1,borderColor:'#fff'}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11},padding:8}}}}
+  });
+}
+
+function renderFriendRank(elId,data){
+  const sorted=data.filter(x=>x.count>0).sort((a,b)=>b.count-a.count).slice(0,6);
+  const max=sorted[0]?.count||1;
+  const el=document.getElementById(elId);
+  if(!sorted.length){ el.innerHTML='<div style="font-size:.78rem;color:var(--muted);text-align:center;padding:10px">尚無資料</div>'; return; }
+  el.innerHTML=sorted.map(x=>`
+    <div class="frank-row">
+      <div class="frank-name">${x.name}</div>
+      <div class="frank-bar-bg"><div class="frank-bar" style="width:${Math.round(x.count/max*100)}%"></div></div>
+      <div class="frank-num">${x.count}</div>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════
+//  DATA PERSISTENCE
+// ═══════════════════════════════════════════════
+function saveLocal(){
+  localStorage.setItem('pkm_cards',JSON.stringify(cards));
+  localStorage.setItem('pkm_friends',JSON.stringify(friends));
+}
+
+// 儲存本地並同步到雲端（跨裝置共用的核心）
+function saveAndSync(){
+  saveLocal();
+  if (CFG.scriptUrl) syncAll();
+}
+
+function exportJSON(){
+  const data={cards,friends,methods,tags:tagMap,countries,exportedAt:new Date().toISOString()};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=`pikmin_backup_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+}
+
+function importJSON(e){
+  const file=e.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const data=JSON.parse(ev.target.result);
+      if(data.cards) cards=data.cards;
+      if(data.friends) friends=data.friends;
+      if(data.methods) methods=data.methods;
+      if(data.tags) tagMap=data.tags;
+      if(data.countries) countries=data.countries;
+      saveLocal();
+      localStorage.setItem('pkm_methods',JSON.stringify(methods));
+      localStorage.setItem('pkm_tags',JSON.stringify(tagMap));
+      localStorage.setItem('pkm_countries',JSON.stringify(countries));
+      renderLibrary(); renderFriendSelects(); renderMethodTags();
+      alert(`✅ 匯入成功！共 ${cards.length} 張明信片`);
+      if(CFG.scriptUrl) syncAll(); // 匯入後同步到雲端
+    }catch(err){ alert('⚠️ 匯入失敗：檔案格式錯誤'); }
+  };
+  reader.readAsText(file);
+  e.target.value='';
+}
+
+// ═══════════════════════════════════════════════
+//  MODAL HELPERS
+// ═══════════════════════════════════════════════
+// 防止好友名稱等含特殊符號的字串破壞 HTML
+function escapeHtml(str) {
+  return String(str||'')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+function overlayClick(e,id){if(e.target===document.getElementById(id)) closeModal(id);}
+</script>
+</body>
+</html>
