@@ -1352,13 +1352,28 @@ function initImageListeners() {
 function handleImg(e, role) {
   const files = Array.from(e.target.files);
   if (!files.length) return;
-  files.forEach(file => {
-    const reader = new FileReader();
-    reader.onload = async ev => {
-      const base64 = ev.target.result;
+
+  // 用 async IIFE 處理每個檔案（需要 await 查詢重複）
+  (async () => {
+    for (const file of files) {
+      const reader = new FileReader();
+      const base64 = await new Promise(res => {
+        reader.onload = ev => res(ev.target.result);
+        reader.readAsDataURL(file);
+      });
+
       const mime = file.type || 'image/jpeg';
-      const timestamp = Date.now();
-      const filename = `${new Date().toISOString().split('T')[0]}_${timestamp}_${role}.${file.name.split('.').pop()}`;
+      let filename = file.name; // 直接用原始檔名
+
+      // 如果有設定 GAS，查詢 Drive 是否有同名檔案
+      if (CFG.scriptUrl) {
+        const checkRes = await callGAS('checkFilename', { filename });
+        if (checkRes && checkRes.exists) {
+          const confirmed = confirm(`Drive 中已有同名檔案「${filename}」，是否仍要上傳？\n（確定後會自動加上編號，例如：${checkRes.suggestedName}）`);
+          if (!confirmed) continue;
+          filename = checkRes.suggestedName;
+        }
+      }
 
       if (role === 'main') {
         currentMainImg = { base64, filename, mime, url: base64 };
@@ -1375,7 +1390,7 @@ function handleImg(e, role) {
           if (res && res.success) {
             if (role === 'main') {
               currentMainImg.driveUrl = res.url;
-              currentMainImg.fileId = res.fileId || ''; // ← 存入 fileId
+              currentMainImg.fileId = res.fileId || '';
             } else {
               const aux = currentAuxImgs.find(x => x.filename === filename);
               if (aux) {
@@ -1386,9 +1401,9 @@ function handleImg(e, role) {
           }
         } catch(err) { console.error('上傳 Drive 失敗:', err); }
       }
-    };
-    reader.readAsDataURL(file);
-  });
+    }
+  })();
+
   e.target.value = '';
 }
 
