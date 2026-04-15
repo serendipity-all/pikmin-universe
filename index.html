@@ -1671,6 +1671,7 @@ async function saveCard() {
     } : null,
     auxImgs: currentAuxImgs.map(p => ({
       url: p.driveUrl || p.base64 || p.url,
+      fileId: p.fileId || '',
       base64: p.base64,
       role: 'aux'
     })),
