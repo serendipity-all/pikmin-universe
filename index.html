@@ -287,7 +287,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
       <div class="stat-card"><h3>🎯 取得方式分布</h3><div class="chart-wrap"><canvas id="chartMethod"></canvas></div></div>
       <div class="stat-card"><h3>📅 每月收藏趨勢</h3><div class="chart-wrap"><canvas id="chartMonthly"></canvas></div></div>
       <div class="stat-card"><h3>🏷️ 類型標籤分布</h3><div class="chart-wrap"><canvas id="chartTags"></canvas></div></div>
-      <div class="stat-card"><h3>⭐ 稀有度分布</h3><div class="chart-wrap"><canvas id="chartRare"></canvas></div></div>
+      <div class="stat-card"><h3>💖 喜好度分布</h3><div class="chart-wrap"><canvas id="chartRare"></canvas></div></div>
       <div class="stat-card"><h3>👥 好友互動排行（收到）</h3><div class="friend-rank" id="rankReceived"></div></div>
       <div class="stat-card"><h3>💌 好友互動排行（送出）</h3><div class="friend-rank" id="rankSent"></div></div>
     </div>
@@ -314,6 +314,16 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
         <input type="text" id="cfgScriptUrl" placeholder="https://script.google.com/macros/s/…/exec">
       </div>
       <button class="btn primary" onclick="saveSettings()" style="margin-top:4px">💾 儲存設定</button>
+    </div>
+
+    <div class="settings-section">
+      <h3>💖 喜好度管理</h3>
+      <div id="favoriteList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px"></div>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+        <input type="text" class="fi" id="cfgNewFavIcon" placeholder="圖示（單一emoji）" style="width:70px;padding:6px 8px;font-size:.9rem;text-align:center">
+        <input type="text" class="fi" id="cfgNewFavLabel" placeholder="名稱" style="flex:1;padding:6px 10px;font-size:.8rem">
+        <button class="btn primary" onclick="addFavorite()" style="padding:6px 12px;font-size:.78rem">＋新增</button>
+      </div>
     </div>
 
     <div class="settings-section">
@@ -449,15 +459,11 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
       <span class="friend-add-inline" onclick="quickAddFriend('source')">＋ 新增好友到名單</span>
     </div>
 
-    <!-- 稀有度 重複張數 -->
+    <!-- 喜好度 重複張數 -->
     <div class="frow">
       <div class="fg">
-        <label class="fl">⭐ 稀有度</label>
-        <div class="rare-select">
-          <div class="rare-opt"><input type="radio" name="rare" id="r0" value="普通" checked><label for="r0">普通</label></div>
-          <div class="rare-opt"><input type="radio" name="rare" id="r1" value="稀有"><label for="r1">⭐ 稀有</label></div>
-          <div class="rare-opt"><input type="radio" name="rare" id="r2" value="超稀有"><label for="r2">✨ 超稀有</label></div>
-        </div>
+        <label class="fl">💖 喜好度</label>
+        <div class="rare-select" id="favoriteSelect"></div>
       </div>
       <div class="fg">
         <label class="fl">🔢 重複張數</label>
@@ -635,6 +641,8 @@ let friends = JSON.parse(localStorage.getItem('pkm_friends') || '[]');
 let methods = JSON.parse(localStorage.getItem('pkm_methods') || '["打菇","好友送","開花","探險","其他"]');
 let tagMap = JSON.parse(localStorage.getItem('pkm_tags') || '{"裝置藝術":"🎨","商店":"🏪","景點":"🗿","餐廳":"🍽️","特殊款":"⭐","旅遊卡":"🎫","地標":"🏛️","咖啡廳":"☕","活動限定":"🎉","季節限定":"🌸","恐怖留":"👻","地方":"📍","建築物":"🏢","看板|標示|到此一遊":"🏷️","宗教|信仰|教堂":"⛩️","公園|廣場|涼亭|噴水池":"🌳","交通":"🚗","城堡|古城|遺跡":"🏰"}');
 let countries = JSON.parse(localStorage.getItem('pkm_countries') || '["日本","台灣","南韓","泰國","馬來西亞","新加坡","美國","英國","法國","德國","澳洲"]');
+// 喜好度：[{ value, label, icon }]
+let favorites = JSON.parse(localStorage.getItem('pkm_favorites') || '[{"value":"神片","label":"神片","icon":"🤩"},{"value":"喜歡","label":"喜歡","icon":"💚"},{"value":"特殊","label":"特殊","icon":"✨"},{"value":"傻眼","label":"傻眼","icon":"😂"}]');
 
 let editingCardId = null;
 let editingFriendId = null;
@@ -659,14 +667,14 @@ const FILTER_FIELDS = [
   {v:'sentDate',l:'送出日期',type:'date'},
   {v:'sourceFriend',l:'來源好友',type:'dynamic',src:'friends'},
   {v:'recipFriend',l:'送給誰',type:'dynamic',src:'friends'},
-  {v:'rarity',l:'稀有度',type:'select',opts:['普通','稀有','超稀有'],labels:['普通','⭐稀有','✨超稀有']},
+  {v:'rarity',l:'喜好度',type:'dynamic',src:'favorites'},
   {v:'tags',l:'標籤',type:'dynamic',src:'tags'},
   {v:'name',l:'地點名稱',type:'text'},
   {v:'cardName',l:'明信片名稱',type:'text'},
   {v:'region',l:'取得國家',type:'text'},
 ];
 
-const RARITY_ICON = {'普通':'','稀有':'⭐','超稀有':'✨'};
+const getFavIcon = (value) => (favorites.find(f => f.value === value)?.icon || '');
 const STATUS_MAP = {sent:{l:'已送出',c:'sb-sent'},pending:{l:'未送出',c:'sb-pending'},kept:{l:'自留',c:'sb-kept'}};
 
 // ═══════════════════════════════════════════════
@@ -676,6 +684,7 @@ window.onload = async () => {
   buildEmojiGrid();
   loadSettings();
   renderMethodSelect();
+  renderFavoriteSelect();
   renderFriendSelects();
   updateSetupCard();
 
@@ -728,9 +737,77 @@ function loadSettings() {
   renderCountryManagement();
   renderCountrySelect();
   renderSettingsFriendList();
+  renderFavoriteList();
 }
 
-function renderSettingsFriendList() {
+function renderFavoriteList() {
+  const el = document.getElementById('favoriteList');
+  if (!el) return;
+  el.innerHTML = favorites.map((f, idx) => `
+    <div style="display:flex;align-items:center;gap:6px;padding:8px;background:#f5f5f5;border-radius:8px">
+      <input type="text" value="${escapeHtml(f.icon)}" style="width:44px;padding:4px;border:1px solid var(--border);border-radius:6px;font-size:1rem;text-align:center"
+        onchange="updateFavorite(${idx},'icon',this.value)">
+      <input type="text" value="${escapeHtml(f.label)}" style="flex:1;padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:.8rem"
+        onchange="updateFavorite(${idx},'label',this.value)">
+      <button type="button" onclick="deleteFavorite(${idx})"
+        style="background:none;border:none;cursor:pointer;color:var(--r);font-size:1rem">🗑️</button>
+    </div>`).join('');
+  renderFavoriteSelect();
+}
+
+function renderFavoriteSelect() {
+  const el = document.getElementById('favoriteSelect');
+  if (!el) return;
+  const cur = el.querySelector('input:checked')?.value || '';
+  el.innerHTML = favorites.map((f, idx) =>
+    `<div class="rare-opt">
+      <input type="radio" name="rare" id="fav_${idx}" value="${escapeHtml(f.value)}" ${cur===f.value?'checked':''}>
+      <label for="fav_${idx}">${f.icon} ${f.label}</label>
+    </div>`
+  ).join('');
+}
+
+function addFavorite() {
+  const icon = document.getElementById('cfgNewFavIcon').value.trim();
+  const label = document.getElementById('cfgNewFavLabel').value.trim();
+  if (!icon || !label) { alert('請填入圖示和名稱'); return; }
+  if (favorites.find(f => f.value === label)) { alert('喜好度名稱已存在'); return; }
+  favorites.push({ value: label, label, icon });
+  saveFavorites();
+  document.getElementById('cfgNewFavIcon').value = '';
+  document.getElementById('cfgNewFavLabel').value = '';
+  renderFavoriteList();
+}
+
+function updateFavorite(idx, key, val) {
+  val = val.trim();
+  if (!val) return;
+  const oldValue = favorites[idx].value;
+  if (key === 'label') {
+    favorites[idx].label = val;
+    favorites[idx].value = val;
+    // 同步更新卡片
+    cards.forEach(c => { if (c.rarity === oldValue) c.rarity = val; });
+    saveLocal();
+  } else {
+    favorites[idx].icon = val;
+  }
+  saveFavorites();
+  renderFavoriteList();
+  renderLibrary();
+}
+
+function deleteFavorite(idx) {
+  if (favorites.length <= 1) { alert('至少需要保留一個喜好度'); return; }
+  if (!confirm(`確定要刪除「${favorites[idx].icon} ${favorites[idx].label}」？`)) return;
+  favorites.splice(idx, 1);
+  saveFavorites();
+  renderFavoriteList();
+}
+
+function saveFavorites() {
+  localStorage.setItem('pkm_favorites', JSON.stringify(favorites));
+}
   const el = document.getElementById('settingsFriendList');
   if (!el) return;
   if (!friends.length) {
@@ -1170,7 +1247,7 @@ async function batchAIScan() {
         p._ai = res.data;
         const d = res.data;
         if (resultEl) resultEl.textContent =
-          `🤖 ${d.cardName||'?'} | ${d.country||''} | ${d.obtainedMethod||'?'} | ${d.rarity||'?'}`;
+          `🤖 ${d.cardName||'?'} | ${d.country||''} | ${d.obtainedMethod||'?'}`;
       } else {
         if (resultEl) resultEl.textContent = '❌ 辨識失敗：' + (res?.error || '未知錯誤');
       }
@@ -1519,7 +1596,6 @@ async function aiScan() {
         📍 取得地點：<b>${d.location||'—'}</b><br>
         🌍 推測國家：<b>${d.country||'—'}</b><br>
         🎯 取得方式：<b>${d.obtainedMethod||'—'}</b>${d.friendName?` (${d.friendName})`:''}<br>
-        ⭐ 稀有度：<b>${d.rarity||'—'}</b><br>
         🏷️ 標籤：<b>${(d.tags||[]).join('、')||'—'}</b><br>
         💭 <i>${d.reason||''}</i>`;
       box.style.display = 'block';
@@ -1601,7 +1677,9 @@ function clearCardForm() {
   document.getElementById('fStatus').value = 'pending';
   document.getElementById('fSourceFriend').value = '';
   document.getElementById('fRecipFriend').value = '';
-  document.querySelector('input[name="rare"][value="普通"]').checked = true;
+  renderFavoriteSelect();
+  // 清除所有喜好度選取
+  document.querySelectorAll('input[name="rare"]').forEach(r => r.checked = false);
   renderTagGrid();
   document.getElementById('upPrompt').style.display = 'block';
   document.getElementById('imgInput').value = '';
@@ -1623,8 +1701,12 @@ function fillCardForm(c) {
   document.getElementById('fRecipFriend').value = c.recipFriend || '';
   document.getElementById('fDupes').value = c.dupes || '1';
   document.getElementById('fNotes').value = c.notes || '';
-  const rareEl = document.querySelector(`input[name="rare"][value="${c.rarity||'普通'}"]`);
+  renderFavoriteSelect();
+  const rareEl = document.querySelector(`input[name="rare"][value="${escapeHtml(c.rarity||'')}"]`);
   if(rareEl) rareEl.checked = true;
+  else if(document.getElementById('favoriteSelect')?.querySelector('input')) {
+    document.getElementById('favoriteSelect').querySelector('input').checked = true;
+  }
   renderTagGrid();
   (c.tags||[]).forEach(t => { const cb = document.querySelector(`#tagGrid input[value="${t}"]`); if(cb) cb.checked = true; });
   if (c.mainImg) { currentMainImg = c.mainImg; document.getElementById('upPrompt').style.display='none'; document.getElementById('aiBtnEl').disabled=false; }
@@ -1656,7 +1738,7 @@ async function saveCard() {
     obtainedDate: document.getElementById('fObtDate').value,
     obtainedMethod: document.getElementById('fObtMethod').value,
     sourceFriend: document.getElementById('fSourceFriend').value,
-    rarity: document.querySelector('input[name="rare"]:checked')?.value || '普通',
+    rarity: document.querySelector('input[name="rare"]:checked')?.value || '',
     dupes: document.getElementById('fDupes').value || '1',
     status,
     sentDate: status==='sent' ? document.getElementById('fSentDate').value : '',
@@ -1831,6 +1913,7 @@ function renderFilterRows() {
       else if(field.src==='friends') opts=friends.map(f=>`<option value="${f.name}" ${cond.value===f.name?'selected':''}>${f.name}</option>`);
       else if(field.src==='methods') opts=methods.map(m=>`<option value="${m}" ${cond.value===m?'selected':''}>${m}</option>`);
       else if(field.src==='tags') opts=Object.keys(tagMap).map(t=>`<option value="${t}" ${cond.value===t?'selected':''}>${tagMap[t]} ${t}</option>`);
+      else if(field.src==='favorites') opts=favorites.map(f=>`<option value="${f.value}" ${cond.value===f.value?'selected':''}>${f.icon} ${f.label}</option>`);
       valueEl=`<select onchange="updateFilter('${cond.id}','value',this.value);renderLibrary()"><option value="">請選擇</option>${opts.join('')}</select>`;
     } else if(field.type==='date'){
       valueEl=`<input type="date" value="${cond.value||''}" onchange="updateFilter('${cond.id}','value',this.value);renderLibrary()">
@@ -1908,7 +1991,7 @@ function renderLibrary(){
 
 function cardGridHTML(c){
   const st=STATUS_MAP[c.status]||STATUS_MAP.pending;
-  const ricon=RARITY_ICON[c.rarity]||'';
+  const ricon=getFavIcon(c.rarity);
   // FIX: use cardTagMap (global tagMap) not local variable named 'tags'
   const tagHtml=(c.tags||[]).map(t=>`<span class="ptag pt-type">${tagMap[t]||'#'} ${t}</span>`).join('');
   const region=c.region?`<span class="ptag pt-loc">🌍${c.region}</span>`:'';
@@ -1940,7 +2023,7 @@ function cardGridHTML(c){
 
 function cardListHTML(c){
   const st=STATUS_MAP[c.status]||STATUS_MAP.pending;
-  const ricon=RARITY_ICON[c.rarity]||'';
+  const ricon=getFavIcon(c.rarity);
   const src=c.mainImg?.url;
   const imgEl=src?`<img class="prow-img" src="${src}" alt="" loading="lazy">`:`<div class="prow-noimg">🖼️</div>`;
   return `<div class="prow" onclick="openDetail('${c.id}')">
@@ -1970,7 +2053,7 @@ function cardListHTML(c){
 function openDetail(id){
   const c=cards.find(x=>x.id===id); if(!c) return;
   const st=STATUS_MAP[c.status]||STATUS_MAP.pending;
-  const ricon=RARITY_ICON[c.rarity]||'';
+  const ricon=getFavIcon(c.rarity);
   const src=c.mainImg?.url;
   let photoHtml='';
   if(src) photoHtml=`<img src="${src}" style="width:100%;max-height:240px;object-fit:cover;border-radius:0 0 4px 4px;display:block;margin-bottom:12px" alt="">`;
@@ -1994,7 +2077,7 @@ function openDetail(id){
       <tr><td style="color:var(--gd);font-weight:700">取得日期</td><td>${c.obtainedDate||'—'}</td></tr>
       <tr><td style="color:var(--gd);font-weight:700">取得方式</td><td>${c.obtainedMethod||'—'}</td></tr>
       <tr><td style="color:var(--gd);font-weight:700">來源好友</td><td>${c.sourceFriend||'—'}</td></tr>
-      <tr><td style="color:var(--gd);font-weight:700">稀有度</td><td>${ricon} ${c.rarity||'普通'}</td></tr>
+      <tr><td style="color:var(--gd);font-weight:700">喜好度</td><td>${ricon} ${c.rarity||'—'}</td></tr>
       <tr><td style="color:var(--gd);font-weight:700">重複張數</td><td>${c.dupes||1} 張</td></tr>
       ${c.status==='sent'?`<tr><td style="color:var(--gd);font-weight:700">送出日期</td><td>${c.sentDate||'—'}</td></tr>
       <tr><td style="color:var(--gd);font-weight:700">送給誰</td><td>${c.recipFriend||'—'}</td></tr>`:''}
@@ -2028,9 +2111,12 @@ function renderStats(){
   cards.forEach(c=>(c.tags||[]).forEach(t=>tc[t]=(tc[t]||0)+1));
   buildChart('chartTags','doughnut',Object.keys(tc),Object.values(tc),['#4a9a4a','#f5c518','#4d8ef0','#e05555','#9966cc','#f08040','#7cc56e','#a8d8ea']);
 
-  const rc={'普通':0,'稀有':0,'超稀有':0};
+  const rc={};
+  favorites.forEach(f => rc[f.value] = 0);
   cards.forEach(c=>{ if(c.rarity) rc[c.rarity]=(rc[c.rarity]||0)+1; });
-  buildChart('chartRare','doughnut',['普通','⭐稀有','✨超稀有'],[rc['普通'],rc['稀有'],rc['超稀有']],['#c5e0b0','#f5c518','#f08040']);
+  const favLabels = favorites.map(f => f.icon + ' ' + f.label);
+  const favData = favorites.map(f => rc[f.value]||0);
+  buildChart('chartRare','doughnut',favLabels,favData,['#ff9999','#66bb6a','#ab47bc','#42a5f5','#ffa726','#ef5350']);
 
   renderFriendRank('rankReceived',friends.map(f=>({name:f.name,count:cards.filter(c=>c.sourceFriend===f.name).length})));
   renderFriendRank('rankSent',friends.map(f=>({name:f.name,count:cards.filter(c=>c.recipFriend===f.name).length})));
