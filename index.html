@@ -593,7 +593,7 @@ let CFG = JSON.parse(localStorage.getItem('pkm_cfg') || '{}');
 let cards = JSON.parse(localStorage.getItem('pkm_cards') || '[]');
 let friends = JSON.parse(localStorage.getItem('pkm_friends') || '[]');
 let methods = JSON.parse(localStorage.getItem('pkm_methods') || '["打菇","好友送","開花","探險","其他"]');
-let tagMap = JSON.parse(localStorage.getItem('pkm_tags') || '{"裝置藝術":"🎨","商店":"🏪","景點":"🗿","餐廳":"🍽️","特殊款":"⭐","旅遊卡":"🎫","地標":"🏛️","咖啡廳":"☕","活動限定":"🎉","季節限定":"🌸","恐怖留":"👻","地方":"📍","建築物":"🏢","看板標示到此一遊":"🏷️","宗教信仰教堂":"⛩️","公園廣場涼亭噴水池":"🌳","交通":"🚗","城堡古城遺跡":"🏰"}');
+let tagMap = JSON.parse(localStorage.getItem('pkm_tags') || '{"裝置藝術":"🎨","商店":"🏪","景點":"🗿","餐廳":"🍽️","特殊款":"⭐","旅遊卡":"🎫","地標":"🏛️","咖啡廳":"☕","活動限定":"🎉","季節限定":"🌸","恐怖留":"👻","地方":"📍","建築物":"🏢","看板|標示|到此一遊":"🏷️","宗教|信仰|教堂":"⛩️","公園|廣場|涼亭|噴水池":"🌳","交通":"🚗","城堡|古城|遺跡":"🏰"}');
 let countries = JSON.parse(localStorage.getItem('pkm_countries') || '["日本","台灣","南韓","泰國","馬來西亞","新加坡","美國","英國","法國","德國","澳洲"]');
 
 let editingCardId = null;
@@ -1217,12 +1217,15 @@ function handleImg(e, role) {
           const res = await callGAS('uploadPhoto', { base64, mimeType: mime, filename });
           if (res && res.success) {
             if (role === 'main') {
-              currentMainImg.driveUrl = res.url; // 備存 Drive URL，base64 仍保留供 AI 用
+              currentMainImg.driveUrl = res.url;
+              currentMainImg.fileId = res.fileId || ''; // ← 存入 fileId
             } else {
               const aux = currentAuxImgs.find(x => x.filename === filename);
-              if (aux) aux.driveUrl = res.url;
+              if (aux) {
+                aux.driveUrl = res.url;
+                aux.fileId = res.fileId || '';
+              }
             }
-            // 不需要重繪，base64 已可顯示
           }
         } catch(err) { console.error('上傳 Drive 失敗:', err); }
       }
@@ -1465,6 +1468,7 @@ async function saveCard() {
     notes: document.getElementById('fNotes').value.trim(),
     mainImg: currentMainImg ? {
       url: currentMainImg.driveUrl || currentMainImg.base64 || currentMainImg.url,
+      fileId: currentMainImg.fileId || '',
       base64: currentMainImg.base64,
       role: 'main'
     } : null,
