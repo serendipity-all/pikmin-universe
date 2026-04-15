@@ -760,7 +760,12 @@ function renderFavoriteSelect() {
   const el = document.getElementById('favoriteSelect');
   if (!el) return;
   const cur = el.querySelector('input:checked')?.value || '';
-  el.innerHTML = favorites.map((f, idx) =>
+  // 加上「— 不選」作為第一個選項，讓使用者可以取消選取
+  el.innerHTML = `<div class="rare-opt">
+      <input type="radio" name="rare" id="fav_none" value="" ${cur===''?'checked':''}>
+      <label for="fav_none" style="color:var(--muted)">— 不選</label>
+    </div>` +
+  favorites.map((f, idx) =>
     `<div class="rare-opt">
       <input type="radio" name="rare" id="fav_${idx}" value="${escapeHtml(f.value)}" ${cur===f.value?'checked':''}>
       <label for="fav_${idx}">${f.icon} ${f.label}</label>
@@ -1681,8 +1686,9 @@ function clearCardForm() {
   document.getElementById('fSourceFriend').value = '';
   document.getElementById('fRecipFriend').value = '';
   renderFavoriteSelect();
-  // 清除所有喜好度選取
-  document.querySelectorAll('input[name="rare"]').forEach(r => r.checked = false);
+  // 預設選「— 不選」
+  const noneEl = document.getElementById('fav_none');
+  if (noneEl) noneEl.checked = true;
   renderTagGrid();
   document.getElementById('upPrompt').style.display = 'block';
   document.getElementById('imgInput').value = '';
