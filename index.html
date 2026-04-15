@@ -790,6 +790,25 @@ function deleteFriendFromSettings(id) {
 }
 
 // 確保好友存在名單，若不存在則自動新增，回傳好友名稱
+// 判斷某個 fileId 是否已在資料庫中使用（主照片或輔助照片）
+function isPhotoInUse(fileId) {
+  if (!fileId) return false;
+  return !!cards.find(c =>
+    c.mainImg?.fileId === fileId ||
+    (c.auxImgs || []).some(a => a.fileId === fileId)
+  );
+}
+
+// 清理 AI 辨識的好友名字
+// 明信片底部固定有「上」字（敬上/致上），不是名字的一部分
+function cleanFriendName(name) {
+  if (!name) return '';
+  return name
+    .replace(/上$/u, '')   // 移除結尾的「上」
+    .replace(/\s+$/u, '')  // 移除結尾空白
+    .trim();
+}
+
 function ensureFriendExists(name) {
   if (!name) return;
   if (!friends.find(f => f.name === name)) {
@@ -1037,8 +1056,8 @@ async function openScanModal() {
 
 // 取得目前篩選後的照片清單
 function getFilteredPhotos() {
-  if (scanFilter === 'new') return scannedPhotos.filter(p => !cards.find(c => c.mainImg?.fileId === p.fileId));
-  if (scanFilter === 'exists') return scannedPhotos.filter(p => !!cards.find(c => c.mainImg?.fileId === p.fileId));
+  if (scanFilter === 'new') return scannedPhotos.filter(p => !isPhotoInUse(p.fileId));
+  if (scanFilter === 'exists') return scannedPhotos.filter(p => isPhotoInUse(p.fileId));
   return scannedPhotos;
 }
 
@@ -1073,7 +1092,7 @@ function scanSelectAll(checked) {
 }
 
 function renderScanModal() {
-  const newCount = scannedPhotos.filter(p => !cards.find(c => c.mainImg?.fileId === p.fileId)).length;
+  const newCount = scannedPhotos.filter(p => !isPhotoInUse(p.fileId)).length;
   document.getElementById('scanStatus').textContent =
     `掃描完成，共 ${scannedPhotos.length} 張，其中 ${newCount} 張尚未建檔`;
 
@@ -1107,7 +1126,7 @@ function renderScanList() {
 
   document.getElementById('scanList').innerHTML = pageItems.map(p => {
     const globalIdx = scannedPhotos.indexOf(p);
-    const isNew = !cards.find(c => c.mainImg?.fileId === p.fileId);
+    const isNew = !isPhotoInUse(p.fileId);
     return `<div class="scan-item" id="scanItem_${globalIdx}">
       <div style="width:60px;height:60px;flex-shrink:0;border-radius:6px;overflow:hidden;background:#e8f5e0;display:flex;align-items:center;justify-content:center;font-size:1.6rem">
         <img src="${p.thumbUrl||p.url}" alt="" style="width:100%;height:100%;object-fit:cover"
@@ -1174,7 +1193,7 @@ async function importScannedPhotos() {
     const globalIdx = scannedPhotos.indexOf(p);
     const chk = document.getElementById(`scanChk_${globalIdx}`);
     if (!chk || !chk.checked) continue;
-    if (cards.find(c => c.mainImg?.fileId === p.fileId)) continue;
+    if (isPhotoInUse(p.fileId)) continue; // 主照片或輔助照片都算已使用
 
     const ai = p._ai || {};
 
@@ -1185,7 +1204,8 @@ async function importScannedPhotos() {
     }
 
     // 自動新增好友到名單
-    if (ai.friendName) ensureFriendExists(ai.friendName);
+    const friendName = cleanFriendName(ai.friendName || '');
+    if (friendName) ensureFriendExists(friendName);
 
     cards.unshift({
       id: Date.now().toString() + '_' + globalIdx,
@@ -1194,11 +1214,10 @@ async function importScannedPhotos() {
       region: ai.country || '',
       obtainedDate: new Date().toISOString().split('T')[0],
       obtainedMethod: ai.obtainedMethod || '',
-      sourceFriend: ai.friendName || '',
+      sourceFriend: friendName,
       rarity: ai.rarity || '普通',
       dupes: '1',
-      // 好友送的卡片遊戲機制不允許轉送，自動設為自留收藏
-      status: ai.friendName ? 'kept' : 'pending',
+      status: friendName ? 'kept' : 'pending',
       sentDate: '',
       recipFriend: '',
       tags: (ai.tags || []).filter(t => tagMap[t]),
@@ -1253,8 +1272,8 @@ async function openDrivePickerModal() {
 }
 
 function getDpFiltered() {
-  if (dpFilter === 'new') return dpPhotos.filter(p => !cards.find(c => c.mainImg?.fileId === p.fileId));
-  if (dpFilter === 'exists') return dpPhotos.filter(p => !!cards.find(c => c.mainImg?.fileId === p.fileId));
+  if (dpFilter === 'new') return dpPhotos.filter(p => !isPhotoInUse(p.fileId));
+  if (dpFilter === 'exists') return dpPhotos.filter(p => isPhotoInUse(p.fileId));
   return dpPhotos;
 }
 
@@ -1301,7 +1320,7 @@ function renderDpList() {
 
   document.getElementById('drivePickerList').innerHTML = pageItems.map(p => {
     const globalIdx = dpPhotos.indexOf(p);
-    const isNew = !cards.find(c => c.mainImg?.fileId === p.fileId);
+    const isNew = !isPhotoInUse(p.fileId);
     // 已加入輔助照片的標示
     const alreadyAdded = currentAuxImgs.find(a => a.fileId === p.fileId);
     return `<div style="display:flex;align-items:center;gap:8px;padding:7px 8px;background:${alreadyAdded?'#e8f5e0':'#f8fff4'};border:1.5px solid var(--border);border-radius:8px">
@@ -1489,6 +1508,10 @@ async function aiScan() {
       if (!res || !res.success) throw new Error(res?.error || '辨識失敗');
 
       aiSuggestion = res.data;
+      // 清理好友名字（移除結尾的「上」字）
+      if (aiSuggestion.friendName) {
+        aiSuggestion.friendName = cleanFriendName(aiSuggestion.friendName);
+      }
       const d = aiSuggestion;
       document.getElementById('aiText').innerHTML = `
         <strong>🤖 AI 辨識結果</strong><br>
@@ -1522,13 +1545,15 @@ function applyAI() {
 
   // 好友送：自動新增到名單，再選取，並設定狀態為自留收藏
   if (d.friendName) {
-    ensureFriendExists(d.friendName);
-    setTimeout(() => {
-      document.getElementById('fSourceFriend').value = d.friendName;
-    }, 50);
-    // 好友送的卡片遊戲機制不允許轉送，預設自留收藏
-    document.getElementById('fStatus').value = 'kept';
-    toggleSentFields();
+    const friendName = cleanFriendName(d.friendName);
+    if (friendName) {
+      ensureFriendExists(friendName);
+      setTimeout(() => {
+        document.getElementById('fSourceFriend').value = friendName;
+      }, 50);
+      document.getElementById('fStatus').value = 'kept';
+      toggleSentFields();
+    }
   }
 
   if (d.rarity) {
