@@ -664,15 +664,15 @@ const EMOJI_LIST = ['🎨','🏷️','⛩️','🌳','🏪','🚗','🗿','🍽�
 const FILTER_FIELDS = [
   {v:'status',l:'狀態',type:'select',opts:['sent','pending','kept'],labels:['已送出','未送出','自留']},
   {v:'obtainedMethod',l:'取得方式',type:'dynamic',src:'methods'},
-  {v:'obtainedDate',l:'取得日期',type:'date'},
-  {v:'sentDate',l:'送出日期',type:'date'},
-  {v:'sourceFriend',l:'來源好友',type:'dynamic',src:'friends'},
+  {v:'sourceFriend',l:'來源好友（誰送的）',type:'dynamic',src:'friends'},
   {v:'recipFriend',l:'送給誰',type:'dynamic',src:'friends'},
+  {v:'cardName',l:'明信片名稱',type:'text'},
+  {v:'name',l:'取得地點',type:'text'},
+  {v:'region',l:'取得國家',type:'dynamic',src:'countries'},
   {v:'rarity',l:'喜好度',type:'dynamic',src:'favorites'},
   {v:'tags',l:'標籤',type:'dynamic',src:'tags'},
-  {v:'name',l:'地點名稱',type:'text'},
-  {v:'cardName',l:'明信片名稱',type:'text'},
-  {v:'region',l:'取得國家',type:'text'},
+  {v:'obtainedDate',l:'取得日期',type:'date'},
+  {v:'sentDate',l:'送出日期',type:'date'},
 ];
 
 const getFavIcon = (value) => (favorites.find(f => f.value === value)?.icon || '');
@@ -1923,6 +1923,7 @@ function renderFilterRows() {
       else if(field.src==='methods') opts=methods.map(m=>`<option value="${m}" ${cond.value===m?'selected':''}>${m}</option>`);
       else if(field.src==='tags') opts=Object.keys(tagMap).map(t=>`<option value="${t}" ${cond.value===t?'selected':''}>${tagMap[t]} ${t}</option>`);
       else if(field.src==='favorites') opts=favorites.map(f=>`<option value="${f.value}" ${cond.value===f.value?'selected':''}>${f.icon} ${f.label}</option>`);
+      else if(field.src==='countries') opts=countries.map(c=>`<option value="${c}" ${cond.value===c?'selected':''}>${c}</option>`);
       valueEl=`<select onchange="updateFilter('${cond.id}','value',this.value);renderLibrary()"><option value="">請選擇</option>${opts.join('')}</select>`;
     } else if(field.type==='date'){
       valueEl=`<input type="date" value="${cond.value||''}" onchange="updateFilter('${cond.id}','value',this.value);renderLibrary()">
