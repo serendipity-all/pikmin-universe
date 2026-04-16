@@ -254,6 +254,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
         <button id="vList" onclick="setView('list')">☰ 列表</button>
       </div>
       <button class="btn" onclick="toggleFilterPanel()">🔧 篩選 <span id="filterCount"></span></button>
+      <button class="btn" id="dupFilterBtn" onclick="toggleDuplicateFilter()" title="顯示名稱重複的明信片">♊ 重複名稱</button>
       <button class="btn primary" onclick="openCardModal()">＋ 新增明信片</button>
     </div>
 
@@ -1972,6 +1973,24 @@ function applyFilters(list) {
 // ═══════════════════════════════════════════════
 //  LIBRARY RENDER
 // ═══════════════════════════════════════════════
+let showDuplicatesOnly = false;
+
+function toggleDuplicateFilter() {
+  showDuplicatesOnly = !showDuplicatesOnly;
+  const btn = document.getElementById('dupFilterBtn');
+  btn.classList.toggle('active', showDuplicatesOnly);
+  renderLibrary();
+}
+
+function getDuplicateCardNames() {
+  const nameCount = {};
+  cards.forEach(c => {
+    const n = (c.cardName || '').trim();
+    if (n) nameCount[n] = (nameCount[n] || 0) + 1;
+  });
+  return new Set(Object.keys(nameCount).filter(n => nameCount[n] > 1));
+}
+
 function setView(v){
   currentView=v;
   document.getElementById('vGrid').classList.toggle('active',v==='grid');
@@ -1985,6 +2004,12 @@ function renderLibrary(){
   const q=(document.getElementById('searchInput')?.value||'').toLowerCase();
   let list=cards.filter(c=>!q||[c.cardName,c.name,c.region,c.sourceFriend,c.recipFriend,c.notes,...(c.tags||[])].some(x=>x&&x.toLowerCase().includes(q)));
   list=applyFilters(list);
+
+  // 重複名稱篩選
+  if (showDuplicatesOnly) {
+    const dupNames = getDuplicateCardNames();
+    list = list.filter(c => dupNames.has((c.cardName||'').trim()));
+  }
 
   document.getElementById('hTot').textContent=cards.length;
   document.getElementById('hSent').textContent=cards.filter(c=>c.status==='sent').length;
