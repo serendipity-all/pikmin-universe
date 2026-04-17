@@ -491,10 +491,8 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
 
     <!-- 送給誰 -->
     <div class="fg" id="recipGrp" style="display:none">
-      <label class="fl">💌 送給誰</label>
-      <div class="friend-select-wrap">
-        <select class="fsel" id="fRecipFriend"><option value="">（請選擇）</option></select>
-      </div>
+      <label class="fl">💌 送給誰（可多選）</label>
+      <div id="recipFriendGrid" class="tag-grid" style="max-height:120px;overflow-y:auto;padding:8px;background:#f8fff4;border:2px solid var(--border);border-radius:9px"></div>
       <span class="friend-add-inline" onclick="quickAddFriend('recip')">＋ 新增好友到名單</span>
     </div>
 
@@ -676,7 +674,8 @@ const FILTER_FIELDS = [
   {v:'sentDate',l:'送出日期',type:'date'},
 ];
 
-const getFavIcon = (value) => (favorites.find(f => f.value === value)?.icon || '');
+const getRecipNames = (c) => Array.isArray(c.recipFriend) ? c.recipFriend : (c.recipFriend ? [c.recipFriend] : []);
+const getRecipStr = (c) => getRecipNames(c).join('、') || '';
 const STATUS_MAP = {sent:{l:'已送出',c:'sb-sent'},pending:{l:'未送出',c:'sb-pending'},kept:{l:'自留',c:'sb-kept'}};
 
 // ═══════════════════════════════════════════════
@@ -856,7 +855,8 @@ function updateFriendName(id, newName) {
   if (oldName) {
     cards.forEach(c => {
       if (c.sourceFriend === oldName) c.sourceFriend = newName;
-      if (c.recipFriend === oldName) c.recipFriend = newName;
+      const recips = getRecipNames(c);
+      if (recips.includes(oldName)) c.recipFriend = recips.map(r => r === oldName ? newName : r);
     });
   }
   saveAndSync();
@@ -1305,7 +1305,7 @@ async function importScannedPhotos() {
       dupes: '1',
       status: friendName ? 'kept' : 'pending',
       sentDate: '',
-      recipFriend: '',
+      recipFriend: [],
       tags: (ai.tags || []).filter(t => tagMap[t]),
       notes: p._ai ? '' : '(自 Drive 掃描建立，請編輯補充資訊)',
       mainImg: {
@@ -1685,7 +1685,7 @@ function clearCardForm() {
   document.getElementById('fObtMethod').value = '';
   document.getElementById('fStatus').value = 'pending';
   document.getElementById('fSourceFriend').value = '';
-  document.getElementById('fRecipFriend').value = '';
+  renderRecipFriendGrid([]);
   renderFavoriteSelect();
   // 預設選「— 不選」
   const noneEl = document.getElementById('fav_none');
@@ -1708,7 +1708,9 @@ function fillCardForm(c) {
   document.getElementById('fStatus').value = c.status || 'pending';
   document.getElementById('fSentDate').value = c.sentDate || '';
   document.getElementById('fSourceFriend').value = c.sourceFriend || '';
-  document.getElementById('fRecipFriend').value = c.recipFriend || '';
+  // recipFriend 支援舊版字串和新版陣列
+  const recipArr = Array.isArray(c.recipFriend) ? c.recipFriend : (c.recipFriend ? [c.recipFriend] : []);
+  renderRecipFriendGrid(recipArr);
   document.getElementById('fDupes').value = c.dupes || '1';
   document.getElementById('fNotes').value = c.notes || '';
   renderFavoriteSelect();
@@ -1752,7 +1754,7 @@ async function saveCard() {
     dupes: document.getElementById('fDupes').value || '1',
     status,
     sentDate: status==='sent' ? document.getElementById('fSentDate').value : '',
-    recipFriend: status==='sent' ? document.getElementById('fRecipFriend').value : '',
+    recipFriend: status==='sent' ? Array.from(document.querySelectorAll('#recipFriendGrid input:checked')).map(cb=>cb.value) : [],
     tags: selectedTags,
     notes: document.getElementById('fNotes').value.trim(),
     mainImg: currentMainImg ? {
@@ -1808,9 +1810,27 @@ function hideToast() {
 // ═══════════════════════════════════════════════
 function renderFriendSelects() {
   const opts = '<option value="">（無）</option>' + friends.map(f=>`<option value="${f.name}">${f.name}</option>`).join('');
-  const sf=document.getElementById('fSourceFriend'), rf=document.getElementById('fRecipFriend');
+  const sf=document.getElementById('fSourceFriend');
   if(sf){ const v=sf.value; sf.innerHTML=opts; sf.value=v; }
-  if(rf){ const v=rf.value; rf.innerHTML='<option value="">（請選擇）</option>'+friends.map(f=>`<option value="${f.name}">${f.name}</option>`).join(''); rf.value=v; }
+  renderRecipFriendGrid();
+}
+
+function renderRecipFriendGrid(selectedNames) {
+  const grid = document.getElementById('recipFriendGrid');
+  if (!grid) return;
+  // 保留目前已勾選的（若沒傳入 selectedNames）
+  const cur = selectedNames !== undefined ? selectedNames :
+    Array.from(grid.querySelectorAll('input:checked')).map(cb => cb.value);
+  if (!friends.length) {
+    grid.innerHTML = '<div style="font-size:.75rem;color:var(--muted)">尚無好友，請先新增好友</div>';
+    return;
+  }
+  grid.innerHTML = friends.map(f =>
+    `<div class="tc">
+      <input type="checkbox" id="recip_${f.id}" value="${escapeHtml(f.name)}" ${cur.includes(f.name)?'checked':''}>
+      <label for="recip_${f.id}">${escapeHtml(f.name)}</label>
+    </div>`
+  ).join('');
 }
 
 function renderFriends() {
@@ -1819,7 +1839,7 @@ function renderFriends() {
   const filtered=friends.filter(f=>!q||f.name.toLowerCase().includes(q)||((f.note||'').toLowerCase().includes(q)));
   if(!filtered.length){ fl.innerHTML=`<div class="empty-state"><div class="ei">👥</div><p>尚無好友，快新增吧！</p></div>`; return; }
   fl.innerHTML=filtered.map(f=>{
-    const sent=cards.filter(c=>c.recipFriend===f.name).length;
+    const sent=cards.filter(c=>getRecipNames(c).includes(f.name)).length;
     const recv=cards.filter(c=>c.sourceFriend===f.name).length;
     const initial=(f.name||'?').charAt(0).toUpperCase();
     return `<div class="friend-card">
@@ -1857,8 +1877,14 @@ function saveFriend() {
   if(pendingFriendTarget){
     setTimeout(()=>{
       renderFriendSelects();
-      const sel=document.getElementById(pendingFriendTarget==='source'?'fSourceFriend':'fRecipFriend');
-      if(sel) sel.value=name;
+      if (pendingFriendTarget === 'source') {
+        const sel = document.getElementById('fSourceFriend');
+        if (sel) sel.value = name;
+      } else {
+        // recip 是 checkbox，重新渲染並勾選新好友
+        const cur = Array.from(document.querySelectorAll('#recipFriendGrid input:checked')).map(cb=>cb.value);
+        renderRecipFriendGrid([...cur, name]);
+      }
       pendingFriendTarget=null;
       document.getElementById('cardOverlay').classList.add('open');
     },50);
@@ -1961,6 +1987,7 @@ function applyFilters(list) {
     const results=active.map(cond=>{
       const val=cond.value; const field=cond.field;
       if(field==='tags') return (card.tags||[]).includes(val);
+      if(field==='recipFriend') return getRecipNames(card).includes(val);
       const cv=(card[field]||'').toString();
       if(cond.op==='gte') return cv>=val;
       if(cond.op==='lte') return cv<=val;
@@ -2002,7 +2029,7 @@ function setView(v){
 
 function renderLibrary(){
   const q=(document.getElementById('searchInput')?.value||'').toLowerCase();
-  let list=cards.filter(c=>!q||[c.cardName,c.name,c.region,c.sourceFriend,c.recipFriend,c.notes,...(c.tags||[])].some(x=>x&&x.toLowerCase().includes(q)));
+  let list=cards.filter(c=>!q||[c.cardName,c.name,c.region,c.sourceFriend,...getRecipNames(c),c.notes,...(c.tags||[])].some(x=>x&&x.toLowerCase().includes(q)));
   list=applyFilters(list);
 
   // 重複名稱篩選
@@ -2045,7 +2072,7 @@ function cardGridHTML(c){
       <div class="pcard-meta">
         ${c.obtainedDate?`<div>📅 ${c.obtainedDate}${c.obtainedMethod?'　🎯 '+c.obtainedMethod:''}</div>`:''}
         ${c.sourceFriend?`<div>🤝 ${c.sourceFriend}</div>`:''}
-        ${c.status==='sent'&&c.recipFriend?`<div>💌 → ${c.recipFriend}</div>`:''}
+        ${c.status==='sent'&&getRecipNames(c).length?`<div>💌 → ${getRecipStr(c)}</div>`:''}
         ${c.dupes&&c.dupes>1?`<div>🔢 重複 ${c.dupes} 張</div>`:''}
       </div>
     </div>
@@ -2073,7 +2100,7 @@ function cardListHTML(c){
     </div>
     <div class="prow-right">
       ${c.sourceFriend?`<span style="font-size:.68rem;color:var(--muted)">🤝 ${c.sourceFriend}</span>`:''}
-      ${c.recipFriend?`<span style="font-size:.68rem;color:var(--muted)">💌 ${c.recipFriend}</span>`:''}
+      ${getRecipNames(c).length?`<span style="font-size:.68rem;color:var(--muted)">💌 ${getRecipStr(c)}</span>`:''}
       <div class="prow-acts" onclick="event.stopPropagation()">
         <button class="act" onclick="openCardModal('${c.id}')">✏️</button>
         <button class="act del" onclick="deleteCard('${c.id}')">🗑️</button>
@@ -2115,7 +2142,7 @@ function openDetail(id){
       <tr><td style="color:var(--gd);font-weight:700">喜好度</td><td>${ricon} ${c.rarity||'—'}</td></tr>
       <tr><td style="color:var(--gd);font-weight:700">重複張數</td><td>${c.dupes||1} 張</td></tr>
       ${c.status==='sent'?`<tr><td style="color:var(--gd);font-weight:700">送出日期</td><td>${c.sentDate||'—'}</td></tr>
-      <tr><td style="color:var(--gd);font-weight:700">送給誰</td><td>${c.recipFriend||'—'}</td></tr>`:''}
+      <tr><td style="color:var(--gd);font-weight:700">送給誰</td><td>${getRecipStr(c)||'—'}</td></tr>`:''}
       <tr><td style="color:var(--gd);font-weight:700">標籤</td><td>${tagList||'—'}</td></tr>
       ${c.notes?`<tr><td style="color:var(--gd);font-weight:700;vertical-align:top">備註</td><td>${c.notes}</td></tr>`:''}
     </table>
@@ -2154,7 +2181,7 @@ function renderStats(){
   buildChart('chartRare','doughnut',favLabels,favData,['#ff9999','#66bb6a','#ab47bc','#42a5f5','#ffa726','#ef5350']);
 
   renderFriendRank('rankReceived',friends.map(f=>({name:f.name,count:cards.filter(c=>c.sourceFriend===f.name).length})));
-  renderFriendRank('rankSent',friends.map(f=>({name:f.name,count:cards.filter(c=>c.recipFriend===f.name).length})));
+  renderFriendRank('rankSent',friends.map(f=>({name:f.name,count:cards.filter(c=>getRecipNames(c).includes(f.name)).length})));
 }
 
 function buildChart(id,type,labels,data,colors){
