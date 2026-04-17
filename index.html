@@ -676,6 +676,7 @@ const FILTER_FIELDS = [
 
 const getRecipNames = (c) => Array.isArray(c.recipFriend) ? c.recipFriend : (c.recipFriend ? [c.recipFriend] : []);
 const getRecipStr = (c) => getRecipNames(c).join('、') || '';
+const getFavIcon = (value) => (favorites.find(f => f.value === value)?.icon || '');
 const STATUS_MAP = {sent:{l:'已送出',c:'sb-sent'},pending:{l:'未送出',c:'sb-pending'},kept:{l:'自留',c:'sb-kept'}};
 
 // ═══════════════════════════════════════════════
