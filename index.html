@@ -1489,6 +1489,33 @@ function confirmDrivePick() {
 }
 
 // ═══════════════════════════════════════════════
+//  IMAGE COMPRESSION
+// ═══════════════════════════════════════════════
+function compressImage(base64, maxSize, quality) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      let w = img.width, h = img.height;
+      if (w <= maxSize && h <= maxSize) {
+        // 已經夠小，不壓縮
+        resolve(base64);
+        return;
+      }
+      // 等比例縮小
+      if (w > h) { h = Math.round(h * maxSize / w); w = maxSize; }
+      else { w = Math.round(w * maxSize / h); h = maxSize; }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = () => resolve(base64); // 失敗就用原圖
+    img.src = base64;
+  });
+}
+
+// ═══════════════════════════════════════════════
 //  IMAGE UPLOAD
 // ═══════════════════════════════════════════════
 function initImageListeners() {
@@ -1513,7 +1540,10 @@ function handleImg(e, role) {
       });
 
       const mime = file.type || 'image/jpeg';
-      let filename = file.name; // 直接用原始檔名
+      let filename = file.name;
+
+      // 壓縮版：供頁面顯示和 AI 辨識
+      const compressedBase64 = await compressImage(base64, 1280, 0.85);
 
       // 如果有設定 GAS，查詢 Drive 是否有同名檔案
       if (CFG.scriptUrl) {
@@ -1526,16 +1556,23 @@ function handleImg(e, role) {
       }
 
       if (role === 'main') {
-        currentMainImg = { base64, filename, mime, url: base64 };
+        currentMainImg = {
+          base64: compressedBase64, // 顯示和 AI 辨識用壓縮版
+          filename, mime: 'image/jpeg', url: compressedBase64
+        };
         document.getElementById('upPrompt').style.display = 'none';
         document.getElementById('aiBtnEl').disabled = false;
       } else {
-        currentAuxImgs.push({ base64, filename, mime, url: base64 });
+        currentAuxImgs.push({
+          base64: compressedBase64,
+          filename, mime: 'image/jpeg', url: compressedBase64
+        });
       }
       renderPhotoGallery();
 
       if (CFG.scriptUrl) {
         try {
+          // 上傳原始尺寸到 Drive（base64 是原圖）
           const res = await callGAS('uploadPhoto', { base64, mimeType: mime, filename });
           if (res && res.success) {
             if (role === 'main') {
