@@ -196,7 +196,24 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
 ::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
-@media(max-width:600px){.stat-pills{display:none}.frow{grid-template-columns:1fr}.h-title{font-size:.95rem}.ntab{font-size:.7rem;padding:4px 9px}}
+@media(max-width:600px){
+  .stat-pills{display:none}
+  .frow{grid-template-columns:1fr}
+  .h-title{font-size:.9rem}
+  .ntab{font-size:.65rem;padding:3px 7px}
+  .h-nav{gap:2px;flex-wrap:wrap}
+  header{height:auto;min-height:56px;padding:6px 12px;flex-wrap:wrap;gap:6px}
+  .h-space{display:none}
+  .pages .page{padding:12px 12px}
+  .toolbar{gap:5px}
+  .btn{font-size:.72rem;padding:5px 10px}
+  .search-box{min-width:120px}
+  #syncBar{padding:4px 12px;font-size:.68rem}
+  .modal{border-radius:14px}
+  .card-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+  .mfoot{padding:10px 14px;gap:6px}
+  .mfoot .btn-save,.mfoot .btn-cancel{padding:7px 14px;font-size:.8rem}
+}
 </style>
 </head>
 <body>
@@ -247,7 +264,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
     <div class="toolbar">
       <div class="search-box">
         <span class="si">🔍</span>
-        <input type="text" id="searchInput" placeholder="搜尋名稱、地點、好友、備註…" oninput="renderLibrary()">
+        <input type="text" id="searchInput" placeholder="搜尋名稱、地點、好友、備註、檔名…" oninput="renderLibrary()">
       </div>
       <div class="view-toggle">
         <button id="vGrid" class="active" onclick="setView('grid')">⊞ 卡片</button>
@@ -1092,8 +1109,34 @@ async function callGAS(action, data) {
   }
 }
 
-async function syncAll() {
+async function syncAll(silent = false) {
   if (!CFG.scriptUrl) { setSyncStatus('', '離線模式'); return; }
+
+  // 若不是靜默模式（手動按同步），先比較雲端筆數做防呆
+  if (!silent) {
+    setSyncStatus('ing', '確認中…');
+    const cloudResult = await callGAS('loadData', {});
+    if (cloudResult && cloudResult.success) {
+      const cloudCount = (cloudResult.cards || []).length;
+      const localCount = cards.length;
+      const diff = localCount - cloudCount;
+      if (cloudCount > 0 && diff < -5) {
+        // 本地比雲端少超過 5 筆，可能是資料遺失，要求確認
+        const ok = confirm(
+          `⚠️ 注意：本地資料（${localCount} 筆）比雲端少 ${Math.abs(diff)} 筆（雲端 ${cloudCount} 筆）。\n\n` +
+          `繼續同步會以本地資料覆蓋雲端，可能導致雲端資料遺失。\n\n確定要同步嗎？`
+        );
+        if (!ok) { setSyncStatus('', '已取消同步'); return; }
+      } else if (cloudCount > 0 && localCount === 0) {
+        const ok = confirm(
+          `⚠️ 警告：本地資料是空的，但雲端有 ${cloudCount} 筆資料。\n\n` +
+          `繼續同步會清空雲端資料。確定要同步嗎？`
+        );
+        if (!ok) { setSyncStatus('', '已取消同步'); return; }
+      }
+    }
+  }
+
   setSyncStatus('ing', '同步中…');
   const result = await callGAS('sync', { cards, friends });
   if (result && result.success) {
@@ -1312,6 +1355,7 @@ async function importScannedPhotos() {
       mainImg: {
         url: p.url,
         fileId: p.fileId,
+        filename: p.filename || '',
         role: 'main'
       },
       auxImgs: [],
@@ -1761,6 +1805,7 @@ async function saveCard() {
     mainImg: currentMainImg ? {
       url: currentMainImg.driveUrl || currentMainImg.base64 || currentMainImg.url,
       fileId: currentMainImg.fileId || '',
+      filename: currentMainImg.filename || '',
       base64: currentMainImg.base64,
       role: 'main'
     } : null,
@@ -2030,7 +2075,7 @@ function setView(v){
 
 function renderLibrary(){
   const q=(document.getElementById('searchInput')?.value||'').toLowerCase();
-  let list=cards.filter(c=>!q||[c.cardName,c.name,c.region,c.sourceFriend,...getRecipNames(c),c.notes,...(c.tags||[])].some(x=>x&&x.toLowerCase().includes(q)));
+  let list=cards.filter(c=>!q||[c.cardName,c.name,c.region,c.sourceFriend,...getRecipNames(c),c.notes,c.mainImg?.filename,...(c.tags||[])].some(x=>x&&x.toLowerCase().includes(q)));
   list=applyFilters(list);
 
   // 重複名稱篩選
@@ -2136,6 +2181,7 @@ function openDetail(id){
     <table style="width:100%;border-collapse:collapse;font-size:.8rem;line-height:2">
       <tr><td style="color:var(--gd);font-weight:700;width:90px">明信片名稱</td><td>${c.cardName||'—'}</td></tr>
       <tr><td style="color:var(--gd);font-weight:700">取得地點</td><td>${c.name||'—'}</td></tr>
+      ${c.mainImg?.filename?`<tr><td style="color:var(--gd);font-weight:700">檔案名稱</td><td style="font-size:.78rem;word-break:break-all">${escapeHtml(c.mainImg.filename)}</td></tr>`:''}
       <tr><td style="color:var(--gd);font-weight:700">取得國家</td><td>${c.region||'—'}</td></tr>
       <tr><td style="color:var(--gd);font-weight:700">取得日期</td><td>${c.obtainedDate||'—'}</td></tr>
       <tr><td style="color:var(--gd);font-weight:700">取得方式</td><td>${c.obtainedMethod||'—'}</td></tr>
@@ -2216,9 +2262,10 @@ function saveLocal(){
 }
 
 // 儲存本地並同步到雲端（跨裝置共用的核心）
+// 自動觸發的同步用 silent=true，不跳防呆確認
 function saveAndSync(){
   saveLocal();
-  if (CFG.scriptUrl) syncAll();
+  if (CFG.scriptUrl) syncAll(true);
 }
 
 function exportJSON(){
