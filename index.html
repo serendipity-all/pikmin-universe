@@ -1221,10 +1221,30 @@ function scanSelectAll(checked) {
   });
 }
 
+function scanSelectAll(checked) {
+  const filtered = getFilteredPhotos();
+  const start = scanPage * SCAN_PAGE_SIZE;
+  const pageItems = filtered.slice(start, start + SCAN_PAGE_SIZE);
+  pageItems.forEach(p => {
+    const isNew = !isPhotoInUse(p.fileId); // 統一用 isPhotoInUse
+    if (!isNew) return;
+    const globalIdx = scannedPhotos.indexOf(p);
+    const chk = document.getElementById(`scanChk_${globalIdx}`);
+    if (chk) chk.checked = checked;
+  });
+}
+
 function renderScanModal() {
+  const total = scannedPhotos.length;
+  const withFileId = scannedPhotos.filter(p => !!p.fileId).length;
+  const cardsWithFileId = cards.filter(c => !!c.mainImg?.fileId).length;
   const newCount = scannedPhotos.filter(p => !isPhotoInUse(p.fileId)).length;
-  document.getElementById('scanStatus').textContent =
-    `掃描完成，共 ${scannedPhotos.length} 張，其中 ${newCount} 張尚未建檔`;
+
+  document.getElementById('scanStatus').innerHTML =
+    `掃描完成，共 ${total} 張，其中 <b>${newCount} 張尚未建檔</b>` +
+    `<br><span style="font-size:.68rem;color:var(--muted)">` +
+    `Drive 照片有 fileId：${withFileId}/${total}　` +
+    `本地卡片有 fileId：${cardsWithFileId}/${cards.length}</span>`;
 
   if (!scannedPhotos.length) return;
 
@@ -1543,7 +1563,7 @@ function handleImg(e, role) {
       let filename = file.name;
 
       // 壓縮版：供頁面顯示和 AI 辨識
-      const compressedBase64 = await compressImage(base64, 1280, 0.85);
+      const compressedBase64 = await compressImage(base64, 1024, 0.85);
 
       // 如果有設定 GAS，查詢 Drive 是否有同名檔案
       if (CFG.scriptUrl) {
