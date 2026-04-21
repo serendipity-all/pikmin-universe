@@ -1256,6 +1256,11 @@ function renderScanModal() {
   } else if (mismatch.length > 10) {
     debugHtml += `<br>⚠️ 比對不上共 ${mismatch.length} 張`;
   }
+  // 印出兩邊 fileId 樣本對比
+  const driveIdSample = scannedPhotos.slice(0,2).map(p=>p.fileId).join(' | ');
+  const cardIdSample = [...allCardFileIds].slice(0,2).join(' | ');
+  debugHtml += `<br>Drive fileId 樣本：${driveIdSample}`;
+  debugHtml += `<br>卡片 fileId 樣本：${cardIdSample}`;
   debugHtml += `</span>`;
 
   document.getElementById('scanStatus').innerHTML =
