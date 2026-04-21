@@ -1261,6 +1261,11 @@ function renderScanModal() {
   const cardIdSample = [...allCardFileIds].slice(0,2).join(' | ');
   debugHtml += `<br>Drive fileId 樣本：${driveIdSample}`;
   debugHtml += `<br>卡片 fileId 樣本：${cardIdSample}`;
+  // 印出卡片 URL 和 fileId 對照
+  const cardSample = cards.filter(c=>c.mainImg?.fileId).slice(0,3).map(c=>
+    `${c.cardName||'?'}：url=${(c.mainImg.url||'').slice(0,40)} fileId=${c.mainImg.fileId}`
+  );
+  debugHtml += `<br>卡片樣本：<br>${cardSample.join('<br>')}`;
   debugHtml += `</span>`;
 
   document.getElementById('scanStatus').innerHTML =
@@ -1354,31 +1359,32 @@ async function batchAIScan() {
 
 async function importScannedPhotos() {
   let count = 0;
-  // 只處理當頁有勾選的項目
   const filtered = getFilteredPhotos();
   const start = scanPage * SCAN_PAGE_SIZE;
   const pageItems = filtered.slice(start, start + SCAN_PAGE_SIZE);
 
-  for (const p of pageItems) {
+  for (let i = 0; i < pageItems.length; i++) {
+    const p = pageItems[i];
     const globalIdx = scannedPhotos.indexOf(p);
     const chk = document.getElementById(`scanChk_${globalIdx}`);
     if (!chk || !chk.checked) continue;
-    if (isPhotoInUse(p.fileId)) continue; // 主照片或輔助照片都算已使用
+    if (isPhotoInUse(p.fileId)) continue;
 
     const ai = p._ai || {};
 
-    // 自動新增國家到清單
     if (ai.country && !countries.includes(ai.country)) {
       countries.push(ai.country);
       localStorage.setItem('pkm_countries', JSON.stringify(countries));
     }
 
-    // 自動新增好友到名單
     const friendName = cleanFriendName(ai.friendName || '');
     if (friendName) ensureFriendExists(friendName);
 
+    // 用 timestamp + 迴圈 index + globalIdx 確保 id 唯一
+    const uniqueId = `${Date.now()}_${i}_${globalIdx}`;
+
     cards.unshift({
-      id: Date.now().toString() + '_' + globalIdx,
+      id: uniqueId,
       cardName: ai.cardName || '',
       name: ai.location || p.filename.replace(/\.[^/.]+$/,''),
       region: ai.country || '',
@@ -1403,12 +1409,22 @@ async function importScannedPhotos() {
     });
     count++;
   }
+
   saveAndSync();
   renderLibrary();
   renderCountryManagement();
   renderCountrySelect();
-  closeModal('scanOverlay');
   showToast(`已匯入 ${count} 張明信片`);
+
+  // 匯入後不關閉，重新渲染掃描列表讓已建檔狀態即時更新
+  // 自動翻到下一頁（若還有）
+  const newFiltered = getFilteredPhotos();
+  const totalPages = Math.max(1, Math.ceil(newFiltered.length / SCAN_PAGE_SIZE));
+  if (scanPage < totalPages - 1) {
+    scanPage++;
+  }
+  renderScanModal();
+  renderScanList();
 }
 
 // ═══════════════════════════════════════════════
