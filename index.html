@@ -1240,11 +1240,26 @@ function renderScanModal() {
   const cardsWithFileId = cards.filter(c => !!c.mainImg?.fileId).length;
   const newCount = scannedPhotos.filter(p => !isPhotoInUse(p.fileId)).length;
 
+  // 診斷：找出 Drive 有、卡片也有 fileId 但比對不上的照片
+  const allCardFileIds = new Set([
+    ...cards.map(c => c.mainImg?.fileId).filter(Boolean),
+    ...cards.flatMap(c => (c.auxImgs||[]).map(a => a.fileId)).filter(Boolean)
+  ]);
+  const mismatch = scannedPhotos.filter(p => p.fileId && !allCardFileIds.has(p.fileId));
+
+  let debugHtml = `<span style="font-size:.68rem;color:var(--muted)">` +
+    `Drive 有 fileId：${withFileId}/${total}　` +
+    `本地卡片有 fileId：${cardsWithFileId}/${cards.length}　` +
+    `Set 中共 ${allCardFileIds.size} 個 fileId`;
+  if (mismatch.length > 0 && mismatch.length <= 10) {
+    debugHtml += `<br>⚠️ 比對不上的(${mismatch.length})：${mismatch.map(p=>p.filename+' ['+p.fileId.slice(0,8)+']').join('、')}`;
+  } else if (mismatch.length > 10) {
+    debugHtml += `<br>⚠️ 比對不上共 ${mismatch.length} 張`;
+  }
+  debugHtml += `</span>`;
+
   document.getElementById('scanStatus').innerHTML =
-    `掃描完成，共 ${total} 張，其中 <b>${newCount} 張尚未建檔</b>` +
-    `<br><span style="font-size:.68rem;color:var(--muted)">` +
-    `Drive 照片有 fileId：${withFileId}/${total}　` +
-    `本地卡片有 fileId：${cardsWithFileId}/${cards.length}</span>`;
+    `掃描完成，共 ${total} 張，其中 <b>${newCount} 張尚未建檔</b><br>${debugHtml}`;
 
   if (!scannedPhotos.length) return;
 
