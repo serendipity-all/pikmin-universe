@@ -1256,8 +1256,15 @@ function renderScanModal() {
   } else if (mismatch.length > 10) {
     debugHtml += `<br>⚠️ 比對不上共 ${mismatch.length} 張`;
   }
-  // 印出兩邊 fileId 樣本對比
-  const driveIdSample = scannedPhotos.slice(0,2).map(p=>p.fileId).join(' | ');
+  // 檢查有沒有任何交集
+  const driveIds = new Set(scannedPhotos.map(p => p.fileId));
+  const intersection = [...allCardFileIds].filter(id => driveIds.has(id));
+  debugHtml += `<br>交集數量：${intersection.length}`;
+  if (intersection.length > 0) {
+    debugHtml += `　交集樣本：${intersection.slice(0,2).join(' | ')}`;
+  } else {
+    debugHtml += `　→ 完全沒有交集！`;
+  }
   const cardIdSample = [...allCardFileIds].slice(0,2).join(' | ');
   debugHtml += `<br>Drive fileId 樣本：${driveIdSample}`;
   debugHtml += `<br>卡片 fileId 樣本：${cardIdSample}`;
