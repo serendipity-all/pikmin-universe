@@ -1113,14 +1113,22 @@ async function callGAS(action, data) {
 async function syncAll(silent = false) {
   if (!CFG.scriptUrl) { setSyncStatus('', '離線模式'); return; }
 
-  // 若不是靜默模式（手動按同步），先比較雲端筆數做防呆
-  if (!silent) {
-    setSyncStatus('ing', '確認中…');
-    const cloudResult = await callGAS('loadData', {});
-    if (cloudResult && cloudResult.success) {
-      const cloudCount = (cloudResult.cards || []).length;
-      const localCount = cards.length;
-      const diff = localCount - cloudCount;
+  setSyncStatus('ing', '確認中…');
+  const cloudResult = await callGAS('loadData', {});
+
+  if (cloudResult && cloudResult.success) {
+    const cloudCount = (cloudResult.cards || []).length;
+    const localCount = cards.length;
+    const diff = localCount - cloudCount;
+
+    // 靜默模式：本地比雲端少超過 10 筆就自動中止，不覆蓋
+    if (silent && cloudCount > 0 && diff < -10) {
+      setSyncStatus('err', `⚠️ 自動同步中止：本地(${localCount})比雲端(${cloudCount})少太多，請手動確認後再同步`);
+      return;
+    }
+
+    // 手動模式：給使用者選擇
+    if (!silent) {
       if (cloudCount > 0 && diff < -5) {
         const ok = confirm(
           `⚠️ 注意：本地資料（${localCount} 筆）比雲端少 ${Math.abs(diff)} 筆（雲端 ${cloudCount} 筆）。\n\n` +
@@ -1134,13 +1142,19 @@ async function syncAll(silent = false) {
         );
         if (!ok) { setSyncStatus('', '已取消同步'); return; }
       }
-    } else {
-      // loadData 失敗，無法比較筆數，讓使用者決定
+    }
+  } else {
+    if (!silent) {
+      // 手動模式：loadData 失敗讓使用者決定
       const ok = confirm(
         `⚠️ 無法取得雲端資料（網路錯誤或 GAS 異常）。\n\n` +
         `無法確認雲端筆數，繼續同步將直接以本地 ${cards.length} 筆資料覆蓋雲端。\n\n確定要繼續嗎？`
       );
       if (!ok) { setSyncStatus('err', '已取消同步（無法取得雲端資料）'); return; }
+    } else {
+      // 靜默模式：loadData 失敗就不同步，避免風險
+      setSyncStatus('err', '自動同步中止：無法取得雲端資料');
+      return;
     }
   }
 
@@ -1298,7 +1312,6 @@ async function batchAIScan() {
   const btn = document.getElementById('scanAIBtn');
   btn.disabled = true;
 
-  // 只處理當頁有勾選的項目
   const filtered = getFilteredPhotos();
   const start = scanPage * SCAN_PAGE_SIZE;
   const pageItems = filtered.slice(start, start + SCAN_PAGE_SIZE);
@@ -1306,30 +1319,50 @@ async function batchAIScan() {
     .map(p => ({ p, idx: scannedPhotos.indexOf(p) }))
     .filter(({ idx }) => document.getElementById(`scanChk_${idx}`)?.checked);
 
+  const CONCURRENCY = 5; // 同時最多 5 張
+  let completed = 0;
+
   btn.textContent = `⏳ AI 辨識中… 0/${selected.length}`;
 
-  for (let i = 0; i < selected.length; i++) {
-    const {p, idx} = selected[i];
-    btn.textContent = `⏳ AI 辨識中… ${i+1}/${selected.length}`;
-    const resultEl = document.getElementById(`scanAIResult_${idx}`);
-    if (resultEl) resultEl.textContent = '辨識中…';
+  // 標記全部為辨識中
+  selected.forEach(({ idx }) => {
+    const el = document.getElementById(`scanAIResult_${idx}`);
+    if (el) el.textContent = '⏳ 等待辨識…';
+  });
 
-    try {
-      const res = await callGAS('aiScan', { fileId: p.fileId, methods, tags: tagMap });
-      if (res && res.success && res.data) {
-        p._ai = res.data;
-        const d = res.data;
-        if (resultEl) resultEl.textContent =
-          `🤖 ${d.cardName||'?'} | ${d.country||''} | ${d.obtainedMethod||'?'}`;
-      } else {
-        if (resultEl) resultEl.textContent = '❌ 辨識失敗：' + (res?.error || '未知錯誤');
+  // 分批並行處理
+  for (let i = 0; i < selected.length; i += CONCURRENCY) {
+    const batch = selected.slice(i, i + CONCURRENCY);
+
+    // 同批標記為辨識中
+    batch.forEach(({ idx }) => {
+      const el = document.getElementById(`scanAIResult_${idx}`);
+      if (el) el.textContent = '辨識中…';
+    });
+
+    await Promise.all(batch.map(async ({ p, idx }) => {
+      const resultEl = document.getElementById(`scanAIResult_${idx}`);
+      try {
+        const res = await callGAS('aiScan', { fileId: p.fileId, methods, tags: tagMap });
+        if (res && res.success && res.data) {
+          p._ai = res.data;
+          const d = res.data;
+          if (resultEl) resultEl.textContent =
+            `🤖 ${d.cardName||'?'} | ${d.country||''} | ${d.obtainedMethod||'?'}`;
+        } else {
+          if (resultEl) resultEl.textContent = '❌ ' + (res?.error || '辨識失敗');
+        }
+      } catch(e) {
+        if (resultEl) resultEl.textContent = '❌ ' + e.message;
       }
-    } catch(e) {
-      if (resultEl) resultEl.textContent = '❌ 辨識失敗：' + e.message;
-    }
+      completed++;
+      btn.textContent = `⏳ AI 辨識中… ${completed}/${selected.length}`;
+    }));
   }
 
-  btn.disabled = false; btn.textContent = '🤖 批次 AI 辨識';
+  btn.disabled = false;
+  btn.textContent = `🤖 批次 AI 辨識（完成 ${completed}/${selected.length}）`;
+  setTimeout(() => { btn.textContent = '🤖 批次 AI 辨識'; }, 3000);
 }
 
 async function importScannedPhotos() {
