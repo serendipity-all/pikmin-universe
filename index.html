@@ -708,19 +708,25 @@ window.onload = async () => {
   updateSetupCard();
 
   if (CFG.scriptUrl) {
-    // 有設定 GAS → 從雲端載入最新資料
+    // 載入中禁止儲存操作，避免 race condition
     setSyncStatus('ing', '載入雲端資料中…');
+
+    // 暫時鎖住新增和儲存按鈕
+    const lockBtns = document.querySelectorAll('.btn.primary, .btn-save');
+    lockBtns.forEach(b => { b.disabled = true; b.title = '載入中，請稍候…'; });
+
     const result = await callGAS('loadData', {});
     if (result && result.success) {
       cards = result.cards || [];
       friends = result.friends || [];
-      // 同時更新 localStorage 作為離線備份
       saveLocal();
       setSyncStatus('ok', `已從雲端載入 ${cards.length} 張明信片`);
     } else {
-      // 雲端失敗 → fallback 到 localStorage
       setSyncStatus('err', '雲端載入失敗，使用本地資料');
     }
+
+    // 解鎖按鈕
+    lockBtns.forEach(b => { b.disabled = false; b.title = ''; });
   } else {
     setSyncStatus('', '離線模式');
   }
@@ -1883,6 +1889,16 @@ function copyLastCard() {
 }
 
 async function saveCard() {
+  // 防呆：如果本地 cards 比 localStorage 備份少很多，可能是資料未載入完整
+  const localBackup = JSON.parse(localStorage.getItem('pkm_cards') || '[]');
+  if (localBackup.length > cards.length + 5 && !editingCardId) {
+    const ok = confirm(
+      `⚠️ 注意：記憶體中只有 ${cards.length} 筆資料，但本地備份有 ${localBackup.length} 筆。\n\n` +
+      `資料可能尚未載入完整，繼續儲存可能會遺失資料。\n\n確定要繼續嗎？`
+    );
+    if (!ok) return;
+  }
+
   const selectedTags = Array.from(document.querySelectorAll('#tagGrid input:checked')).map(cb => cb.value);
   const status = document.getElementById('fStatus').value;
   const data = {
