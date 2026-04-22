@@ -1624,41 +1624,74 @@ function handleImg(e, role) {
 
       if (role === 'main') {
         currentMainImg = {
-          base64: compressedBase64, // 顯示和 AI 辨識用壓縮版
-          filename, mime: 'image/jpeg', url: compressedBase64
+          base64: compressedBase64,
+          filename, mime: 'image/jpeg', url: compressedBase64,
+          uploading: true // 標記上傳中
         };
         document.getElementById('upPrompt').style.display = 'none';
         document.getElementById('aiBtnEl').disabled = false;
       } else {
         currentAuxImgs.push({
           base64: compressedBase64,
-          filename, mime: 'image/jpeg', url: compressedBase64
+          filename, mime: 'image/jpeg', url: compressedBase64,
+          uploading: true
         });
       }
       renderPhotoGallery();
+      updateSaveBtn(); // 上傳中禁用儲存
 
       if (CFG.scriptUrl) {
         try {
-          // 上傳原始尺寸到 Drive（base64 是原圖）
           const res = await callGAS('uploadPhoto', { base64, mimeType: mime, filename });
           if (res && res.success) {
             if (role === 'main') {
               currentMainImg.driveUrl = res.url;
               currentMainImg.fileId = res.fileId || '';
+              currentMainImg.uploading = false;
             } else {
               const aux = currentAuxImgs.find(x => x.filename === filename);
               if (aux) {
                 aux.driveUrl = res.url;
                 aux.fileId = res.fileId || '';
+                aux.uploading = false;
               }
             }
+          } else {
+            // 上傳失敗，清除 uploading 標記但沒有 driveUrl
+            if (role === 'main') currentMainImg.uploading = false;
+            else { const aux = currentAuxImgs.find(x => x.filename === filename); if (aux) aux.uploading = false; }
           }
-        } catch(err) { console.error('上傳 Drive 失敗:', err); }
+        } catch(err) {
+          console.error('上傳 Drive 失敗:', err);
+          if (role === 'main') currentMainImg.uploading = false;
+          else { const aux = currentAuxImgs.find(x => x.filename === filename); if (aux) aux.uploading = false; }
+        }
+      } else {
+        // 沒有 GAS，不需要上傳
+        if (role === 'main') currentMainImg.uploading = false;
+        else { const aux = currentAuxImgs.find(x => x.filename === filename); if (aux) aux.uploading = false; }
       }
+      renderPhotoGallery();
+      updateSaveBtn(); // 上傳完成後重新啟用
     }
   })();
 
   e.target.value = '';
+}
+
+function updateSaveBtn() {
+  const saveBtn = document.querySelector('#cardOverlay .btn-save');
+  if (!saveBtn) return;
+  const isUploading =
+    (currentMainImg?.uploading) ||
+    currentAuxImgs.some(p => p.uploading);
+  if (isUploading) {
+    saveBtn.disabled = true;
+    saveBtn.textContent = '⏳ 上傳中…';
+  } else {
+    saveBtn.disabled = false;
+    saveBtn.textContent = '🌱 儲存';
+  }
 }
 
 function renderPhotoGallery() {
@@ -1917,17 +1950,17 @@ async function saveCard() {
     tags: selectedTags,
     notes: document.getElementById('fNotes').value.trim(),
     mainImg: currentMainImg ? {
-      url: currentMainImg.driveUrl || currentMainImg.base64 || currentMainImg.url,
+      // 只用 driveUrl，若尚未上傳完成則暫存空字串，絕不存 base64 到 url
+      url: currentMainImg.driveUrl || '',
       fileId: currentMainImg.fileId || '',
       filename: currentMainImg.filename || '',
-      base64: currentMainImg.base64,
+      // base64 只留在 currentMainImg 記憶體中供顯示，不存進 cards
       role: 'main'
     } : null,
     auxImgs: currentAuxImgs.map(p => ({
-      url: p.driveUrl || p.base64 || p.url,
+      url: p.driveUrl || p.url || '',
       fileId: p.fileId || '',
       filename: p.filename || '',
-      base64: p.base64,
       role: 'aux'
     })),
     createdAt: editingCardId ? (cards.find(c=>c.id===editingCardId)||{}).createdAt || new Date().toISOString() : new Date().toISOString()
