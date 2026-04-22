@@ -727,6 +727,7 @@ window.onload = async () => {
 
   renderLibrary();
   renderFriendSelects();
+  renderSettingsFriendList();
 };
 
 function updateSetupCard() {
@@ -1121,7 +1122,6 @@ async function syncAll(silent = false) {
       const localCount = cards.length;
       const diff = localCount - cloudCount;
       if (cloudCount > 0 && diff < -5) {
-        // 本地比雲端少超過 5 筆，可能是資料遺失，要求確認
         const ok = confirm(
           `⚠️ 注意：本地資料（${localCount} 筆）比雲端少 ${Math.abs(diff)} 筆（雲端 ${cloudCount} 筆）。\n\n` +
           `繼續同步會以本地資料覆蓋雲端，可能導致雲端資料遺失。\n\n確定要同步嗎？`
@@ -1134,6 +1134,13 @@ async function syncAll(silent = false) {
         );
         if (!ok) { setSyncStatus('', '已取消同步'); return; }
       }
+    } else {
+      // loadData 失敗，無法比較筆數，讓使用者決定
+      const ok = confirm(
+        `⚠️ 無法取得雲端資料（網路錯誤或 GAS 異常）。\n\n` +
+        `無法確認雲端筆數，繼續同步將直接以本地 ${cards.length} 筆資料覆蓋雲端。\n\n確定要繼續嗎？`
+      );
+      if (!ok) { setSyncStatus('err', '已取消同步（無法取得雲端資料）'); return; }
     }
   }
 
@@ -1235,48 +1242,9 @@ function scanSelectAll(checked) {
 }
 
 function renderScanModal() {
-  const total = scannedPhotos.length;
-  const withFileId = scannedPhotos.filter(p => !!p.fileId).length;
-  const cardsWithFileId = cards.filter(c => !!c.mainImg?.fileId).length;
   const newCount = scannedPhotos.filter(p => !isPhotoInUse(p.fileId)).length;
-
-  // 診斷：找出 Drive 有、卡片也有 fileId 但比對不上的照片
-  const allCardFileIds = new Set([
-    ...cards.map(c => c.mainImg?.fileId).filter(Boolean),
-    ...cards.flatMap(c => (c.auxImgs||[]).map(a => a.fileId)).filter(Boolean)
-  ]);
-  const mismatch = scannedPhotos.filter(p => p.fileId && !allCardFileIds.has(p.fileId));
-
-  let debugHtml = `<span style="font-size:.68rem;color:var(--muted)">` +
-    `Drive 有 fileId：${withFileId}/${total}　` +
-    `本地卡片有 fileId：${cardsWithFileId}/${cards.length}　` +
-    `Set 中共 ${allCardFileIds.size} 個 fileId`;
-  if (mismatch.length > 0 && mismatch.length <= 10) {
-    debugHtml += `<br>⚠️ 比對不上的(${mismatch.length})：${mismatch.map(p=>p.filename+' ['+p.fileId.slice(0,8)+']').join('、')}`;
-  } else if (mismatch.length > 10) {
-    debugHtml += `<br>⚠️ 比對不上共 ${mismatch.length} 張`;
-  }
-  // 檢查有沒有任何交集
-  const driveIds = new Set(scannedPhotos.map(p => p.fileId));
-  const intersection = [...allCardFileIds].filter(id => driveIds.has(id));
-  debugHtml += `<br>交集數量：${intersection.length}`;
-  if (intersection.length > 0) {
-    debugHtml += `　交集樣本：${intersection.slice(0,2).join(' | ')}`;
-  } else {
-    debugHtml += `　→ 完全沒有交集！`;
-  }
-  const cardIdSample = [...allCardFileIds].slice(0,2).join(' | ');
-  debugHtml += `<br>Drive fileId 樣本：${driveIdSample}`;
-  debugHtml += `<br>卡片 fileId 樣本：${cardIdSample}`;
-  // 印出卡片 URL 和 fileId 對照
-  const cardSample = cards.filter(c=>c.mainImg?.fileId).slice(0,3).map(c=>
-    `${c.cardName||'?'}：url=${(c.mainImg.url||'').slice(0,40)} fileId=${c.mainImg.fileId}`
-  );
-  debugHtml += `<br>卡片樣本：<br>${cardSample.join('<br>')}`;
-  debugHtml += `</span>`;
-
-  document.getElementById('scanStatus').innerHTML =
-    `掃描完成，共 ${total} 張，其中 <b>${newCount} 張尚未建檔</b><br>${debugHtml}`;
+  document.getElementById('scanStatus').textContent =
+    `掃描完成，共 ${scannedPhotos.length} 張，其中 ${newCount} 張尚未建檔`;
 
   if (!scannedPhotos.length) return;
 
@@ -1450,19 +1418,16 @@ async function openDrivePickerModal() {
   document.getElementById('dpPager').style.display = 'none';
   document.getElementById('drivePickerOverlay').classList.add('open');
 
-  // 若 scannedPhotos 已有資料就直接用，否則重新掃描
-  if (scannedPhotos.length > 0) {
-    dpPhotos = scannedPhotos;
-    renderDpList();
-  } else {
-    const result = await callGAS('scan', {});
-    if (!result || !result.success) {
-      document.getElementById('drivePickerStatus').textContent = '掃描失敗：' + (result?.error || '網路錯誤');
-      return;
-    }
-    dpPhotos = result.photos || [];
-    renderDpList();
+  // 每次開啟都重新掃描，確保資料是最新的
+  const result = await callGAS('scan', {});
+  if (!result || !result.success) {
+    document.getElementById('drivePickerStatus').textContent = '掃描失敗：' + (result?.error || '網路錯誤');
+    return;
   }
+  dpPhotos = result.photos || [];
+  // 同時更新 scannedPhotos 快取
+  if (dpPhotos.length > 0) scannedPhotos = dpPhotos;
+  renderDpList();
 }
 
 function getDpFiltered() {
@@ -1912,6 +1877,7 @@ async function saveCard() {
     auxImgs: currentAuxImgs.map(p => ({
       url: p.driveUrl || p.base64 || p.url,
       fileId: p.fileId || '',
+      filename: p.filename || '',
       base64: p.base64,
       role: 'aux'
     })),
@@ -2021,19 +1987,22 @@ function saveFriend() {
   saveAndSync();
   renderFriends(); renderFriendSelects(); closeModal('friendOverlay');
   if(pendingFriendTarget){
+    const target = pendingFriendTarget;
+    const savedCardId = editingCardId; // 暫存目前編輯中的卡片 id
+    pendingFriendTarget = null;
     setTimeout(()=>{
-      renderFriendSelects();
-      if (pendingFriendTarget === 'source') {
-        const sel = document.getElementById('fSourceFriend');
-        if (sel) sel.value = name;
-      } else {
-        // recip 是 checkbox，重新渲染並勾選新好友
-        const cur = Array.from(document.querySelectorAll('#recipFriendGrid input:checked')).map(cb=>cb.value);
-        renderRecipFriendGrid([...cur, name]);
-      }
-      pendingFriendTarget=null;
-      document.getElementById('cardOverlay').classList.add('open');
-    },50);
+      // 用 openCardModal 完整重新初始化，確保所有選單都更新
+      openCardModal(savedCardId);
+      setTimeout(()=>{
+        if (target === 'source') {
+          const sel = document.getElementById('fSourceFriend');
+          if (sel) sel.value = name;
+        } else {
+          const cur = Array.from(document.querySelectorAll('#recipFriendGrid input:checked')).map(cb=>cb.value);
+          renderRecipFriendGrid([...cur, name]);
+        }
+      }, 80);
+    }, 50);
   }
 }
 
@@ -2080,6 +2049,9 @@ function removeFilterRow(id) {
 
 function clearFilters() {
   filterConditions=[];
+  showDuplicatesOnly = false;
+  const dupBtn = document.getElementById('dupFilterBtn');
+  if (dupBtn) dupBtn.classList.remove('active');
   renderFilterRows(); renderLibrary();
   updateFilterCount();
 }
@@ -2393,7 +2365,7 @@ function importJSON(e){
       localStorage.setItem('pkm_tags',JSON.stringify(tagMap));
       localStorage.setItem('pkm_countries',JSON.stringify(countries));
       localStorage.setItem('pkm_favorites',JSON.stringify(favorites));
-      renderLibrary(); renderFriendSelects(); renderMethodTags(); renderFavoriteList();
+      renderLibrary(); renderFriendSelects(); renderMethodTags(); renderFavoriteList(); renderFavoriteSelect(); renderSettingsFriendList();
       alert(`✅ 匯入成功！共 ${cards.length} 張明信片`);
       if(CFG.scriptUrl) syncAll(); // 匯入後同步到雲端
     }catch(err){ alert('⚠️ 匯入失敗：檔案格式錯誤'); }
