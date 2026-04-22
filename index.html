@@ -1624,40 +1624,43 @@ function handleImg(e, role) {
 
       if (role === 'main') {
         currentMainImg = {
-          base64: compressedBase64,
-          filename, mime: 'image/jpeg', url: compressedBase64,
-          uploading: true // 標記上傳中
+          base64: compressedBase64, // 顯示用，不存進 cards
+          url: '',                  // 等 Drive 上傳完才填入
+          filename, mime: 'image/jpeg',
+          uploading: true
         };
         document.getElementById('upPrompt').style.display = 'none';
         document.getElementById('aiBtnEl').disabled = false;
       } else {
         currentAuxImgs.push({
           base64: compressedBase64,
-          filename, mime: 'image/jpeg', url: compressedBase64,
+          url: '',
+          filename, mime: 'image/jpeg',
           uploading: true
         });
       }
       renderPhotoGallery();
-      updateSaveBtn(); // 上傳中禁用儲存
+      updateSaveBtn();
 
       if (CFG.scriptUrl) {
         try {
           const res = await callGAS('uploadPhoto', { base64, mimeType: mime, filename });
           if (res && res.success) {
             if (role === 'main') {
+              currentMainImg.url = res.url;
               currentMainImg.driveUrl = res.url;
               currentMainImg.fileId = res.fileId || '';
               currentMainImg.uploading = false;
             } else {
               const aux = currentAuxImgs.find(x => x.filename === filename);
               if (aux) {
+                aux.url = res.url;
                 aux.driveUrl = res.url;
                 aux.fileId = res.fileId || '';
                 aux.uploading = false;
               }
             }
           } else {
-            // 上傳失敗，清除 uploading 標記但沒有 driveUrl
             if (role === 'main') currentMainImg.uploading = false;
             else { const aux = currentAuxImgs.find(x => x.filename === filename); if (aux) aux.uploading = false; }
           }
@@ -1667,12 +1670,11 @@ function handleImg(e, role) {
           else { const aux = currentAuxImgs.find(x => x.filename === filename); if (aux) aux.uploading = false; }
         }
       } else {
-        // 沒有 GAS，不需要上傳
         if (role === 'main') currentMainImg.uploading = false;
         else { const aux = currentAuxImgs.find(x => x.filename === filename); if (aux) aux.uploading = false; }
       }
       renderPhotoGallery();
-      updateSaveBtn(); // 上傳完成後重新啟用
+      updateSaveBtn();
     }
   })();
 
@@ -1950,11 +1952,9 @@ async function saveCard() {
     tags: selectedTags,
     notes: document.getElementById('fNotes').value.trim(),
     mainImg: currentMainImg ? {
-      // 只用 driveUrl，若尚未上傳完成則暫存空字串，絕不存 base64 到 url
-      url: currentMainImg.driveUrl || '',
+      url: currentMainImg.driveUrl || currentMainImg.url || '',
       fileId: currentMainImg.fileId || '',
       filename: currentMainImg.filename || '',
-      // base64 只留在 currentMainImg 記憶體中供顯示，不存進 cards
       role: 'main'
     } : null,
     auxImgs: currentAuxImgs.map(p => ({
