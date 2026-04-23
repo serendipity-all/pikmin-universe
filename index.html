@@ -1597,7 +1597,6 @@ function handleImg(e, role) {
   const files = Array.from(e.target.files);
   if (!files.length) return;
 
-  // 用 async IIFE 處理每個檔案（需要 await 查詢重複）
   (async () => {
     for (const file of files) {
       const reader = new FileReader();
@@ -1607,93 +1606,35 @@ function handleImg(e, role) {
       });
 
       const mime = file.type || 'image/jpeg';
-      let filename = file.name;
+      const filename = file.name;
 
-      // 壓縮版：供頁面顯示和 AI 辨識
+      // 壓縮版供顯示和 AI 辨識，原圖暫存供之後上傳 Drive
       const compressedBase64 = await compressImage(base64, 1024, 0.85);
-
-      // 如果有設定 GAS，查詢 Drive 是否有同名檔案
-      if (CFG.scriptUrl) {
-        const checkRes = await callGAS('checkFilename', { filename });
-        if (checkRes && checkRes.exists) {
-          const confirmed = confirm(`Drive 中已有同名檔案「${filename}」，是否仍要上傳？\n（確定後會自動加上編號，例如：${checkRes.suggestedName}）`);
-          if (!confirmed) continue;
-          filename = checkRes.suggestedName;
-        }
-      }
 
       if (role === 'main') {
         currentMainImg = {
-          base64: compressedBase64, // 顯示用，不存進 cards
-          url: '',                  // 等 Drive 上傳完才填入
-          filename, mime: 'image/jpeg',
-          uploading: true
+          base64: compressedBase64,   // 壓縮版：顯示 + AI 辨識用
+          originalBase64: base64,     // 原圖：儲存時上傳 Drive 用
+          url: compressedBase64,      // 暫時用 base64 顯示
+          filename, mime,
+          uploaded: false             // 尚未上傳到 Drive
         };
         document.getElementById('upPrompt').style.display = 'none';
         document.getElementById('aiBtnEl').disabled = false;
       } else {
         currentAuxImgs.push({
           base64: compressedBase64,
-          url: '',
-          filename, mime: 'image/jpeg',
-          uploading: true
+          originalBase64: base64,
+          url: compressedBase64,
+          filename, mime,
+          uploaded: false
         });
       }
       renderPhotoGallery();
-      updateSaveBtn();
-
-      if (CFG.scriptUrl) {
-        try {
-          const res = await callGAS('uploadPhoto', { base64, mimeType: mime, filename });
-          if (res && res.success) {
-            if (role === 'main') {
-              currentMainImg.url = res.url;
-              currentMainImg.driveUrl = res.url;
-              currentMainImg.fileId = res.fileId || '';
-              currentMainImg.uploading = false;
-            } else {
-              const aux = currentAuxImgs.find(x => x.filename === filename);
-              if (aux) {
-                aux.url = res.url;
-                aux.driveUrl = res.url;
-                aux.fileId = res.fileId || '';
-                aux.uploading = false;
-              }
-            }
-          } else {
-            if (role === 'main') currentMainImg.uploading = false;
-            else { const aux = currentAuxImgs.find(x => x.filename === filename); if (aux) aux.uploading = false; }
-          }
-        } catch(err) {
-          console.error('上傳 Drive 失敗:', err);
-          if (role === 'main') currentMainImg.uploading = false;
-          else { const aux = currentAuxImgs.find(x => x.filename === filename); if (aux) aux.uploading = false; }
-        }
-      } else {
-        if (role === 'main') currentMainImg.uploading = false;
-        else { const aux = currentAuxImgs.find(x => x.filename === filename); if (aux) aux.uploading = false; }
-      }
-      renderPhotoGallery();
-      updateSaveBtn();
     }
   })();
 
   e.target.value = '';
-}
-
-function updateSaveBtn() {
-  const saveBtn = document.querySelector('#cardOverlay .btn-save');
-  if (!saveBtn) return;
-  const isUploading =
-    (currentMainImg?.uploading) ||
-    currentAuxImgs.some(p => p.uploading);
-  if (isUploading) {
-    saveBtn.disabled = true;
-    saveBtn.textContent = '⏳ 上傳中…';
-  } else {
-    saveBtn.disabled = false;
-    saveBtn.textContent = '🌱 儲存';
-  }
 }
 
 function renderPhotoGallery() {
@@ -1924,7 +1865,7 @@ function copyLastCard() {
 }
 
 async function saveCard() {
-  // 防呆：如果本地 cards 比 localStorage 備份少很多，可能是資料未載入完整
+  // 防呆：記憶體資料比 localStorage 備份少很多時警告
   const localBackup = JSON.parse(localStorage.getItem('pkm_cards') || '[]');
   if (localBackup.length > cards.length + 5 && !editingCardId) {
     const ok = confirm(
@@ -1932,6 +1873,56 @@ async function saveCard() {
       `資料可能尚未載入完整，繼續儲存可能會遺失資料。\n\n確定要繼續嗎？`
     );
     if (!ok) return;
+  }
+
+  const saveBtn = document.querySelector('#cardOverlay .btn-save');
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '⏳ 儲存中…'; }
+
+  // 上傳尚未上傳的照片到 Drive
+  if (CFG.scriptUrl) {
+    // 主照片
+    if (currentMainImg && !currentMainImg.uploaded && currentMainImg.originalBase64) {
+      let filename = currentMainImg.filename;
+      try {
+        // 檢查重複檔名
+        const checkRes = await callGAS('checkFilename', { filename });
+        if (checkRes?.exists) {
+          const confirmed = confirm(`Drive 中已有同名檔案「${filename}」，是否仍要上傳？\n（確定後會自動加上編號，例如：${checkRes.suggestedName}）`);
+          if (!confirmed) {
+            if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '🌱 儲存'; }
+            return;
+          }
+          filename = checkRes.suggestedName;
+          currentMainImg.filename = filename;
+        }
+        const res = await callGAS('uploadPhoto', { base64: currentMainImg.originalBase64, mimeType: currentMainImg.mime, filename });
+        if (res?.success) {
+          currentMainImg.url = res.url;
+          currentMainImg.fileId = res.fileId || '';
+          currentMainImg.uploaded = true;
+        }
+      } catch(err) { console.error('主照片上傳失敗:', err); }
+    }
+
+    // 輔助照片
+    for (const aux of currentAuxImgs) {
+      if (!aux.uploaded && aux.originalBase64) {
+        let filename = aux.filename;
+        try {
+          const checkRes = await callGAS('checkFilename', { filename });
+          if (checkRes?.exists) {
+            filename = checkRes.suggestedName;
+            aux.filename = filename;
+          }
+          const res = await callGAS('uploadPhoto', { base64: aux.originalBase64, mimeType: aux.mime, filename });
+          if (res?.success) {
+            aux.url = res.url;
+            aux.fileId = res.fileId || '';
+            aux.uploaded = true;
+          }
+        } catch(err) { console.error('輔助照片上傳失敗:', err); }
+      }
+    }
   }
 
   const selectedTags = Array.from(document.querySelectorAll('#tagGrid input:checked')).map(cb => cb.value);
@@ -1952,22 +1943,25 @@ async function saveCard() {
     tags: selectedTags,
     notes: document.getElementById('fNotes').value.trim(),
     mainImg: currentMainImg ? {
-      url: currentMainImg.driveUrl || currentMainImg.url || '',
+      url: currentMainImg.url || '',
       fileId: currentMainImg.fileId || '',
       filename: currentMainImg.filename || '',
       role: 'main'
     } : null,
     auxImgs: currentAuxImgs.map(p => ({
-      url: p.driveUrl || p.url || '',
+      url: p.url || '',
       fileId: p.fileId || '',
       filename: p.filename || '',
       role: 'aux'
     })),
     createdAt: editingCardId ? (cards.find(c=>c.id===editingCardId)||{}).createdAt || new Date().toISOString() : new Date().toISOString()
   };
+
   if (editingCardId) { const i=cards.findIndex(c=>c.id===editingCardId); if(i>=0) cards[i]=data; }
   else cards.unshift(data);
   saveAndSync(); renderLibrary(); closeModal('cardOverlay');
+
+  if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '🌱 儲存'; }
 }
 
 // ═══════════════════════════════════════════════
