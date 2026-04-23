@@ -1165,7 +1165,7 @@ async function syncAll(silent = false) {
   }
 
   setSyncStatus('ing', '同步中…');
-  const result = await callGAS('sync', { cards, friends });
+  const result = await callGAS('sync', { cards: cleanCardsForSync(cards), friends });
   if (result && result.success) {
     setSyncStatus('ok', `已同步（${new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'})}）`);
   } else {
@@ -2407,6 +2407,25 @@ function renderFriendRank(elId,data){
 function saveLocal(){
   localStorage.setItem('pkm_cards',JSON.stringify(cards));
   localStorage.setItem('pkm_friends',JSON.stringify(friends));
+}
+
+// 清除 cards 中的 base64，只保留必要欄位供雲端同步
+function cleanCardsForSync(cardsArr) {
+  return cardsArr.map(c => ({
+    ...c,
+    mainImg: c.mainImg ? {
+      url: (c.mainImg.url||'').startsWith('data:') ? '' : (c.mainImg.url||''),
+      fileId: c.mainImg.fileId || '',
+      filename: c.mainImg.filename || '',
+      role: 'main'
+    } : null,
+    auxImgs: (c.auxImgs||[]).map(a => ({
+      url: (a.url||'').startsWith('data:') ? '' : (a.url||''),
+      fileId: a.fileId || '',
+      filename: a.filename || '',
+      role: 'aux'
+    }))
+  }));
 }
 
 // 儲存本地並同步到雲端（跨裝置共用的核心）
