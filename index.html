@@ -107,7 +107,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
 .modal{background:var(--card);border-radius:20px;width:100%;max-width:600px;max-height:94vh;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3);animation:slideUp .2s ease;display:flex;flex-direction:column}
 .mbody{padding:16px 18px;overflow-y:auto;flex:1}
 @keyframes slideUp{from{transform:translateY(16px);opacity:0}to{transform:none;opacity:1}}
-.mhead{background:linear-gradient(135deg,var(--g),var(--gd));padding:14px 18px;display:flex;align-items:center;justify-content:space-between;border-radius:18px 18px 0 0;position:sticky;top:0;z-index:10}
+.mhead{background:linear-gradient(135deg,var(--g),var(--gd));padding:14px 18px;display:flex;align-items:center;justify-content:space-between;border-radius:18px 18px 0 0;flex-shrink:0}
 .mtitle{font-family:'Nunito',sans-serif;font-weight:900;font-size:1rem;color:#fff;display:flex;align-items:center;gap:7px}
 .xbtn{background:rgba(255,255,255,.2);border:none;border-radius:50%;width:28px;height:28px;font-size:.9rem;cursor:pointer;color:#fff;display:flex;align-items:center;justify-content:center}
 .xbtn:hover{background:rgba(255,255,255,.35)}
@@ -120,7 +120,8 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
 .mfoot{padding:12px 18px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;align-items:center;flex-wrap:wrap;background:var(--card);flex-shrink:0}
 .btn-cancel{padding:8px 16px;border:2px solid var(--border);border-radius:10px;background:#fff;font-family:'Nunito',sans-serif;font-weight:700;font-size:.84rem;cursor:pointer;color:var(--muted)}
 .btn-save{padding:8px 20px;background:linear-gradient(135deg,var(--g),var(--gd));border:none;border-radius:10px;color:#fff;font-family:'Nunito',sans-serif;font-weight:800;font-size:.84rem;cursor:pointer;box-shadow:0 2px 8px var(--sh)}
-.btn-save:hover{transform:translateY(-1px)}
+.btn-save:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn-save:not(:disabled):hover{transform:translateY(-1px)}
 .copy-last-btn{padding:6px 12px;border:1.5px dashed var(--border);border-radius:8px;background:#fafff8;font-size:.73rem;font-family:inherit;cursor:pointer;color:var(--muted)}
 .copy-last-btn:hover{border-color:var(--g);color:var(--g)}
 .upload-area{border:2px dashed var(--border);border-radius:12px;padding:14px;text-align:center;cursor:pointer;transition:all .18s;background:#f8fff4;position:relative}
@@ -149,7 +150,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
 .tc input{position:absolute;opacity:0;width:0}
 .tc label{display:inline-block;padding:3px 10px;border:2px solid var(--border);border-radius:12px;font-size:.72rem;font-weight:700;cursor:pointer;transition:all .14s;font-family:'Nunito',sans-serif;color:var(--muted);background:#fff}
 .tc input:checked+label{background:var(--g);border-color:var(--g);color:#fff}
-.rare-select{display:flex;gap:6px}
+.rare-select{display:flex;flex-wrap:wrap;gap:6px}
 .rare-opt{position:relative}
 .rare-opt input{position:absolute;opacity:0;width:0}
 .rare-opt label{display:inline-block;padding:3px 11px;border:2px solid var(--border);border-radius:12px;font-size:.72rem;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;color:var(--muted);background:#fff;transition:all .14s}
@@ -184,7 +185,6 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
 .setting-row label{font-size:.8rem;font-weight:600;color:var(--gd);min-width:100px}
 .setting-row input{flex:1;min-width:200px;padding:7px 11px;border:2px solid var(--border);border-radius:8px;font-size:.8rem;font-family:inherit;outline:none}
 .setting-row input:focus{border-color:var(--g)}
-/* Drive Scan Modal */
 .scan-item{background:#f8fff4;border:2px solid var(--border);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:10px;margin-bottom:6px}
 .scan-item img{width:60px;height:60px;object-fit:cover;border-radius:6px;flex-shrink:0;background:#ddd}
 .scan-item-info{flex:1;min-width:0;font-size:.78rem}
@@ -249,7 +249,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
 <!-- PAGES -->
 <div class="pages">
 
-  <!-- ══ LIBRARY PAGE ══ -->
+  <!-- LIBRARY PAGE -->
   <div class="page active" id="page-library">
     <div id="setupCard" style="display:none">
       <div class="setup-card">
@@ -260,7 +260,6 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
         </div>
       </div>
     </div>
-
     <div class="toolbar">
       <div class="search-box">
         <span class="si">🔍</span>
@@ -274,8 +273,6 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
       <button class="btn" id="dupFilterBtn" onclick="toggleDuplicateFilter()" title="顯示名稱重複的明信片">♊ 重複名稱</button>
       <button class="btn primary" onclick="openCardModal()">＋ 新增明信片</button>
     </div>
-
-    <!-- FILTER PANEL -->
     <div class="filter-panel" id="filterPanel">
       <div class="filter-header">
         <span>🔧 自訂篩選條件</span>
@@ -286,11 +283,10 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
       </div>
       <div class="filter-rows" id="filterRows"></div>
     </div>
-
     <div id="cardGrid" class="card-grid"></div>
   </div>
 
-  <!-- ══ STATS PAGE ══ -->
+  <!-- STATS PAGE -->
   <div class="page" id="page-stats">
     <div class="stats-grid">
       <div class="stat-card">
@@ -312,7 +308,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
     </div>
   </div>
 
-  <!-- ══ FRIENDS PAGE ══ -->
+  <!-- FRIENDS PAGE -->
   <div class="page" id="page-friends">
     <div class="toolbar">
       <div class="search-box">
@@ -324,7 +320,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
     <div class="friend-list" id="friendList"></div>
   </div>
 
-  <!-- ══ SETTINGS PAGE ══ -->
+  <!-- SETTINGS PAGE -->
   <div class="page" id="page-settings">
     <div class="settings-section">
       <h3>☁️ Google Apps Script 設定</h3>
@@ -334,17 +330,15 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
       </div>
       <button class="btn primary" onclick="saveSettings()" style="margin-top:4px">💾 儲存設定</button>
     </div>
-
     <div class="settings-section">
       <h3>💖 喜好度管理</h3>
       <div id="favoriteList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px"></div>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-        <input type="text" class="fi" id="cfgNewFavIcon" placeholder="圖示（單一emoji）" style="width:70px;padding:6px 8px;font-size:.9rem;text-align:center">
+        <input type="text" class="fi" id="cfgNewFavIcon" placeholder="圖示emoji" style="width:70px;padding:6px 8px;font-size:.9rem;text-align:center">
         <input type="text" class="fi" id="cfgNewFavLabel" placeholder="名稱" style="flex:1;padding:6px 10px;font-size:.8rem">
         <button class="btn primary" onclick="addFavorite()" style="padding:6px 12px;font-size:.78rem">＋新增</button>
       </div>
     </div>
-
     <div class="settings-section">
       <h3>👥 好友管理</h3>
       <div id="settingsFriendList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px"></div>
@@ -353,7 +347,6 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
         <button class="btn primary" onclick="addFriendFromSettings()" style="padding:6px 12px;font-size:.78rem">＋新增</button>
       </div>
     </div>
-
     <div class="settings-section">
       <h3>🏷️ 類型標籤管理</h3>
       <div id="tagList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px"></div>
@@ -361,12 +354,9 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
         <label style="font-size:.77rem;font-weight:700;color:var(--gd);display:block;margin-bottom:8px">新增標籤：</label>
         <input type="text" class="fi" id="cfgNewTagInput" placeholder="輸入標籤名稱" style="width:100%;padding:6px 10px;font-size:.8rem;margin-bottom:8px">
         <div id="cfgEmojiGrid" style="display:grid;grid-template-columns:repeat(8,1fr);gap:4px;padding:10px;background:#f8fff4;border:2px solid var(--border);border-radius:10px;max-height:200px;overflow-y:auto"></div>
-        <div style="margin-top:8px">
-          <button class="btn primary" onclick="saveNewTag()" style="width:100%;padding:8px;font-size:.78rem">＋ 新增標籤</button>
-        </div>
+        <button class="btn primary" onclick="saveNewTag()" style="width:100%;padding:8px;font-size:.78rem;margin-top:8px">＋ 新增標籤</button>
       </div>
     </div>
-
     <div class="settings-section">
       <h3>🎯 取得方式管理</h3>
       <div id="methodList" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
@@ -375,7 +365,6 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
         <button class="btn primary" onclick="addMethod()" style="padding:6px 12px;font-size:.78rem">新增</button>
       </div>
     </div>
-
     <div class="settings-section">
       <h3>🌍 取得國家管理</h3>
       <div id="countryList" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
@@ -384,7 +373,6 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
         <button class="btn primary" onclick="saveNewCountry()" style="padding:6px 12px;font-size:.78rem">＋新增</button>
       </div>
     </div>
-
     <div class="settings-section">
       <h3>💾 資料管理</h3>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -396,7 +384,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
   </div>
 </div>
 
-<!-- ══ POSTCARD MODAL ══ -->
+<!-- POSTCARD MODAL -->
 <div class="overlay" id="cardOverlay" onclick="overlayClick(event,'cardOverlay')">
 <div class="modal">
   <div class="mhead">
@@ -404,16 +392,13 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
     <button class="xbtn" onclick="closeModal('cardOverlay')">✕</button>
   </div>
   <div class="mbody">
-    <!-- 照片上傳 -->
     <div class="fg">
       <label class="fl">📷 明信片照片（主照片）</label>
-      <div class="upload-area" id="uploadArea" onclick="document.getElementById('imgInput').click()">
+      <div class="upload-area" onclick="document.getElementById('imgInput').click()">
         <input type="file" id="imgInput" accept="image/*" style="display:none">
         <div id="upPrompt"><div class="up-icon">🖼️</div><p>點擊上傳主照片</p></div>
       </div>
     </div>
-
-    <!-- 輔助照片 -->
     <div class="fg">
       <label class="fl">📸 輔助照片（可多張）</label>
       <div style="display:flex;gap:6px">
@@ -422,35 +407,25 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
           <div style="font-size:1.4rem;opacity:.4">📸</div>
           <p>點擊上傳或拖曳多張照片</p>
         </div>
-        <button type="button" class="btn" onclick="openDrivePickerModal()"
-          style="flex-shrink:0;flex-direction:column;gap:3px;padding:8px 12px;height:auto"
-          title="從 Drive 選取">
+        <button type="button" class="btn" onclick="openDrivePickerModal()" style="flex-shrink:0;flex-direction:column;gap:3px;padding:8px 12px;height:auto" title="從 Drive 選取">
           <span style="font-size:1.4rem;opacity:.6">📁</span>
           <span style="font-size:.65rem">從 Drive</span>
         </button>
       </div>
     </div>
-
-    <!-- 照片預覽 -->
     <div class="photo-gallery" id="photoGallery">
-      <h4>已上傳的照片</h4>
+      <h4>已選擇的照片</h4>
       <div class="photo-list" id="photoList"></div>
     </div>
-
-    <!-- AI 掃描 -->
     <button class="ai-btn" id="aiBtnEl" onclick="aiScan()" disabled>🤖 AI 辨識地點・標籤・取得方式</button>
     <div class="ai-box" id="aiBox">
       <div id="aiText"></div>
       <button class="apply-btn" onclick="applyAI()">✅ 套用建議</button>
     </div>
-
-    <!-- 明信片名稱 地點名稱 -->
     <div class="frow">
       <div class="fg"><label class="fl">🎴 明信片名稱</label><input type="text" class="fi" id="fCardName" placeholder="小灰色蕈菇"></div>
       <div class="fg"><label class="fl">📍 取得地點</label><input type="text" class="fi" id="fName" placeholder="東海里 竹北市"></div>
     </div>
-
-    <!-- 遊戲地區 -->
     <div class="fg">
       <label class="fl">🌍 取得國家</label>
       <div style="display:flex;gap:6px">
@@ -459,26 +434,17 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
         <button class="btn primary" onclick="addCountryFromModal()" style="padding:6px 12px;font-size:.78rem;white-space:nowrap">＋新增</button>
       </div>
     </div>
-
-    <!-- 取得日期 方式 -->
     <div class="frow">
       <div class="fg"><label class="fl">📅 取得日期</label><input type="date" class="fi" id="fObtDate"></div>
-      <div class="fg">
-        <label class="fl">🎯 取得方式</label>
-        <select class="fsel" id="fObtMethod"></select>
-      </div>
+      <div class="fg"><label class="fl">🎯 取得方式</label><select class="fsel" id="fObtMethod"></select></div>
     </div>
-
-    <!-- 來源好友 -->
     <div class="fg">
-      <label class="fl">🤝 來源好友 <span style="font-weight:400;font-size:.7rem;color:var(--muted)">（邀我打菇／直接送我的人）</span></label>
+      <label class="fl">🤝 來源好友</label>
       <div class="friend-select-wrap">
         <select class="fsel" id="fSourceFriend"><option value="">（無）</option></select>
       </div>
       <span class="friend-add-inline" onclick="quickAddFriend('source')">＋ 新增好友到名單</span>
     </div>
-
-    <!-- 喜好度 重複張數 -->
     <div class="frow">
       <div class="fg">
         <label class="fl">💖 喜好度</label>
@@ -489,8 +455,6 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
         <input type="number" class="fi" id="fDupes" min="1" value="1" placeholder="1">
       </div>
     </div>
-
-    <!-- 狀態 送出日期 -->
     <div class="frow">
       <div class="fg">
         <label class="fl">📬 送出狀態</label>
@@ -505,22 +469,16 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
         <input type="date" class="fi" id="fSentDate">
       </div>
     </div>
-
-    <!-- 送給誰 -->
     <div class="fg" id="recipGrp" style="display:none">
       <label class="fl">💌 送給誰（可多選）</label>
       <div id="recipFriendGrid" class="tag-grid" style="max-height:120px;overflow-y:auto;padding:8px;background:#f8fff4;border:2px solid var(--border);border-radius:9px"></div>
       <span class="friend-add-inline" onclick="quickAddFriend('recip')">＋ 新增好友到名單</span>
     </div>
-
-    <!-- 類型標籤 -->
     <div class="fg">
       <label class="fl">🏷️ 類型標籤（可多選）</label>
       <div class="tag-grid" id="tagGrid"></div>
       <div style="font-size:.7rem;color:var(--muted);margin-top:8px">💡 提示：新增/編輯標籤請到「⚙️ 設定」頁面</div>
     </div>
-
-    <!-- 備註 -->
     <div class="fg">
       <label class="fl">💬 備註/心得</label>
       <textarea class="fta" id="fNotes" placeholder="記下這張明信片的故事…"></textarea>
@@ -529,12 +487,12 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
   <div class="mfoot">
     <button class="copy-last-btn" onclick="copyLastCard()">📋 沿用上一筆</button>
     <button class="btn-cancel" onclick="closeModal('cardOverlay')">取消</button>
-    <button class="btn-save" onclick="saveCard()">🌱 儲存</button>
+    <button class="btn-save" id="cardSaveBtn" onclick="saveCard()">🌱 儲存</button>
   </div>
 </div>
 </div>
 
-<!-- ══ DRIVE PICKER MODAL（輔助照片選取）══ -->
+<!-- DRIVE PICKER MODAL -->
 <div class="overlay" id="drivePickerOverlay" onclick="overlayClick(event,'drivePickerOverlay')">
 <div class="modal" style="max-width:500px">
   <div class="mhead" style="background:linear-gradient(135deg,#2d7a4a,#1a5c35)">
@@ -566,7 +524,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
 </div>
 </div>
 
-<!-- ══ FRIEND MODAL ══ -->
+<!-- FRIEND MODAL -->
 <div class="overlay" id="friendOverlay" onclick="overlayClick(event,'friendOverlay')">
 <div class="modal" style="max-width:400px">
   <div class="mhead">
@@ -584,7 +542,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
 </div>
 </div>
 
-<!-- ══ DETAIL MODAL ══ -->
+<!-- DETAIL MODAL -->
 <div class="overlay" id="detailOverlay" onclick="overlayClick(event,'detailOverlay')">
 <div class="modal" style="max-width:480px">
   <div class="mhead" style="background:linear-gradient(135deg,#3a6a9a,#2255aa)">
@@ -599,7 +557,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
 </div>
 </div>
 
-<!-- ══ DRIVE SCAN MODAL ══ -->
+<!-- DRIVE SCAN MODAL -->
 <div class="overlay" id="scanOverlay" onclick="overlayClick(event,'scanOverlay')">
 <div class="modal" style="max-width:600px">
   <div class="mhead" style="background:linear-gradient(135deg,#7a4a9a,#4a2a7a)">
@@ -607,31 +565,23 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
     <button class="xbtn" onclick="closeModal('scanOverlay')">✕</button>
   </div>
   <div class="mbody" style="padding:12px 16px">
-    <!-- 狀態列 -->
     <div id="scanStatus" style="font-size:.82rem;color:var(--muted);margin-bottom:10px"></div>
-
-    <!-- 工具列：篩選 + 全選 -->
     <div id="scanToolbar" style="display:none;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px;padding:8px 10px;background:#f8fff4;border:1.5px solid var(--border);border-radius:10px">
-      <!-- 篩選 -->
       <div style="display:flex;gap:4px">
         <button class="btn active" id="scanFilterAll" onclick="setScanFilter('all')" style="padding:4px 10px;font-size:.72rem">全部</button>
         <button class="btn" id="scanFilterNew" onclick="setScanFilter('new')" style="padding:4px 10px;font-size:.72rem">✅ 未建檔</button>
         <button class="btn" id="scanFilterExists" onclick="setScanFilter('exists')" style="padding:4px 10px;font-size:.72rem">⚠️ 已存在</button>
       </div>
-      <!-- 全選/取消 -->
       <div style="display:flex;gap:4px;margin-left:auto">
         <button class="btn" onclick="scanSelectAll(true)" style="padding:4px 10px;font-size:.72rem">☑ 全選</button>
         <button class="btn" onclick="scanSelectAll(false)" style="padding:4px 10px;font-size:.72rem">☐ 取消</button>
       </div>
     </div>
-
-    <!-- 分頁導覽 -->
     <div id="scanPager" style="display:none;align-items:center;gap:6px;margin-bottom:8px;font-size:.78rem;color:var(--muted)">
       <button class="btn" id="scanPrevBtn" onclick="changeScanPage(-1)" style="padding:3px 10px;font-size:.75rem">‹ 上頁</button>
       <span id="scanPageInfo"></span>
       <button class="btn" id="scanNextBtn" onclick="changeScanPage(1)" style="padding:3px 10px;font-size:.75rem">下頁 ›</button>
     </div>
-
     <div id="scanList"></div>
   </div>
   <div class="mfoot">
@@ -642,62 +592,311 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
 </div>
 </div>
 
-<!-- UNDO TOAST -->
+<!-- TOAST -->
 <div class="toast" id="toast">
   <span id="toastMsg">已刪除</span>
   <button onclick="undoDelete()">撤銷</button>
 </div>
 
 <script>
+'use strict';
 // ═══════════════════════════════════════════════
-//  STATE & CONFIG
+//  CONSTANTS & STATE
 // ═══════════════════════════════════════════════
-let CFG = JSON.parse(localStorage.getItem('pkm_cfg') || '{}');
-let cards = JSON.parse(localStorage.getItem('pkm_cards') || '[]');
-let friends = JSON.parse(localStorage.getItem('pkm_friends') || '[]');
-let methods = JSON.parse(localStorage.getItem('pkm_methods') || '["打菇","好友送","開花","探險","其他"]');
-let tagMap = JSON.parse(localStorage.getItem('pkm_tags') || '{"裝置藝術":"🎨","商店":"🏪","景點":"🗿","餐廳":"🍽️","特殊款":"⭐","旅遊卡":"🎫","地標":"🏛️","咖啡廳":"☕","活動限定":"🎉","季節限定":"🌸","恐怖留":"👻","地方":"📍","建築物":"🏢","看板|標示|到此一遊":"🏷️","宗教|信仰|教堂":"⛩️","公園|廣場|涼亭|噴水池":"🌳","交通":"🚗","城堡|古城|遺跡":"🏰"}');
-let countries = JSON.parse(localStorage.getItem('pkm_countries') || '["日本","台灣","南韓","泰國","馬來西亞","新加坡","美國","英國","法國","德國","澳洲"]');
-// 喜好度：[{ value, label, icon }]
-let favorites = JSON.parse(localStorage.getItem('pkm_favorites') || '[{"value":"神片","label":"神片","icon":"🤩"},{"value":"喜歡","label":"喜歡","icon":"💚"},{"value":"特殊","label":"特殊","icon":"✨"},{"value":"傻眼","label":"傻眼","icon":"😂"}]');
-
-let editingCardId = null;
-let editingFriendId = null;
-let currentView = 'grid';
-let filterLogic = 'AND';
-let filterConditions = [];
-let deletedCard = null;
-let toastTimer = null;
-let aiSuggestion = null;
-let currentMainImg = null;
-let currentAuxImgs = [];
-let pendingFriendTarget = null;
-let chartInstances = {};
-let scannedPhotos = []; // for drive scan modal
-
 const EMOJI_LIST = ['🎨','🏷️','⛩️','🌳','🏪','🚗','🗿','🍽️','⭐','🎫','🏛️','☕','🎉','🌸','👻','📍','🏢','🌲','🏖️','🌺','🎭','🎪','🏰','🗼','🌊','⛰️','🦌','🌻','🍕','🍜','🍣','🥘','🎂','🍰','🚀','🎸','📚','🎮','🏆','💎','🌙','☀️','❄️','🌈','💝','🎎','🛕','🎌','🚂','✈️','🚢','🚁','🎓','⚽','🏀','🎾','🏐','🎳','🎿','⛷️','🏊','🚴','🧘','💐','❤️','💚','💙','💛','😀','😂','🥰','😍'];
-
+const STATUS_MAP = { sent:{l:'已送出',c:'sb-sent'}, pending:{l:'未送出',c:'sb-pending'}, kept:{l:'自留',c:'sb-kept'} };
+const SCAN_PAGE_SIZE = 30;
+const DP_PAGE_SIZE = 30;
 const FILTER_FIELDS = [
-  {v:'status',l:'狀態',type:'select',opts:['sent','pending','kept'],labels:['已送出','未送出','自留']},
-  {v:'obtainedMethod',l:'取得方式',type:'dynamic',src:'methods'},
+  {v:'status',      l:'狀態',           type:'select',  opts:['sent','pending','kept'], labels:['已送出','未送出','自留']},
+  {v:'obtainedMethod',l:'取得方式',      type:'dynamic', src:'methods'},
   {v:'sourceFriend',l:'來源好友（誰送的）',type:'dynamic',src:'friends'},
-  {v:'recipFriend',l:'送給誰',type:'dynamic',src:'friends'},
-  {v:'cardName',l:'明信片名稱',type:'text'},
-  {v:'name',l:'取得地點',type:'text'},
-  {v:'region',l:'取得國家',type:'dynamic',src:'countries'},
-  {v:'rarity',l:'喜好度',type:'dynamic',src:'favorites'},
-  {v:'tags',l:'標籤',type:'dynamic',src:'tags'},
-  {v:'obtainedDate',l:'取得日期',type:'date'},
-  {v:'sentDate',l:'送出日期',type:'date'},
+  {v:'recipFriend', l:'送給誰',         type:'dynamic', src:'friends'},
+  {v:'cardName',    l:'明信片名稱',      type:'text'},
+  {v:'name',        l:'取得地點',        type:'text'},
+  {v:'region',      l:'取得國家',        type:'dynamic', src:'countries'},
+  {v:'rarity',      l:'喜好度',         type:'dynamic', src:'favorites'},
+  {v:'tags',        l:'標籤',           type:'dynamic', src:'tags'},
+  {v:'obtainedDate',l:'取得日期',        type:'date'},
+  {v:'sentDate',    l:'送出日期',        type:'date'},
 ];
 
-const getRecipNames = (c) => Array.isArray(c.recipFriend) ? c.recipFriend : (c.recipFriend ? [c.recipFriend] : []);
-const getRecipStr = (c) => getRecipNames(c).join('、') || '';
-const getFavIcon = (value) => (favorites.find(f => f.value === value)?.icon || '');
-const STATUS_MAP = {sent:{l:'已送出',c:'sb-sent'},pending:{l:'未送出',c:'sb-pending'},kept:{l:'自留',c:'sb-kept'}};
+// ── 持久化資料（localStorage） ──
+let CFG      = JSON.parse(localStorage.getItem('pkm_cfg')       || '{}');
+let cards    = JSON.parse(localStorage.getItem('pkm_cards')     || '[]');
+let friends  = JSON.parse(localStorage.getItem('pkm_friends')   || '[]');
+let methods  = JSON.parse(localStorage.getItem('pkm_methods')   || '["打菇","好友送","開花","探險","其他"]');
+let tagMap   = JSON.parse(localStorage.getItem('pkm_tags')      || '{"裝置藝術":"🎨","商店":"🏪","景點":"🗿","餐廳":"🍽️","特殊款":"⭐","旅遊卡":"🎫","地標":"🏛️","咖啡廳":"☕","活動限定":"🎉","季節限定":"🌸","恐怖留":"👻","地方":"📍","建築物":"🏢","看板|標示|到此一遊":"🏷️","宗教|信仰|教堂":"⛩️","公園|廣場|涼亭|噴水池":"🌳","交通":"🚗","城堡|古城|遺跡":"🏰"}');
+let countries= JSON.parse(localStorage.getItem('pkm_countries') || '["日本","台灣","南韓","泰國","馬來西亞","新加坡","美國","英國","法國","德國","澳洲"]');
+let favorites= JSON.parse(localStorage.getItem('pkm_favorites') || '[{"value":"神片","label":"神片","icon":"🤩"},{"value":"喜歡","label":"喜歡","icon":"💚"},{"value":"特殊","label":"特殊","icon":"✨"},{"value":"傻眼","label":"傻眼","icon":"😂"}]');
+
+// ── UI 狀態 ──
+let editingCardId   = null;
+let editingFriendId = null;
+let currentView     = 'grid';
+let filterLogic     = 'AND';
+let filterConditions= [];
+let deletedCard     = null;
+let toastTimer      = null;
+let aiSuggestion    = null;
+let showDuplicatesOnly = false;
+let chartInstances  = {};
+
+// ── 目前編輯中的照片（僅記憶體，不含 base64 存入資料庫）──
+// 每張照片格式：{ base64, originalBase64, url, fileId, filename, mime, fromDrive }
+let currentMainImg  = null; // 主照片
+let currentAuxImgs  = [];   // 輔助照片
+
+// ── 掃描/Picker 狀態 ──
+let scannedPhotos   = [];
+let scanFilter      = 'all';
+let scanPage        = 0;
+let dpPhotos        = [];
+let dpFilter        = 'all';
+let dpPage          = 0;
+let pendingFriendTarget = null;
 
 // ═══════════════════════════════════════════════
-//  INIT
+//  HELPERS
+// ═══════════════════════════════════════════════
+function escapeHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function isBase64(s) {
+  return typeof s === 'string' && (s.startsWith('data:image') || s.startsWith('/9j/') || s.startsWith('iVBOR'));
+}
+/** 從卡片取得乾淨可顯示的圖片 URL（不含 base64） */
+function getImgUrl(img) {
+  if (!img) return '';
+  if (img.url && !isBase64(img.url)) return img.url;
+  return '';
+}
+/** 從 currentMainImg/AuxImgs 取得顯示 URL（可含 base64 預覽） */
+function getPreviewUrl(img) {
+  if (!img) return '';
+  return img.base64 || img.url || '';
+}
+const getRecipNames = (c) => Array.isArray(c.recipFriend) ? c.recipFriend : (c.recipFriend ? [c.recipFriend] : []);
+const getRecipStr   = (c) => getRecipNames(c).join('、') || '';
+const getFavIcon    = (v) => (favorites.find(f => f.value === v)?.icon || '');
+
+// 判斷 fileId 是否已在資料庫（主照或輔助）
+function isPhotoInUse(fileId) {
+  if (!fileId) return false;
+  return !!cards.find(c =>
+    c.mainImg?.fileId === fileId ||
+    (c.auxImgs||[]).some(a => a.fileId === fileId)
+  );
+}
+
+// 清理 AI 辨識好友名字（移除結尾「上」字）
+function cleanFriendName(name) {
+  return String(name||'').replace(/上$/u,'').replace(/\s+$/u,'').trim();
+}
+
+// 確保好友存在名單
+function ensureFriendExists(name) {
+  if (!name || friends.find(f => f.name === name)) return;
+  friends.push({ id: Date.now().toString(), name, note: '' });
+  saveLocal();
+  renderFriendSelects();
+  renderSettingsFriendList();
+}
+
+// 壓縮圖片（最大 maxPx px，品質 q）
+function compressImage(base64, maxPx, q) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      let w = img.width, h = img.height;
+      if (w <= maxPx && h <= maxPx) { resolve(base64); return; }
+      if (w > h) { h = Math.round(h * maxPx / w); w = maxPx; }
+      else       { w = Math.round(w * maxPx / h); h = maxPx; }
+      const cv = document.createElement('canvas');
+      cv.width = w; cv.height = h;
+      cv.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve(cv.toDataURL('image/jpeg', q));
+    };
+    img.onerror = () => resolve(base64);
+    img.src = base64;
+  });
+}
+
+// ═══════════════════════════════════════════════
+//  GAS API CALL（清理 base64 後再傳送）
+// ═══════════════════════════════════════════════
+async function callGAS(action, data) {
+  if (!CFG.scriptUrl) return null;
+  try {
+    const res = await fetch(CFG.scriptUrl + '?action=' + action, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(data)
+    });
+    return await res.json();
+  } catch(e) {
+    console.error('GAS 呼叫失敗:', e);
+    return null;
+  }
+}
+
+// 把 cards 清理後（移除 base64、只保留雲端欄位）再送同步
+function buildSyncPayload() {
+  return {
+    cards: cards.map(c => ({
+      id:             c.id,
+      cardName:       c.cardName || '',
+      name:           c.name || '',
+      region:         c.region || '',
+      obtainedDate:   c.obtainedDate || '',
+      obtainedMethod: c.obtainedMethod || '',
+      sourceFriend:   c.sourceFriend || '',
+      rarity:         c.rarity || '',
+      dupes:          c.dupes || '1',
+      status:         c.status || 'pending',
+      sentDate:       c.sentDate || '',
+      recipFriend:    c.recipFriend || [],
+      tags:           c.tags || [],
+      notes:          c.notes || '',
+      mainImg: c.mainImg ? {
+        // 嚴格過濾 base64，只存 Drive URL
+        url:      isBase64(c.mainImg.url) ? '' : (c.mainImg.url || ''),
+        fileId:   c.mainImg.fileId   || '',
+        filename: c.mainImg.filename || ''
+      } : null,
+      auxImgs: (c.auxImgs||[]).map(a => ({
+        url:      isBase64(a.url) ? '' : (a.url || ''),
+        fileId:   a.fileId   || '',
+        filename: a.filename || ''
+      })),
+      createdAt: c.createdAt || ''
+    })),
+    friends
+  };
+}
+
+// ═══════════════════════════════════════════════
+//  SYNC & LOAD
+// ═══════════════════════════════════════════════
+let _cloudDataLoaded = false; // 是否已從雲端載入過
+
+async function syncAll(silent = false) {
+  if (!CFG.scriptUrl) { setSyncStatus('', '離線模式'); return; }
+
+  setSyncStatus('ing', '確認中…');
+  const cloud = await callGAS('loadData', {});
+
+  if (cloud && cloud.success) {
+    const cloudCount = (cloud.cards || []).length;
+    const localCount = cards.length;
+
+    // 靜默模式：本地比雲端少超過 10 筆就停止
+    if (silent && cloudCount > 0 && localCount < cloudCount - 10) {
+      setSyncStatus('err', `⚠️ 自動同步暫停：本地(${localCount})比雲端(${cloudCount})少太多，請手動確認後同步`);
+      return;
+    }
+
+    // 手動模式：提示使用者
+    if (!silent) {
+      if (cloudCount > 0 && localCount === 0) {
+        if (!confirm(`⚠️ 警告：本地是空的，但雲端有 ${cloudCount} 筆。繼續同步會清空雲端，確定嗎？`)) {
+          setSyncStatus('', '已取消'); return;
+        }
+      } else if (cloudCount > 0 && localCount < cloudCount - 5) {
+        if (!confirm(`⚠️ 注意：本地(${localCount}筆)比雲端(${cloudCount}筆)少 ${cloudCount-localCount} 筆。繼續同步會覆蓋雲端，確定嗎？`)) {
+          setSyncStatus('', '已取消'); return;
+        }
+      }
+    }
+  } else if (!silent) {
+    if (!confirm('⚠️ 無法取得雲端資料。確定要直接同步（覆蓋雲端）嗎？')) {
+      setSyncStatus('err', '已取消'); return;
+    }
+  } else {
+    // 靜默模式取不到雲端→不同步
+    setSyncStatus('err', '自動同步中止：無法連到雲端');
+    return;
+  }
+
+  setSyncStatus('ing', '同步中…');
+  const res = await callGAS('sync', buildSyncPayload());
+  if (res?.success) {
+    setSyncStatus('ok', `已同步 ${cards.length} 張（${new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'})}）`);
+  } else {
+    setSyncStatus('err', '同步失敗：' + (res?.error || '網路錯誤'));
+  }
+}
+
+function setSyncStatus(state, msg) {
+  document.getElementById('syncDot').className = 'sdot' + (state ? ' '+state : '');
+  document.getElementById('syncMsg').textContent = msg;
+}
+
+// ═══════════════════════════════════════════════
+//  DATA PERSISTENCE
+// ═══════════════════════════════════════════════
+function saveLocal() {
+  // 存入 localStorage 前也清除 base64，避免 localStorage 爆滿
+  const cleanCards = cards.map(c => ({
+    ...c,
+    mainImg: c.mainImg ? {
+      url:      isBase64(c.mainImg.url) ? '' : (c.mainImg.url || ''),
+      fileId:   c.mainImg.fileId   || '',
+      filename: c.mainImg.filename || '',
+      role:     'main'
+    } : null,
+    auxImgs: (c.auxImgs||[]).map(a => ({
+      url:      isBase64(a.url) ? '' : (a.url || ''),
+      fileId:   a.fileId   || '',
+      filename: a.filename || '',
+      role:     'aux'
+    }))
+  }));
+  localStorage.setItem('pkm_cards',   JSON.stringify(cleanCards));
+  localStorage.setItem('pkm_friends', JSON.stringify(friends));
+}
+
+function saveAndSync() {
+  saveLocal();
+  if (CFG.scriptUrl) syncAll(true);
+}
+
+function exportJSON() {
+  const data = { cards: buildSyncPayload().cards, friends, methods, tags: tagMap, countries, favorites, exportedAt: new Date().toISOString() };
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
+  a.download = `pikmin_backup_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+}
+
+function importJSON(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (data.cards)     cards    = data.cards;
+      if (data.friends)   friends  = data.friends;
+      if (data.methods)   methods  = data.methods;
+      if (data.tags)      tagMap   = data.tags;
+      if (data.countries) countries= data.countries;
+      if (data.favorites) favorites= data.favorites;
+      saveLocal();
+      localStorage.setItem('pkm_methods',   JSON.stringify(methods));
+      localStorage.setItem('pkm_tags',      JSON.stringify(tagMap));
+      localStorage.setItem('pkm_countries', JSON.stringify(countries));
+      localStorage.setItem('pkm_favorites', JSON.stringify(favorites));
+      renderLibrary(); renderFriendSelects(); renderSettingsFriendList();
+      renderMethodTags(); renderFavoriteList(); renderFavoriteSelect();
+      showToast('匯入成功');
+    } catch(err) { alert('匯入失敗：' + err.message); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+// ═══════════════════════════════════════════════
+//  BOOT
 // ═══════════════════════════════════════════════
 window.onload = async () => {
   buildEmojiGrid();
@@ -708,24 +907,22 @@ window.onload = async () => {
   updateSetupCard();
 
   if (CFG.scriptUrl) {
-    // 載入中禁止儲存操作，避免 race condition
+    // 載入期間鎖定新增/儲存，防止 race condition
     setSyncStatus('ing', '載入雲端資料中…');
-
-    // 暫時鎖住新增和儲存按鈕
     const lockBtns = document.querySelectorAll('.btn.primary, .btn-save');
-    lockBtns.forEach(b => { b.disabled = true; b.title = '載入中，請稍候…'; });
+    lockBtns.forEach(b => { b.disabled = true; b.title = '載入中…'; });
 
-    const result = await callGAS('loadData', {});
-    if (result && result.success) {
-      cards = result.cards || [];
-      friends = result.friends || [];
+    const res = await callGAS('loadData', {});
+    if (res?.success) {
+      cards   = res.cards   || [];
+      friends = res.friends || [];
       saveLocal();
-      setSyncStatus('ok', `已從雲端載入 ${cards.length} 張明信片`);
+      _cloudDataLoaded = true;
+      setSyncStatus('ok', `已載入 ${cards.length} 張明信片`);
     } else {
       setSyncStatus('err', '雲端載入失敗，使用本地資料');
     }
 
-    // 解鎖按鈕
     lockBtns.forEach(b => { b.disabled = false; b.title = ''; });
   } else {
     setSyncStatus('', '離線模式');
@@ -740,12 +937,9 @@ function updateSetupCard() {
   document.getElementById('setupCard').style.display = CFG.scriptUrl ? 'none' : 'block';
 }
 
-// ═══════════════════════════════════════════════
-//  PAGE NAV
-// ═══════════════════════════════════════════════
 function showPage(id, btn) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.ntab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.ntab').forEach(b => b.classList.remove('active'));
   document.getElementById('page-' + id).classList.add('active');
   if (btn) btn.classList.add('active');
   if (id === 'stats') renderStats();
@@ -766,96 +960,87 @@ function loadSettings() {
   renderFavoriteList();
 }
 
+function saveSettings() {
+  CFG.scriptUrl = document.getElementById('cfgScriptUrl').value.trim();
+  localStorage.setItem('pkm_cfg', JSON.stringify(CFG));
+  updateSetupCard();
+  showToast('設定已儲存');
+}
+
+// ── 喜好度管理 ──
 function renderFavoriteList() {
-  const el = document.getElementById('favoriteList');
-  if (!el) return;
-  el.innerHTML = favorites.map((f, idx) => `
+  const el = document.getElementById('favoriteList'); if (!el) return;
+  el.innerHTML = favorites.map((f,i) => `
     <div style="display:flex;align-items:center;gap:6px;padding:8px;background:#f5f5f5;border-radius:8px">
       <input type="text" value="${escapeHtml(f.icon)}" style="width:44px;padding:4px;border:1px solid var(--border);border-radius:6px;font-size:1rem;text-align:center"
-        onchange="updateFavorite(${idx},'icon',this.value)">
+        onchange="updateFavorite(${i},'icon',this.value)">
       <input type="text" value="${escapeHtml(f.label)}" style="flex:1;padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:.8rem"
-        onchange="updateFavorite(${idx},'label',this.value)">
-      <button type="button" onclick="deleteFavorite(${idx})"
-        style="background:none;border:none;cursor:pointer;color:var(--r);font-size:1rem">🗑️</button>
+        onchange="updateFavorite(${i},'label',this.value)">
+      <button type="button" onclick="deleteFavorite(${i})" style="background:none;border:none;cursor:pointer;color:var(--r);font-size:1rem">🗑️</button>
     </div>`).join('');
-  renderFavoriteSelect();
 }
 
 function renderFavoriteSelect() {
-  const el = document.getElementById('favoriteSelect');
-  if (!el) return;
+  const el = document.getElementById('favoriteSelect'); if (!el) return;
   const cur = el.querySelector('input:checked')?.value || '';
-  // 加上「— 不選」作為第一個選項，讓使用者可以取消選取
   el.innerHTML = `<div class="rare-opt">
       <input type="radio" name="rare" id="fav_none" value="" ${cur===''?'checked':''}>
       <label for="fav_none" style="color:var(--muted)">— 不選</label>
     </div>` +
-  favorites.map((f, idx) =>
-    `<div class="rare-opt">
-      <input type="radio" name="rare" id="fav_${idx}" value="${escapeHtml(f.value)}" ${cur===f.value?'checked':''}>
-      <label for="fav_${idx}">${f.icon} ${f.label}</label>
-    </div>`
-  ).join('');
+    favorites.map((f,i) => `<div class="rare-opt">
+      <input type="radio" name="rare" id="fav_${i}" value="${escapeHtml(f.value)}" ${cur===f.value?'checked':''}>
+      <label for="fav_${i}">${f.icon} ${f.label}</label>
+    </div>`).join('');
 }
 
 function addFavorite() {
-  const icon = document.getElementById('cfgNewFavIcon').value.trim();
+  const icon  = document.getElementById('cfgNewFavIcon').value.trim();
   const label = document.getElementById('cfgNewFavLabel').value.trim();
   if (!icon || !label) { alert('請填入圖示和名稱'); return; }
-  if (favorites.find(f => f.value === label)) { alert('喜好度名稱已存在'); return; }
+  if (favorites.find(f => f.value === label)) { alert('名稱已存在'); return; }
   favorites.push({ value: label, label, icon });
-  saveFavorites();
+  localStorage.setItem('pkm_favorites', JSON.stringify(favorites));
   document.getElementById('cfgNewFavIcon').value = '';
   document.getElementById('cfgNewFavLabel').value = '';
   renderFavoriteList();
 }
 
 function updateFavorite(idx, key, val) {
-  val = val.trim();
-  if (!val) return;
-  const oldValue = favorites[idx].value;
+  val = val.trim(); if (!val) return;
   if (key === 'label') {
-    favorites[idx].label = val;
-    favorites[idx].value = val;
-    // 同步更新卡片
-    cards.forEach(c => { if (c.rarity === oldValue) c.rarity = val; });
+    const old = favorites[idx].value;
+    favorites[idx].label = favorites[idx].value = val;
+    cards.forEach(c => { if (c.rarity === old) c.rarity = val; });
     saveLocal();
+    renderLibrary();
   } else {
     favorites[idx].icon = val;
   }
-  saveFavorites();
+  localStorage.setItem('pkm_favorites', JSON.stringify(favorites));
   renderFavoriteList();
-  renderLibrary();
 }
 
 function deleteFavorite(idx) {
-  if (favorites.length <= 1) { alert('至少需要保留一個喜好度'); return; }
-  if (!confirm(`確定要刪除「${favorites[idx].icon} ${favorites[idx].label}」？`)) return;
+  if (favorites.length <= 1) { alert('至少保留一個喜好度'); return; }
+  if (!confirm(`確定刪除「${favorites[idx].icon} ${favorites[idx].label}」？`)) return;
   favorites.splice(idx, 1);
-  saveFavorites();
+  localStorage.setItem('pkm_favorites', JSON.stringify(favorites));
   renderFavoriteList();
 }
 
-function saveFavorites() {
-  localStorage.setItem('pkm_favorites', JSON.stringify(favorites));
-}
-
+// ── 好友管理（設定頁）──
 function renderSettingsFriendList() {
-  const el = document.getElementById('settingsFriendList');
-  if (!el) return;
-  if (!friends.length) {
-    el.innerHTML = '<div style="font-size:.78rem;color:var(--muted)">尚無好友</div>';
-    return;
-  }
-  el.innerHTML = friends.map(f => `
-    <div style="display:flex;align-items:center;gap:8px;padding:8px;background:#f5f5f5;border-radius:8px">
-      <span style="font-size:1.1rem">👤</span>
-      <input type="text" value="${escapeHtml(f.name)}" data-friend-id="${f.id}"
-        style="flex:1;padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:.8rem"
-        onchange="updateFriendName(this.dataset.friendId, this.value)">
-      <button type="button" data-friend-id="${f.id}" onclick="deleteFriendFromSettings(this.dataset.friendId)"
-        style="background:none;border:none;cursor:pointer;color:var(--r);font-size:1rem">🗑️</button>
-    </div>`).join('');
+  const el = document.getElementById('settingsFriendList'); if (!el) return;
+  el.innerHTML = !friends.length ? '<div style="font-size:.78rem;color:var(--muted)">尚無好友</div>' :
+    friends.map(f => `
+      <div style="display:flex;align-items:center;gap:8px;padding:8px;background:#f5f5f5;border-radius:8px">
+        <span style="font-size:1.1rem">👤</span>
+        <input type="text" value="${escapeHtml(f.name)}" data-friend-id="${f.id}"
+          style="flex:1;padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:.8rem"
+          onchange="updateFriendName(this.dataset.friendId, this.value)">
+        <button type="button" data-friend-id="${f.id}" onclick="deleteFriendFromSettings(this.dataset.friendId)"
+          style="background:none;border:none;cursor:pointer;color:var(--r);font-size:1rem">🗑️</button>
+      </div>`).join('');
 }
 
 function addFriendFromSettings() {
@@ -870,20 +1055,17 @@ function addFriendFromSettings() {
 }
 
 function updateFriendName(id, newName) {
-  newName = newName.trim();
-  if (!newName) return;
-  if (friends.find(f => f.name === newName && f.id !== id)) { alert('好友名稱已存在'); return; }
-  const oldName = friends.find(f => f.id === id)?.name;
+  newName = newName.trim(); if (!newName) return;
+  if (friends.find(f => f.name === newName && f.id !== id)) { alert('名稱已存在'); return; }
+  const old = friends.find(f => f.id === id)?.name;
   const f = friends.find(f => f.id === id);
-  if (f) f.name = newName;
-  // 同步更新卡片裡的好友名稱
-  if (oldName) {
-    cards.forEach(c => {
-      if (c.sourceFriend === oldName) c.sourceFriend = newName;
-      const recips = getRecipNames(c);
-      if (recips.includes(oldName)) c.recipFriend = recips.map(r => r === oldName ? newName : r);
-    });
-  }
+  if (!f) return;
+  f.name = newName;
+  if (old) cards.forEach(c => {
+    if (c.sourceFriend === old) c.sourceFriend = newName;
+    const recips = getRecipNames(c);
+    if (recips.includes(old)) c.recipFriend = recips.map(r => r === old ? newName : r);
+  });
   saveAndSync();
   renderSettingsFriendList();
   renderFriendSelects();
@@ -891,838 +1073,265 @@ function updateFriendName(id, newName) {
 }
 
 function deleteFriendFromSettings(id) {
-  const f = friends.find(x => x.id === id);
-  if (!f) return;
-  if (!confirm(`確定要刪除好友「${f.name}」嗎？相關明信片記錄不受影響。`)) return;
+  const f = friends.find(x => x.id === id); if (!f) return;
+  if (!confirm(`確定刪除好友「${f.name}」？相關明信片記錄不受影響。`)) return;
   friends = friends.filter(x => x.id !== id);
   saveAndSync();
   renderSettingsFriendList();
   renderFriendSelects();
 }
 
-// 確保好友存在名單，若不存在則自動新增，回傳好友名稱
-// 判斷某個 fileId 是否已在資料庫中使用（主照片或輔助照片）
-function isPhotoInUse(fileId) {
-  if (!fileId) return false;
-  return !!cards.find(c =>
-    c.mainImg?.fileId === fileId ||
-    (c.auxImgs || []).some(a => a.fileId === fileId)
-  );
-}
-
-// 清理 AI 辨識的好友名字
-// 明信片底部固定有「上」字（敬上/致上），不是名字的一部分
-function cleanFriendName(name) {
-  if (!name) return '';
-  return name
-    .replace(/上$/u, '')   // 移除結尾的「上」
-    .replace(/\s+$/u, '')  // 移除結尾空白
-    .trim();
-}
-
-function ensureFriendExists(name) {
-  if (!name) return;
-  if (!friends.find(f => f.name === name)) {
-    friends.push({ id: Date.now().toString(), name, note: '' });
-    saveAndSync();
-    renderFriendSelects();
-    renderSettingsFriendList();
-  }
-}
-
-function saveSettings() {
-  const url = document.getElementById('cfgScriptUrl').value.trim();
-  if (!url) { alert('請輸入 Google Apps Script 網址'); return; }
-  CFG.scriptUrl = url;
-  localStorage.setItem('pkm_cfg', JSON.stringify(CFG));
-  updateSetupCard();
-  alert('✅ 設定已儲存！');
-}
-
+// ── Emoji Grid ──
 function buildEmojiGrid() {
-  const grid = document.getElementById('cfgEmojiGrid');
-  if (!grid) return;
-  grid.innerHTML = EMOJI_LIST.map(e =>
-    `<button type="button" onclick="selectCfgTagEmoji('${e}',this)"
-      style="padding:6px;border:2px solid transparent;border-radius:6px;background:#fff;cursor:pointer;font-size:1rem;transition:all .2s">${e}</button>`
-  ).join('');
+  const g = document.getElementById('cfgEmojiGrid'); if (!g) return;
+  g.innerHTML = EMOJI_LIST.map(e => `<button type="button" onclick="selectCfgTagEmoji('${e}',this)"
+    style="padding:5px;border:2px solid transparent;border-radius:6px;background:none;cursor:pointer;font-size:1.1rem">${e}</button>`).join('');
 }
 
-function renderMethodTags() {
-  const el = document.getElementById('methodList');
-  const DEFAULT_METHODS = ['打菇','好友送','開花','探險','其他'];
-  el.innerHTML = methods.map(m => `
-    <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:#f0fae8;
-      border:1.5px solid var(--border);border-radius:12px;font-size:.76rem;font-weight:600">
-      ${m}
-      ${DEFAULT_METHODS.includes(m) ? '' :
-        `<button type="button" onclick="removeMethod('${m}')" style="background:none;border:none;cursor:pointer;color:#ccc;font-size:.85rem;padding:0 0 0 2px">✕</button>`}
-    </span>`).join('');
-  renderMethodSelect();
+function selectCfgTagEmoji(emoji, btn) {
+  document.querySelectorAll('#cfgEmojiGrid button').forEach(b => b.style.borderColor = 'transparent');
+  btn.style.borderColor = 'var(--g)';
+  btn.dataset.selected = '1';
+  btn.dataset.emoji = emoji;
 }
 
-function addMethod() {
-  const v = document.getElementById('newMethodInput').value.trim();
-  if (!v || methods.includes(v)) return;
-  methods.push(v);
-  localStorage.setItem('pkm_methods', JSON.stringify(methods));
-  document.getElementById('newMethodInput').value = '';
-  renderMethodTags();
-}
-
-function removeMethod(m) {
-  methods = methods.filter(x => x !== m);
-  localStorage.setItem('pkm_methods', JSON.stringify(methods));
-  renderMethodTags();
-}
-
-function renderMethodSelect() {
-  const sel = document.getElementById('fObtMethod');
-  if (!sel) return;
-  const cur = sel.value;
-  sel.innerHTML = '<option value="">請選擇</option>' + methods.map(m => `<option value="${m}">${m}</option>`).join('');
-  if (cur) sel.value = cur;
-}
-
+// ── Tags ──
 function renderTagManagement() {
-  const el = document.getElementById('tagList');
+  const el = document.getElementById('tagList'); if (!el) return;
   el.innerHTML = Object.entries(tagMap).map(([name, emoji]) => `
-    <div style="display:flex;align-items:center;gap:8px;padding:8px;background:#f5f5f5;border-radius:8px">
-      <span style="font-size:1.2rem;min-width:30px">${emoji}</span>
-      <input type="text" value="${name}" data-oldname="${name}" style="flex:1;padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:.8rem"
-        onchange="updateTagName('${name}',this.value)">
-      <button type="button" onclick="deleteTag('${name}')" style="background:none;border:none;cursor:pointer;color:var(--r);font-size:1rem">🗑️</button>
+    <div style="display:flex;align-items:center;gap:6px;padding:7px;background:#f5f5f5;border-radius:8px">
+      <span style="font-size:1.2rem">${emoji}</span>
+      <input type="text" value="${escapeHtml(name)}" style="flex:1;padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:.8rem"
+        onchange="updateTagName('${escapeHtml(name)}',this.value)">
+      <button type="button" onclick="deleteTag('${escapeHtml(name)}')" style="background:none;border:none;cursor:pointer;color:var(--r);font-size:1rem">🗑️</button>
     </div>`).join('');
 }
 
 function renderTagGrid() {
-  const grid = document.getElementById('tagGrid');
-  if (!grid) return;
-  const cur = Array.from(document.querySelectorAll('#tagGrid input:checked')).map(cb => cb.value);
-  grid.innerHTML = Object.entries(tagMap).map(([name, emoji]) =>
-    `<div class="tc"><input type="checkbox" id="tg_${name}" value="${name}" ${cur.includes(name)?'checked':''}><label for="tg_${name}">${emoji} ${name}</label></div>`
+  const el = document.getElementById('tagGrid'); if (!el) return;
+  el.innerHTML = Object.entries(tagMap).map(([name, emoji]) =>
+    `<div class="tc"><input type="checkbox" id="tag_${escapeHtml(name)}" value="${escapeHtml(name)}"><label for="tag_${escapeHtml(name)}">${emoji} ${name}</label></div>`
   ).join('');
 }
 
-function selectCfgTagEmoji(emoji, btn) {
-  window.selectedCfgTagEmoji = emoji;
-  document.querySelectorAll('#cfgEmojiGrid button').forEach(b => b.style.borderColor = 'transparent');
-  if (btn) btn.style.borderColor = 'var(--g)';
-}
-
 function saveNewTag() {
-  const name = document.getElementById('cfgNewTagInput').value.trim();
-  const emoji = window.selectedCfgTagEmoji;
-  if (!name) { alert('請輸入標籤名稱'); return; }
-  if (!emoji) { alert('請選擇圖案'); return; }
+  const name = (document.getElementById('cfgNewTagInput').value || '').trim(); if (!name) return;
+  const selBtn = document.querySelector('#cfgEmojiGrid button[data-selected="1"]');
+  const emoji = selBtn ? selBtn.dataset.emoji : '🏷️';
   if (tagMap[name]) { alert('標籤已存在'); return; }
   tagMap[name] = emoji;
   localStorage.setItem('pkm_tags', JSON.stringify(tagMap));
   document.getElementById('cfgNewTagInput').value = '';
-  window.selectedCfgTagEmoji = null;
-  document.querySelectorAll('#cfgEmojiGrid button').forEach(b => b.style.borderColor = 'transparent');
-  renderTagManagement();
-  renderTagGrid();
+  document.querySelectorAll('#cfgEmojiGrid button').forEach(b => { b.style.borderColor='transparent'; delete b.dataset.selected; });
+  renderTagManagement(); renderTagGrid();
 }
 
 function updateTagName(oldName, newName) {
-  newName = newName.trim();
-  if (!newName || newName === oldName) return;
-  if (tagMap[newName]) { alert('標籤名稱已存在'); return; }
+  newName = newName.trim(); if (!newName || newName === oldName) return;
+  if (tagMap[newName]) { alert('標籤已存在'); return; }
   const emoji = tagMap[oldName];
   delete tagMap[oldName];
   tagMap[newName] = emoji;
   cards.forEach(c => { if (c.tags) c.tags = c.tags.map(t => t === oldName ? newName : t); });
   localStorage.setItem('pkm_tags', JSON.stringify(tagMap));
-  saveAndSync();
-  renderTagManagement();
-  renderTagGrid();
+  saveAndSync(); renderTagManagement(); renderTagGrid();
 }
 
 function deleteTag(name) {
-  if (!confirm(`確定要刪除標籤「${name}」？`)) return;
+  if (!confirm(`確定刪除標籤「${name}」？`)) return;
   delete tagMap[name];
   cards.forEach(c => { if (c.tags) c.tags = c.tags.filter(t => t !== name); });
   localStorage.setItem('pkm_tags', JSON.stringify(tagMap));
-  saveAndSync();
-  renderTagManagement();
-  renderTagGrid();
-  renderLibrary();
+  saveAndSync(); renderTagManagement(); renderTagGrid(); renderLibrary();
 }
 
+// ── Methods ──
+function renderMethodTags() {
+  const el = document.getElementById('methodList'); if (!el) return;
+  el.innerHTML = methods.map(m => `
+    <div style="display:flex;align-items:center;gap:4px;padding:4px 10px;background:#f5f5f5;border:1.5px solid var(--border);border-radius:12px;font-size:.78rem">
+      <span>${m}</span>
+      <button onclick="removeMethod('${escapeHtml(m)}')" style="background:none;border:none;cursor:pointer;color:#bbb;font-size:.85rem;line-height:1">✕</button>
+    </div>`).join('');
+}
+
+function renderMethodSelect() {
+  const el = document.getElementById('fObtMethod'); if (!el) return;
+  const cur = el.value;
+  el.innerHTML = methods.map(m => `<option value="${escapeHtml(m)}">${m}</option>`).join('');
+  if (methods.includes(cur)) el.value = cur;
+}
+
+function addMethod() {
+  const m = (document.getElementById('newMethodInput').value || '').trim();
+  if (!m || methods.includes(m)) return;
+  methods.push(m);
+  localStorage.setItem('pkm_methods', JSON.stringify(methods));
+  document.getElementById('newMethodInput').value = '';
+  renderMethodTags(); renderMethodSelect();
+}
+
+function removeMethod(m) {
+  methods = methods.filter(x => x !== m);
+  localStorage.setItem('pkm_methods', JSON.stringify(methods));
+  renderMethodTags(); renderMethodSelect();
+}
+
+// ── Countries ──
 function renderCountryManagement() {
-  const el = document.getElementById('countryList');
+  const el = document.getElementById('countryList'); if (!el) return;
   el.innerHTML = countries.map(c => `
-    <span style="display:inline-flex;align-items:center;gap:4px;padding:6px 10px;background:#f0fae8;border:1.5px solid var(--border);border-radius:12px;font-size:.76rem;font-weight:600">
-      ${c}
-      <button type="button" onclick="deleteCountry('${c}')" style="background:none;border:none;cursor:pointer;color:#ccc;font-size:.85rem;padding:0 0 0 2px">✕</button>
-    </span>`).join('');
+    <div style="display:flex;align-items:center;gap:4px;padding:4px 10px;background:#f5f5f5;border:1.5px solid var(--border);border-radius:12px;font-size:.78rem">
+      <span>${c}</span>
+      <button onclick="deleteCountry('${escapeHtml(c)}')" style="background:none;border:none;cursor:pointer;color:#bbb;font-size:.85rem;line-height:1">✕</button>
+    </div>`).join('');
 }
 
 function renderCountrySelect() {
-  const sel = document.getElementById('fCountry');
-  if (!sel) return;
-  const cur = sel.value;
-  sel.innerHTML = '<option value="">請選擇</option>' + countries.map(c => `<option value="${c}">${c}</option>`).join('');
-  if (cur) sel.value = cur;
-}
-
-function addCountryFromModal() {
-  const v = document.getElementById('newCountryInput').value.trim();
-  if (!v) return;
-  if (!countries.includes(v)) {
-    countries.push(v);
-    localStorage.setItem('pkm_countries', JSON.stringify(countries));
-    renderCountryManagement();
-  }
-  renderCountrySelect();
-  document.getElementById('fCountry').value = v;
-  document.getElementById('newCountryInput').value = '';
+  const el = document.getElementById('fCountry'); if (!el) return;
+  const cur = el.value;
+  el.innerHTML = '<option value="">（請選擇）</option>' + countries.map(c => `<option value="${escapeHtml(c)}">${c}</option>`).join('');
+  if (cur) el.value = cur;
 }
 
 function saveNewCountry() {
-  const name = document.getElementById('cfgNewCountryInput').value.trim();
-  if (!name || countries.includes(name)) return;
-  countries.push(name);
+  const c = (document.getElementById('cfgNewCountryInput').value || '').trim();
+  if (!c || countries.includes(c)) return;
+  countries.push(c);
   localStorage.setItem('pkm_countries', JSON.stringify(countries));
   document.getElementById('cfgNewCountryInput').value = '';
-  renderCountryManagement();
-  renderCountrySelect();
+  renderCountryManagement(); renderCountrySelect();
 }
 
-function deleteCountry(name) {
-  if (!confirm(`確定要刪除「${name}」？`)) return;
-  countries = countries.filter(c => c !== name);
+function addCountryFromModal() {
+  const c = (document.getElementById('newCountryInput').value || '').trim();
+  if (!c) return;
+  if (!countries.includes(c)) {
+    countries.push(c);
+    localStorage.setItem('pkm_countries', JSON.stringify(countries));
+    renderCountryManagement(); renderCountrySelect();
+  }
+  document.getElementById('fCountry').value = c;
+  document.getElementById('newCountryInput').value = '';
+}
+
+function deleteCountry(c) {
+  countries = countries.filter(x => x !== c);
   localStorage.setItem('pkm_countries', JSON.stringify(countries));
-  renderCountryManagement();
-  renderCountrySelect();
+  renderCountryManagement(); renderCountrySelect();
 }
 
 // ═══════════════════════════════════════════════
-//  GOOGLE APPS SCRIPT API
+//  IMAGE UPLOAD & COMPRESSION
 // ═══════════════════════════════════════════════
-async function callGAS(action, data) {
-  if (!CFG.scriptUrl) return null;
-  try {
-    const res = await fetch(CFG.scriptUrl + '?action=' + action, {
-      method: 'POST',
-      headers: {'Content-Type': 'text/plain'},
-      body: JSON.stringify(data)
-    });
-    return await res.json();
-  } catch (e) {
-    console.error('GAS 呼叫失敗:', e);
-    return null;
-  }
-}
-
-async function syncAll(silent = false) {
-  if (!CFG.scriptUrl) { setSyncStatus('', '離線模式'); return; }
-
-  setSyncStatus('ing', '確認中…');
-  const cloudResult = await callGAS('loadData', {});
-
-  if (cloudResult && cloudResult.success) {
-    const cloudCount = (cloudResult.cards || []).length;
-    const localCount = cards.length;
-    const diff = localCount - cloudCount;
-
-    // 靜默模式：本地比雲端少超過 10 筆就自動中止，不覆蓋
-    if (silent && cloudCount > 0 && diff < -10) {
-      setSyncStatus('err', `⚠️ 自動同步中止：本地(${localCount})比雲端(${cloudCount})少太多，請手動確認後再同步`);
-      return;
-    }
-
-    // 手動模式：給使用者選擇
-    if (!silent) {
-      if (cloudCount > 0 && diff < -5) {
-        const ok = confirm(
-          `⚠️ 注意：本地資料（${localCount} 筆）比雲端少 ${Math.abs(diff)} 筆（雲端 ${cloudCount} 筆）。\n\n` +
-          `繼續同步會以本地資料覆蓋雲端，可能導致雲端資料遺失。\n\n確定要同步嗎？`
-        );
-        if (!ok) { setSyncStatus('', '已取消同步'); return; }
-      } else if (cloudCount > 0 && localCount === 0) {
-        const ok = confirm(
-          `⚠️ 警告：本地資料是空的，但雲端有 ${cloudCount} 筆資料。\n\n` +
-          `繼續同步會清空雲端資料。確定要同步嗎？`
-        );
-        if (!ok) { setSyncStatus('', '已取消同步'); return; }
-      }
-    }
-  } else {
-    if (!silent) {
-      // 手動模式：loadData 失敗讓使用者決定
-      const ok = confirm(
-        `⚠️ 無法取得雲端資料（網路錯誤或 GAS 異常）。\n\n` +
-        `無法確認雲端筆數，繼續同步將直接以本地 ${cards.length} 筆資料覆蓋雲端。\n\n確定要繼續嗎？`
-      );
-      if (!ok) { setSyncStatus('err', '已取消同步（無法取得雲端資料）'); return; }
-    } else {
-      // 靜默模式：loadData 失敗就不同步，避免風險
-      setSyncStatus('err', '自動同步中止：無法取得雲端資料');
-      return;
-    }
-  }
-
-  setSyncStatus('ing', '同步中…');
-  const result = await callGAS('sync', { cards: cleanCardsForSync(cards), friends });
-  if (result && result.success) {
-    setSyncStatus('ok', `已同步（${new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'})}）`);
-  } else {
-    setSyncStatus('err', '同步失敗：' + (result?.error || '網路錯誤'));
-  }
-}
-
-function setSyncStatus(state, msg) {
-  const d = document.getElementById('syncDot');
-  d.className = 'sdot' + (state ? ' '+state : '');
-  document.getElementById('syncMsg').textContent = msg;
-}
-
-// ═══════════════════════════════════════════════
-//  DRIVE SCAN MODAL
-// ═══════════════════════════════════════════════
-const SCAN_PAGE_SIZE = 30;
-let scanFilter = 'all';   // 'all' | 'new' | 'exists'
-let scanPage = 0;         // 目前頁碼（0-based）
-
-async function openScanModal() {
-  if (!CFG.scriptUrl) { alert('請先在「⚙️ 設定」填入 Google Apps Script 網址'); return; }
-  scanFilter = 'all';
-  scanPage = 0;
-  document.getElementById('scanList').innerHTML = '';
-  document.getElementById('scanStatus').textContent = '掃描中…';
-  document.getElementById('scanImportBtn').style.display = 'none';
-  document.getElementById('scanAIBtn').style.display = 'none';
-  document.getElementById('scanToolbar').style.display = 'none';
-  document.getElementById('scanPager').style.display = 'none';
-  document.getElementById('scanOverlay').classList.add('open');
-
-  setSyncStatus('ing', '掃描 Drive 中…');
-  const result = await callGAS('scan', {});
-  if (!result || !result.success) {
-    document.getElementById('scanStatus').textContent = '掃描失敗：' + (result?.error || '網路錯誤');
-    setSyncStatus('err', '掃描失敗');
-    return;
-  }
-
-  scannedPhotos = result.photos || [];
-  setSyncStatus('ok', '掃描完成');
-  renderScanModal();
-}
-
-// 取得目前篩選後的照片清單
-function getFilteredPhotos() {
-  if (scanFilter === 'new') return scannedPhotos.filter(p => !isPhotoInUse(p.fileId));
-  if (scanFilter === 'exists') return scannedPhotos.filter(p => isPhotoInUse(p.fileId));
-  return scannedPhotos;
-}
-
-function setScanFilter(f) {
-  scanFilter = f;
-  scanPage = 0;
-  ['all','new','exists'].forEach(k => {
-    document.getElementById('scanFilter' + k.charAt(0).toUpperCase() + k.slice(1))
-      ?.classList.toggle('active', k === f);
-  });
-  renderScanList();
-}
-
-function changeScanPage(dir) {
-  const filtered = getFilteredPhotos();
-  const maxPage = Math.max(0, Math.ceil(filtered.length / SCAN_PAGE_SIZE) - 1);
-  scanPage = Math.min(maxPage, Math.max(0, scanPage + dir));
-  renderScanList();
-}
-
-function scanSelectAll(checked) {
-  const filtered = getFilteredPhotos();
-  const start = scanPage * SCAN_PAGE_SIZE;
-  const pageItems = filtered.slice(start, start + SCAN_PAGE_SIZE);
-  pageItems.forEach(p => {
-    const isNew = !cards.find(c => c.mainImg?.fileId === p.fileId);
-    if (!isNew) return; // 已存在的沒有 checkbox
-    const globalIdx = scannedPhotos.indexOf(p);
-    const chk = document.getElementById(`scanChk_${globalIdx}`);
-    if (chk) chk.checked = checked;
-  });
-}
-
-function scanSelectAll(checked) {
-  const filtered = getFilteredPhotos();
-  const start = scanPage * SCAN_PAGE_SIZE;
-  const pageItems = filtered.slice(start, start + SCAN_PAGE_SIZE);
-  pageItems.forEach(p => {
-    const isNew = !isPhotoInUse(p.fileId); // 統一用 isPhotoInUse
-    if (!isNew) return;
-    const globalIdx = scannedPhotos.indexOf(p);
-    const chk = document.getElementById(`scanChk_${globalIdx}`);
-    if (chk) chk.checked = checked;
-  });
-}
-
-function renderScanModal() {
-  const newCount = scannedPhotos.filter(p => !isPhotoInUse(p.fileId)).length;
-  document.getElementById('scanStatus').textContent =
-    `掃描完成，共 ${scannedPhotos.length} 張，其中 ${newCount} 張尚未建檔`;
-
-  if (!scannedPhotos.length) return;
-
-  document.getElementById('scanToolbar').style.display = 'flex';
-  if (newCount > 0) {
-    document.getElementById('scanImportBtn').style.display = '';
-    document.getElementById('scanAIBtn').style.display = '';
-  }
-  renderScanList();
-}
-
-function renderScanList() {
-  const filtered = getFilteredPhotos();
-  const totalPages = Math.max(1, Math.ceil(filtered.length / SCAN_PAGE_SIZE));
-  scanPage = Math.min(scanPage, totalPages - 1);
-  const start = scanPage * SCAN_PAGE_SIZE;
-  const pageItems = filtered.slice(start, start + SCAN_PAGE_SIZE);
-
-  // 分頁導覽
-  const pager = document.getElementById('scanPager');
-  if (filtered.length > SCAN_PAGE_SIZE) {
-    pager.style.display = 'flex';
-    document.getElementById('scanPageInfo').textContent = `第 ${scanPage+1} / ${totalPages} 頁（共 ${filtered.length} 張）`;
-    document.getElementById('scanPrevBtn').disabled = scanPage === 0;
-    document.getElementById('scanNextBtn').disabled = scanPage >= totalPages - 1;
-  } else {
-    pager.style.display = 'none';
-  }
-
-  document.getElementById('scanList').innerHTML = pageItems.map(p => {
-    const globalIdx = scannedPhotos.indexOf(p);
-    const isNew = !isPhotoInUse(p.fileId);
-    return `<div class="scan-item" id="scanItem_${globalIdx}">
-      <div style="width:60px;height:60px;flex-shrink:0;border-radius:6px;overflow:hidden;background:#e8f5e0;display:flex;align-items:center;justify-content:center;font-size:1.6rem">
-        <img src="${p.thumbUrl||p.url}" alt="" style="width:100%;height:100%;object-fit:cover"
-          onerror="this.parentNode.innerHTML='🖼️'">
-      </div>
-      <div class="scan-item-info">
-        <div class="scan-item-name">${escapeHtml(p.filename)}</div>
-        <div class="scan-item-status ${isNew?'new':''}">${isNew?'✅ 尚未建檔':'⚠️ 已存在'}</div>
-        <div id="scanAIResult_${globalIdx}" style="font-size:.68rem;color:var(--b);margin-top:2px"></div>
-      </div>
-      ${isNew ? `<div class="scan-actions">
-        <input type="checkbox" id="scanChk_${globalIdx}" checked style="width:16px;height:16px;cursor:pointer">
-      </div>` : ''}
-    </div>`;
-  }).join('');
-}
-
-async function batchAIScan() {
-  const btn = document.getElementById('scanAIBtn');
-  btn.disabled = true;
-
-  const filtered = getFilteredPhotos();
-  const start = scanPage * SCAN_PAGE_SIZE;
-  const pageItems = filtered.slice(start, start + SCAN_PAGE_SIZE);
-  const selected = pageItems
-    .map(p => ({ p, idx: scannedPhotos.indexOf(p) }))
-    .filter(({ idx }) => document.getElementById(`scanChk_${idx}`)?.checked);
-
-  const CONCURRENCY = 5; // 同時最多 5 張
-  let completed = 0;
-
-  btn.textContent = `⏳ AI 辨識中… 0/${selected.length}`;
-
-  // 標記全部為辨識中
-  selected.forEach(({ idx }) => {
-    const el = document.getElementById(`scanAIResult_${idx}`);
-    if (el) el.textContent = '⏳ 等待辨識…';
-  });
-
-  // 分批並行處理
-  for (let i = 0; i < selected.length; i += CONCURRENCY) {
-    const batch = selected.slice(i, i + CONCURRENCY);
-
-    // 同批標記為辨識中
-    batch.forEach(({ idx }) => {
-      const el = document.getElementById(`scanAIResult_${idx}`);
-      if (el) el.textContent = '辨識中…';
-    });
-
-    await Promise.all(batch.map(async ({ p, idx }) => {
-      const resultEl = document.getElementById(`scanAIResult_${idx}`);
-      try {
-        const res = await callGAS('aiScan', { fileId: p.fileId, methods, tags: tagMap });
-        if (res && res.success && res.data) {
-          p._ai = res.data;
-          const d = res.data;
-          if (resultEl) resultEl.textContent =
-            `🤖 ${d.cardName||'?'} | ${d.country||''} | ${d.obtainedMethod||'?'}`;
-        } else {
-          if (resultEl) resultEl.textContent = '❌ ' + (res?.error || '辨識失敗');
-        }
-      } catch(e) {
-        if (resultEl) resultEl.textContent = '❌ ' + e.message;
-      }
-      completed++;
-      btn.textContent = `⏳ AI 辨識中… ${completed}/${selected.length}`;
-    }));
-  }
-
-  btn.disabled = false;
-  btn.textContent = `🤖 批次 AI 辨識（完成 ${completed}/${selected.length}）`;
-  setTimeout(() => { btn.textContent = '🤖 批次 AI 辨識'; }, 3000);
-}
-
-async function importScannedPhotos() {
-  let count = 0;
-  const filtered = getFilteredPhotos();
-  const start = scanPage * SCAN_PAGE_SIZE;
-  const pageItems = filtered.slice(start, start + SCAN_PAGE_SIZE);
-
-  for (let i = 0; i < pageItems.length; i++) {
-    const p = pageItems[i];
-    const globalIdx = scannedPhotos.indexOf(p);
-    const chk = document.getElementById(`scanChk_${globalIdx}`);
-    if (!chk || !chk.checked) continue;
-    if (isPhotoInUse(p.fileId)) continue;
-
-    const ai = p._ai || {};
-
-    if (ai.country && !countries.includes(ai.country)) {
-      countries.push(ai.country);
-      localStorage.setItem('pkm_countries', JSON.stringify(countries));
-    }
-
-    const friendName = cleanFriendName(ai.friendName || '');
-    if (friendName) ensureFriendExists(friendName);
-
-    // 用 timestamp + 迴圈 index + globalIdx 確保 id 唯一
-    const uniqueId = `${Date.now()}_${i}_${globalIdx}`;
-
-    cards.unshift({
-      id: uniqueId,
-      cardName: ai.cardName || '',
-      name: ai.location || p.filename.replace(/\.[^/.]+$/,''),
-      region: ai.country || '',
-      obtainedDate: new Date().toISOString().split('T')[0],
-      obtainedMethod: ai.obtainedMethod || '',
-      sourceFriend: friendName,
-      rarity: ai.rarity || '',
-      dupes: '1',
-      status: friendName ? 'kept' : 'pending',
-      sentDate: '',
-      recipFriend: [],
-      tags: (ai.tags || []).filter(t => tagMap[t]),
-      notes: p._ai ? '' : '(自 Drive 掃描建立，請編輯補充資訊)',
-      mainImg: {
-        url: p.url,
-        fileId: p.fileId,
-        filename: p.filename || '',
-        role: 'main'
-      },
-      auxImgs: [],
-      createdAt: new Date().toISOString()
-    });
-    count++;
-  }
-
-  saveAndSync();
-  renderLibrary();
-  renderCountryManagement();
-  renderCountrySelect();
-  showToast(`已匯入 ${count} 張明信片`);
-
-  // 匯入後不關閉，重新渲染掃描列表讓已建檔狀態即時更新
-  // 自動翻到下一頁（若還有）
-  const newFiltered = getFilteredPhotos();
-  const totalPages = Math.max(1, Math.ceil(newFiltered.length / SCAN_PAGE_SIZE));
-  if (scanPage < totalPages - 1) {
-    scanPage++;
-  }
-  renderScanModal();
-  renderScanList();
-}
-
-// ═══════════════════════════════════════════════
-//  DRIVE PICKER（輔助照片從 Drive 選取）
-// ═══════════════════════════════════════════════
-const DP_PAGE_SIZE = 30;
-let dpPhotos = [];      // Drive 所有照片
-let dpFilter = 'all';
-let dpPage = 0;
-
-async function openDrivePickerModal() {
-  if (!CFG.scriptUrl) { alert('請先在設定中填入 GAS 網址'); return; }
-  dpFilter = 'all'; dpPage = 0;
-  document.getElementById('drivePickerList').innerHTML = '';
-  document.getElementById('drivePickerStatus').textContent = '掃描 Drive 中…';
-  document.getElementById('dpPager').style.display = 'none';
-  document.getElementById('drivePickerOverlay').classList.add('open');
-
-  // 每次開啟都重新掃描，確保資料是最新的
-  const result = await callGAS('scan', {});
-  if (!result || !result.success) {
-    document.getElementById('drivePickerStatus').textContent = '掃描失敗：' + (result?.error || '網路錯誤');
-    return;
-  }
-  dpPhotos = result.photos || [];
-  // 同時更新 scannedPhotos 快取
-  if (dpPhotos.length > 0) scannedPhotos = dpPhotos;
-  renderDpList();
-}
-
-function getDpFiltered() {
-  if (dpFilter === 'new') return dpPhotos.filter(p => !isPhotoInUse(p.fileId));
-  if (dpFilter === 'exists') return dpPhotos.filter(p => isPhotoInUse(p.fileId));
-  return dpPhotos;
-}
-
-function setDpFilter(f) {
-  dpFilter = f; dpPage = 0;
-  ['all','new','exists'].forEach(k => {
-    document.getElementById('dpFilter' + k.charAt(0).toUpperCase() + k.slice(1))
-      ?.classList.toggle('active', k === f);
-  });
-  renderDpList();
-}
-
-function changeDpPage(dir) {
-  const filtered = getDpFiltered();
-  const maxPage = Math.max(0, Math.ceil(filtered.length / DP_PAGE_SIZE) - 1);
-  dpPage = Math.min(maxPage, Math.max(0, dpPage + dir));
-  renderDpList();
-}
-
-function dpSelectAll(checked) {
-  document.querySelectorAll('#drivePickerList input[type="checkbox"]')
-    .forEach(chk => chk.checked = checked);
-}
-
-function renderDpList() {
-  const filtered = getDpFiltered();
-  const totalPages = Math.max(1, Math.ceil(filtered.length / DP_PAGE_SIZE));
-  dpPage = Math.min(dpPage, totalPages - 1);
-  const start = dpPage * DP_PAGE_SIZE;
-  const pageItems = filtered.slice(start, start + DP_PAGE_SIZE);
-
-  document.getElementById('drivePickerStatus').textContent =
-    `共 ${dpPhotos.length} 張，顯示 ${filtered.length} 張`;
-
-  const pager = document.getElementById('dpPager');
-  if (filtered.length > DP_PAGE_SIZE) {
-    pager.style.display = 'flex';
-    document.getElementById('dpPageInfo').textContent = `第 ${dpPage+1} / ${totalPages} 頁`;
-    document.getElementById('dpPrevBtn').disabled = dpPage === 0;
-    document.getElementById('dpNextBtn').disabled = dpPage >= totalPages - 1;
-  } else {
-    pager.style.display = 'none';
-  }
-
-  document.getElementById('drivePickerList').innerHTML = pageItems.map(p => {
-    const globalIdx = dpPhotos.indexOf(p);
-    const isNew = !isPhotoInUse(p.fileId);
-    // 已加入輔助照片的標示
-    const alreadyAdded = currentAuxImgs.find(a => a.fileId === p.fileId);
-    return `<div style="display:flex;align-items:center;gap:8px;padding:7px 8px;background:${alreadyAdded?'#e8f5e0':'#f8fff4'};border:1.5px solid var(--border);border-radius:8px">
-      <div style="width:50px;height:50px;flex-shrink:0;border-radius:6px;overflow:hidden;background:#e0f0d8;display:flex;align-items:center;justify-content:center;font-size:1.3rem">
-        <img src="${p.thumbUrl||p.url}" alt="" style="width:100%;height:100%;object-fit:cover" onerror="this.parentNode.innerHTML='🖼️'">
-      </div>
-      <div style="flex:1;min-width:0;font-size:.75rem">
-        <div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(p.filename)}</div>
-        <div style="color:var(--muted);font-size:.68rem;margin-top:2px">${isNew?'未建檔':'已建檔'}${alreadyAdded?' · ✅ 已加入':''}</div>
-      </div>
-      <input type="checkbox" data-fileid="${p.fileId}" data-url="${p.url}"
-        data-filename="${escapeHtml(p.filename)}"
-        ${alreadyAdded ? 'checked' : ''}
-        style="width:16px;height:16px;cursor:pointer;flex-shrink:0">
-    </div>`;
-  }).join('');
-}
-
-function confirmDrivePick() {
-  const checkboxes = document.querySelectorAll('#drivePickerList input[type="checkbox"]:checked');
-  let added = 0;
-  checkboxes.forEach(chk => {
-    const fileId = chk.dataset.fileid;
-    const url = chk.dataset.url;
-    const filename = chk.dataset.filename;
-    // 避免重複加入
-    if (!currentAuxImgs.find(a => a.fileId === fileId)) {
-      currentAuxImgs.push({ url, fileId, filename, role: 'aux' });
-      added++;
-    }
-  });
-  renderPhotoGallery();
-  closeModal('drivePickerOverlay');
-  if (added > 0) showToast(`已加入 ${added} 張輔助照片`);
-}
-
-// ═══════════════════════════════════════════════
-//  IMAGE COMPRESSION
-// ═══════════════════════════════════════════════
-function compressImage(base64, maxSize, quality) {
-  return new Promise(resolve => {
-    const img = new Image();
-    img.onload = () => {
-      let w = img.width, h = img.height;
-      if (w <= maxSize && h <= maxSize) {
-        // 已經夠小，不壓縮
-        resolve(base64);
-        return;
-      }
-      // 等比例縮小
-      if (w > h) { h = Math.round(h * maxSize / w); w = maxSize; }
-      else { w = Math.round(w * maxSize / h); h = maxSize; }
-      const canvas = document.createElement('canvas');
-      canvas.width = w; canvas.height = h;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, w, h);
-      resolve(canvas.toDataURL('image/jpeg', quality));
-    };
-    img.onerror = () => resolve(base64); // 失敗就用原圖
-    img.src = base64;
-  });
-}
-
-// ═══════════════════════════════════════════════
-//  IMAGE UPLOAD
-// ═══════════════════════════════════════════════
+// 初始化 file input 監聽
 function initImageListeners() {
-  // Use named functions to avoid duplicate listeners
-  const imgInput = document.getElementById('imgInput');
-  const auxInput = document.getElementById('auxImgInput');
-  imgInput.onchange = (e) => handleImg(e, 'main');
-  auxInput.onchange = (e) => handleImg(e, 'aux');
+  document.getElementById('imgInput').onchange    = e => handleImg(e, 'main');
+  document.getElementById('auxImgInput').onchange = e => handleImg(e, 'aux');
 }
 
+/**
+ * 選圖後：壓縮供顯示/AI，保留原圖供上傳 Drive
+ * 一律是暫存，不立刻上傳 Drive。按儲存才上傳。
+ */
 function handleImg(e, role) {
   const files = Array.from(e.target.files);
   if (!files.length) return;
-
   (async () => {
     for (const file of files) {
-      const reader = new FileReader();
-      const base64 = await new Promise(res => {
-        reader.onload = ev => res(ev.target.result);
-        reader.readAsDataURL(file);
+      const b64 = await new Promise(res => {
+        const r = new FileReader();
+        r.onload = ev => res(ev.target.result);
+        r.readAsDataURL(file);
       });
-
-      const mime = file.type || 'image/jpeg';
-      const filename = file.name;
-
-      // 壓縮版供顯示和 AI 辨識，原圖暫存供之後上傳 Drive
-      const compressedBase64 = await compressImage(base64, 1024, 0.85);
-
+      // 壓縮版供顯示和 AI
+      const compressed = await compressImage(b64, 1024, 0.85);
+      const obj = {
+        base64:       compressed, // 顯示用
+        originalBase64: b64,      // 上傳 Drive 用（原尺寸）
+        url:          '',         // 上傳後填入 Drive URL
+        fileId:       '',
+        filename:     file.name,
+        mime:         file.type || 'image/jpeg',
+        fromDrive:    false
+      };
       if (role === 'main') {
-        currentMainImg = {
-          base64: compressedBase64,   // 壓縮版：顯示 + AI 辨識用
-          originalBase64: base64,     // 原圖：儲存時上傳 Drive 用
-          url: compressedBase64,      // 暫時用 base64 顯示
-          filename, mime,
-          uploaded: false             // 尚未上傳到 Drive
-        };
+        currentMainImg = obj;
         document.getElementById('upPrompt').style.display = 'none';
         document.getElementById('aiBtnEl').disabled = false;
       } else {
-        currentAuxImgs.push({
-          base64: compressedBase64,
-          originalBase64: base64,
-          url: compressedBase64,
-          filename, mime,
-          uploaded: false
-        });
+        currentAuxImgs.push(obj);
       }
       renderPhotoGallery();
     }
   })();
-
   e.target.value = '';
 }
 
 function renderPhotoGallery() {
   const gallery = document.getElementById('photoGallery');
-  const list = document.getElementById('photoList');
-  const hasPhotos = !!currentMainImg || currentAuxImgs.length > 0;
-  gallery.classList.toggle('show', hasPhotos);
-
-  const photos = [];
-  if (currentMainImg) photos.push({...currentMainImg, role:'main'});
-  currentAuxImgs.forEach(p => photos.push({...p, role:'aux'}));
-
-  list.innerHTML = photos.map((p, idx) => `
-    <div class="photo-item">
-      <img src="${p.base64||p.url}" alt="" style="width:100%;height:100%;object-fit:cover">
-      ${p.role==='main'?`<span class="photo-main-badge">主</span>`:`<span class="photo-aux-badge">輔</span>`}
+  const list    = document.getElementById('photoList');
+  const imgs = [];
+  if (currentMainImg) imgs.push({ img: currentMainImg, role: 'main', idx: 0 });
+  currentAuxImgs.forEach((img, i) => imgs.push({ img, role: 'aux', idx: i }));
+  if (!imgs.length) { gallery.classList.remove('show'); return; }
+  gallery.classList.add('show');
+  list.innerHTML = imgs.map(({ img, role, idx }) => {
+    const src = img.base64 || (img.url && !isBase64(img.url) ? img.url : '');
+    return `<div class="photo-item">
+      ${src ? `<img src="${src}" alt="">` : '<div style="background:#eee;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:1.5rem">🖼️</div>'}
+      <span class="${role==='main'?'photo-main-badge':'photo-aux-badge'}">${role==='main'?'主':'輔'}</span>
       <div class="photo-acts">
-        <button class="photo-act" onclick="removePhoto(${idx})" type="button">✕</button>
+        <button class="photo-act" onclick="removePhoto('${role}',${idx})">✕</button>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
-function removePhoto(idx) {
-  if (idx === 0 && currentMainImg) {
+function removePhoto(role, idx) {
+  if (role === 'main') {
     currentMainImg = null;
-    document.getElementById('upPrompt').style.display = 'block';
+    document.getElementById('upPrompt').style.display = '';
     document.getElementById('aiBtnEl').disabled = true;
+    document.getElementById('aiBox').style.display = 'none';
   } else {
-    const auxIdx = currentMainImg ? idx - 1 : idx;
-    currentAuxImgs.splice(auxIdx, 1);
+    currentAuxImgs.splice(idx, 1);
   }
   renderPhotoGallery();
 }
 
 // ═══════════════════════════════════════════════
-//  AI SCAN (透過 GAS 中繼，避免 CORS 問題)
-//  支援三種來源：
-//    1. 手動上傳的 base64
-//    2. Drive 掃描匯入的 fileId
-//    3. Drive 掃描匯入的 url（fallback）
+//  AI SCAN
 // ═══════════════════════════════════════════════
 async function aiScan() {
-  if (!currentMainImg) { alert('請先上傳照片'); return; }
-  if (!CFG.scriptUrl) { alert('請先在設定中填入 GAS 網址，AI 辨識需透過後端中繼'); return; }
-
+  if (!CFG.scriptUrl) { alert('請先設定 GAS 網址'); return; }
+  if (!currentMainImg) { alert('請先上傳主照片'); return; }
   const btn = document.getElementById('aiBtnEl');
-  const box = document.getElementById('aiBox');
-  btn.disabled = true; btn.textContent = '⏳ 辨識中…';
-  box.style.display = 'none'; aiSuggestion = null;
+  btn.disabled = true; btn.textContent = '⏳ AI 辨識中…';
+  document.getElementById('aiBox').style.display = 'none';
 
-  let payload = { methods, tags: tagMap };
-  if (currentMainImg.base64) {
-    let base64 = currentMainImg.base64;
-    if (base64.startsWith('data:')) base64 = base64.split(',')[1];
-    payload.base64 = base64;
-    payload.mime = currentMainImg.mime || 'image/jpeg';
-  } else if (currentMainImg.fileId) {
-    payload.fileId = currentMainImg.fileId;
+  let payload;
+  if (currentMainImg.fromDrive && currentMainImg.fileId) {
+    payload = { fileId: currentMainImg.fileId, methods, tags: tagMap };
   } else {
-    btn.disabled = false; btn.textContent = '🤖 AI 辨識地點・標籤・取得方式';
-    alert('此卡片沒有可辨識的圖片資料，請重新上傳照片');
-    return;
+    // 用壓縮版 base64 送 AI，不用原圖
+    const b64 = currentMainImg.base64 || '';
+    const raw = b64.includes(',') ? b64.split(',')[1] : b64;
+    payload = { base64: raw, mime: 'image/jpeg', methods, tags: tagMap };
   }
 
-  // 最多自動重試 1 次（應對偶發錯誤）
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
       const res = await callGAS('aiScan', payload);
-
-      if (!res?.success && attempt === 0 && (
-        res?.error?.includes('high demand') ||
-        res?.error?.includes('overloaded') ||
-        res?.error?.includes('quota') ||
-        res?.error?.includes('Quota')
-      )) {
-        // 付費方案遇到偶發限制，等 5 秒重試一次
+      if (!res?.success && attempt === 0 && (res?.error?.includes('quota') || res?.error?.includes('overloaded'))) {
         btn.textContent = '⏳ 重試中…';
         await new Promise(r => setTimeout(r, 5000));
         continue;
       }
-
-      if (!res || !res.success) throw new Error(res?.error || '辨識失敗');
-
+      if (!res?.success) throw new Error(res?.error || '辨識失敗');
       aiSuggestion = res.data;
-      // 清理好友名字（移除結尾的「上」字）
-      if (aiSuggestion.friendName) {
-        aiSuggestion.friendName = cleanFriendName(aiSuggestion.friendName);
-      }
+      // 清除結尾「上」字
+      if (aiSuggestion.friendName) aiSuggestion.friendName = cleanFriendName(aiSuggestion.friendName);
       const d = aiSuggestion;
       document.getElementById('aiText').innerHTML = `
         <strong>🤖 AI 辨識結果</strong><br>
@@ -1732,281 +1341,269 @@ async function aiScan() {
         🎯 取得方式：<b>${d.obtainedMethod||'—'}</b>${d.friendName?` (${d.friendName})`:''}<br>
         🏷️ 標籤：<b>${(d.tags||[]).join('、')||'—'}</b><br>
         💭 <i>${d.reason||''}</i>`;
-      box.style.display = 'block';
-      break; // 成功，跳出重試迴圈
-
-    } catch(e) {
-      document.getElementById('aiText').innerHTML = `<b>⚠️ 辨識失敗：</b>${e.message}`;
-      box.style.display = 'block';
+      document.getElementById('aiBox').style.display = '';
+      break;
+    } catch(err) {
+      alert('AI 辨識失敗：' + err.message);
       break;
     }
   }
-
-  renderPhotoGallery();
   btn.disabled = false; btn.textContent = '🤖 AI 辨識地點・標籤・取得方式';
 }
 
 function applyAI() {
   if (!aiSuggestion) return;
   const d = aiSuggestion;
-  if (d.cardName) document.getElementById('fCardName').value = d.cardName;
-  if (d.location) document.getElementById('fName').value = d.location;
-  if (d.obtainedMethod) document.getElementById('fObtMethod').value = d.obtainedMethod;
-
-  // 好友送：自動新增到名單，再選取，並設定狀態為自留收藏
-  if (d.friendName) {
-    const friendName = cleanFriendName(d.friendName);
-    if (friendName) {
-      ensureFriendExists(friendName);
-      setTimeout(() => {
-        document.getElementById('fSourceFriend').value = friendName;
-      }, 50);
-      document.getElementById('fStatus').value = 'kept';
-      toggleSentFields();
-    }
-  }
-
-  if (d.rarity) {
-    const el = document.querySelector(`input[name="rare"][value="${d.rarity}"]`);
-    if (el) el.checked = true;
-  }
-  if (d.tags) document.querySelectorAll('#tagGrid input').forEach(cb => { cb.checked = d.tags.includes(cb.value); });
-
-  // 自動填入國家，若不在清單則自動新增
+  if (d.cardName)       document.getElementById('fCardName').value   = d.cardName;
+  if (d.location)       document.getElementById('fName').value        = d.location;
+  if (d.obtainedMethod) document.getElementById('fObtMethod').value   = d.obtainedMethod;
   if (d.country) {
     if (!countries.includes(d.country)) {
       countries.push(d.country);
       localStorage.setItem('pkm_countries', JSON.stringify(countries));
-      renderCountryManagement();
-      renderCountrySelect();
+      renderCountryManagement(); renderCountrySelect();
     }
     document.getElementById('fCountry').value = d.country;
   }
+  if (d.friendName) {
+    ensureFriendExists(d.friendName);
+    setTimeout(() => { document.getElementById('fSourceFriend').value = d.friendName; }, 50);
+    document.getElementById('fStatus').value = 'kept';
+    toggleSentFields();
+  }
+  if (d.tags) document.querySelectorAll('#tagGrid input').forEach(cb => { cb.checked = d.tags.includes(cb.value); });
 }
 
 // ═══════════════════════════════════════════════
 //  CARD MODAL
 // ═══════════════════════════════════════════════
-function openCardModal(id=null) {
-  editingCardId = id; currentMainImg = null; currentAuxImgs = []; aiSuggestion = null;
+function openCardModal(id = null) {
+  editingCardId = id;
   document.getElementById('cardModalTitle').textContent = id ? '編輯明信片' : '新增明信片';
   clearCardForm();
-  if (id) { const c = cards.find(x=>x.id===id); if(c) fillCardForm(c); }
-  toggleSentFields();
-  document.getElementById('aiBox').style.display = 'none';
-  renderFriendSelects();
-  renderCountrySelect();
+  if (id) {
+    const c = cards.find(x => x.id === id);
+    if (c) fillCardForm(c);
+  }
   renderTagGrid();
-  initImageListeners(); // Use onchange instead of addEventListener to avoid duplicates
+  renderFavoriteSelect();
   document.getElementById('cardOverlay').classList.add('open');
+  initImageListeners();
 }
 
 function clearCardForm() {
-  ['fCardName','fName','fObtDate','fSentDate','fNotes'].forEach(id => {
-    const el = document.getElementById(id); if(el) el.value = '';
-  });
-  document.getElementById('fDupes').value = '1';
-  document.getElementById('fCountry').value = '';
-  document.getElementById('fObtMethod').value = '';
-  document.getElementById('fStatus').value = 'pending';
+  ['fCardName','fName','fNotes'].forEach(id => { document.getElementById(id).value = ''; });
+  document.getElementById('fObtDate').value    = new Date().toISOString().split('T')[0];
+  document.getElementById('fDupes').value      = '1';
+  document.getElementById('fStatus').value     = 'pending';
+  document.getElementById('fSentDate').value   = '';
   document.getElementById('fSourceFriend').value = '';
-  renderRecipFriendGrid([]);
+  document.getElementById('fObtMethod').value  = methods[0] || '';
+  document.getElementById('fCountry').value    = '';
   renderFavoriteSelect();
-  // 預設選「— 不選」
   const noneEl = document.getElementById('fav_none');
   if (noneEl) noneEl.checked = true;
-  renderTagGrid();
-  document.getElementById('upPrompt').style.display = 'block';
-  document.getElementById('imgInput').value = '';
-  document.getElementById('auxImgInput').value = '';
+  renderRecipFriendGrid([]);
+  toggleSentFields();
+  currentMainImg = null;
+  currentAuxImgs = [];
+  aiSuggestion   = null;
+  document.getElementById('upPrompt').style.display = '';
   document.getElementById('aiBtnEl').disabled = true;
-  currentMainImg = null; currentAuxImgs = [];
+  document.getElementById('aiBox').style.display = 'none';
   renderPhotoGallery();
+  const saveBtn = document.getElementById('cardSaveBtn');
+  if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '🌱 儲存'; }
 }
 
 function fillCardForm(c) {
-  document.getElementById('fCardName').value = c.cardName || '';
-  document.getElementById('fName').value = c.name || '';
-  document.getElementById('fCountry').value = c.region || '';
-  document.getElementById('fObtDate').value = c.obtainedDate || '';
-  document.getElementById('fObtMethod').value = c.obtainedMethod || '';
-  document.getElementById('fStatus').value = c.status || 'pending';
-  document.getElementById('fSentDate').value = c.sentDate || '';
+  document.getElementById('fCardName').value   = c.cardName || '';
+  document.getElementById('fName').value        = c.name || '';
+  document.getElementById('fObtDate').value    = c.obtainedDate || '';
+  document.getElementById('fObtMethod').value  = c.obtainedMethod || '';
   document.getElementById('fSourceFriend').value = c.sourceFriend || '';
-  // recipFriend 支援舊版字串和新版陣列
-  const recipArr = Array.isArray(c.recipFriend) ? c.recipFriend : (c.recipFriend ? [c.recipFriend] : []);
-  renderRecipFriendGrid(recipArr);
-  document.getElementById('fDupes').value = c.dupes || '1';
-  document.getElementById('fNotes').value = c.notes || '';
+  document.getElementById('fDupes').value      = c.dupes || '1';
+  document.getElementById('fStatus').value     = c.status || 'pending';
+  document.getElementById('fSentDate').value   = c.sentDate || '';
+  document.getElementById('fNotes').value      = c.notes || '';
+  document.getElementById('fCountry').value    = c.region || '';
+  toggleSentFields();
   renderFavoriteSelect();
-  const rareEl = document.querySelector(`input[name="rare"][value="${escapeHtml(c.rarity||'')}"]`);
-  if(rareEl) rareEl.checked = true;
-  else if(document.getElementById('favoriteSelect')?.querySelector('input')) {
-    document.getElementById('favoriteSelect').querySelector('input').checked = true;
-  }
+  const rEl = document.querySelector(`input[name="rare"][value="${escapeHtml(c.rarity||'')}"]`);
+  if (rEl) rEl.checked = true;
+  else { const n = document.getElementById('fav_none'); if(n) n.checked = true; }
   renderTagGrid();
-  (c.tags||[]).forEach(t => { const cb = document.querySelector(`#tagGrid input[value="${t}"]`); if(cb) cb.checked = true; });
-  if (c.mainImg) { currentMainImg = c.mainImg; document.getElementById('upPrompt').style.display='none'; document.getElementById('aiBtnEl').disabled=false; }
-  if (c.auxImgs) currentAuxImgs = [...c.auxImgs];
+  (c.tags||[]).forEach(t => { const cb = document.querySelector(`#tagGrid input[value="${escapeHtml(t)}"]`); if(cb) cb.checked = true; });
+  const recipArr = getRecipNames(c);
+  renderRecipFriendGrid(recipArr);
+  // 設定照片（已建檔的，從 Drive URL 顯示）
+  if (c.mainImg) {
+    currentMainImg = { ...c.mainImg, base64: null, originalBase64: null, fromDrive: true };
+    document.getElementById('upPrompt').style.display = 'none';
+    document.getElementById('aiBtnEl').disabled = false;
+  }
+  if (c.auxImgs) {
+    currentAuxImgs = c.auxImgs.map(a => ({ ...a, base64: null, originalBase64: null, fromDrive: true }));
+  }
   renderPhotoGallery();
 }
 
 function toggleSentFields() {
   const s = document.getElementById('fStatus').value;
-  document.getElementById('sentDateGrp').style.display = s==='sent' ? '' : 'none';
-  document.getElementById('recipGrp').style.display = s==='sent' ? '' : 'none';
+  document.getElementById('sentDateGrp').style.display = s === 'sent' ? '' : 'none';
+  document.getElementById('recipGrp').style.display    = s === 'sent' ? '' : 'none';
 }
 
 function copyLastCard() {
   if (!cards.length) return;
-  const last = cards[0];
-  document.getElementById('fObtMethod').value = last.obtainedMethod || '';
-  document.getElementById('fObtDate').value = last.obtainedDate || '';
+  const c = cards[0];
+  document.getElementById('fObtMethod').value  = c.obtainedMethod || '';
+  document.getElementById('fSourceFriend').value = c.sourceFriend || '';
+  document.getElementById('fCountry').value    = c.region || '';
+  (c.tags||[]).forEach(t => { const cb = document.querySelector(`#tagGrid input[value="${escapeHtml(t)}"]`); if(cb) cb.checked = true; });
 }
 
+/**
+ * 儲存卡片：
+ * 1. 防呆確認資料完整性
+ * 2. 上傳新照片到 Drive（含重複檔名檢查）
+ * 3. 存入 cards（只存 Drive URL，不存 base64）
+ * 4. saveAndSync
+ */
 async function saveCard() {
-  // 防呆：記憶體資料比 localStorage 備份少很多時警告
-  const localBackup = JSON.parse(localStorage.getItem('pkm_cards') || '[]');
-  if (localBackup.length > cards.length + 5 && !editingCardId) {
-    const ok = confirm(
-      `⚠️ 注意：記憶體中只有 ${cards.length} 筆資料，但本地備份有 ${localBackup.length} 筆。\n\n` +
-      `資料可能尚未載入完整，繼續儲存可能會遺失資料。\n\n確定要繼續嗎？`
-    );
-    if (!ok) return;
+  const saveBtn = document.getElementById('cardSaveBtn');
+
+  // 防呆：記憶體比 localStorage 備份少太多
+  const backup = JSON.parse(localStorage.getItem('pkm_cards') || '[]');
+  if (!editingCardId && backup.length > cards.length + 5) {
+    if (!confirm(`⚠️ 資料可能未完整載入（記憶體 ${cards.length} 筆，備份 ${backup.length} 筆）。確定要繼續儲存嗎？`)) return;
   }
 
-  const saveBtn = document.querySelector('#cardOverlay .btn-save');
-  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '⏳ 儲存中…'; }
+  saveBtn.disabled = true; saveBtn.textContent = '⏳ 儲存中…';
 
-  // 上傳尚未上傳的照片到 Drive
+  // 上傳新照片到 Drive
   if (CFG.scriptUrl) {
     // 主照片
-    if (currentMainImg && !currentMainImg.uploaded && currentMainImg.originalBase64) {
-      let filename = currentMainImg.filename;
-      try {
-        // 檢查重複檔名
-        const checkRes = await callGAS('checkFilename', { filename });
-        if (checkRes?.exists) {
-          const confirmed = confirm(`Drive 中已有同名檔案「${filename}」，是否仍要上傳？\n（確定後會自動加上編號，例如：${checkRes.suggestedName}）`);
-          if (!confirmed) {
-            if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '🌱 儲存'; }
-            return;
-          }
-          filename = checkRes.suggestedName;
-          currentMainImg.filename = filename;
+    if (currentMainImg && currentMainImg.originalBase64 && !currentMainImg.url) {
+      let fn = currentMainImg.filename;
+      const chk = await callGAS('checkFilename', { filename: fn });
+      if (chk?.exists) {
+        if (!confirm(`Drive 中已有同名檔案「${fn}」，要自動加編號繼續上傳嗎？`)) {
+          saveBtn.disabled = false; saveBtn.textContent = '🌱 儲存';
+          return;
         }
-        const res = await callGAS('uploadPhoto', { base64: currentMainImg.originalBase64, mimeType: currentMainImg.mime, filename });
-        if (res?.success) {
-          currentMainImg.url = res.url;
-          currentMainImg.fileId = res.fileId || '';
-          currentMainImg.uploaded = true;
-        }
-      } catch(err) { console.error('主照片上傳失敗:', err); }
+        fn = chk.suggestedName;
+        currentMainImg.filename = fn;
+      }
+      const up = await callGAS('uploadPhoto', { base64: currentMainImg.originalBase64, mimeType: currentMainImg.mime, filename: fn });
+      if (up?.success) {
+        currentMainImg.url    = up.url;
+        currentMainImg.fileId = up.fileId;
+      }
     }
 
     // 輔助照片
     for (const aux of currentAuxImgs) {
-      if (!aux.uploaded && aux.originalBase64) {
-        let filename = aux.filename;
-        try {
-          const checkRes = await callGAS('checkFilename', { filename });
-          if (checkRes?.exists) {
-            filename = checkRes.suggestedName;
-            aux.filename = filename;
-          }
-          const res = await callGAS('uploadPhoto', { base64: aux.originalBase64, mimeType: aux.mime, filename });
-          if (res?.success) {
-            aux.url = res.url;
-            aux.fileId = res.fileId || '';
-            aux.uploaded = true;
-          }
-        } catch(err) { console.error('輔助照片上傳失敗:', err); }
+      if (aux.originalBase64 && !aux.url) {
+        let fn = aux.filename;
+        const chk = await callGAS('checkFilename', { filename: fn });
+        if (chk?.exists) { fn = chk.suggestedName; aux.filename = fn; }
+        const up = await callGAS('uploadPhoto', { base64: aux.originalBase64, mimeType: aux.mime, filename: fn });
+        if (up?.success) { aux.url = up.url; aux.fileId = up.fileId; }
       }
     }
   }
 
   const selectedTags = Array.from(document.querySelectorAll('#tagGrid input:checked')).map(cb => cb.value);
   const status = document.getElementById('fStatus').value;
+
   const data = {
-    id: editingCardId || Date.now().toString(),
-    cardName: document.getElementById('fCardName').value.trim(),
-    name: document.getElementById('fName').value.trim(),
-    region: document.getElementById('fCountry').value,
-    obtainedDate: document.getElementById('fObtDate').value,
+    id:             editingCardId || Date.now().toString(),
+    cardName:       document.getElementById('fCardName').value.trim(),
+    name:           document.getElementById('fName').value.trim(),
+    region:         document.getElementById('fCountry').value,
+    obtainedDate:   document.getElementById('fObtDate').value,
     obtainedMethod: document.getElementById('fObtMethod').value,
-    sourceFriend: document.getElementById('fSourceFriend').value,
-    rarity: document.querySelector('input[name="rare"]:checked')?.value || '',
-    dupes: document.getElementById('fDupes').value || '1',
+    sourceFriend:   document.getElementById('fSourceFriend').value,
+    rarity:         document.querySelector('input[name="rare"]:checked')?.value || '',
+    dupes:          document.getElementById('fDupes').value || '1',
     status,
-    sentDate: status==='sent' ? document.getElementById('fSentDate').value : '',
-    recipFriend: status==='sent' ? Array.from(document.querySelectorAll('#recipFriendGrid input:checked')).map(cb=>cb.value) : [],
-    tags: selectedTags,
-    notes: document.getElementById('fNotes').value.trim(),
+    sentDate:       status === 'sent' ? document.getElementById('fSentDate').value : '',
+    recipFriend:    status === 'sent' ? Array.from(document.querySelectorAll('#recipFriendGrid input:checked')).map(cb => cb.value) : [],
+    tags:           selectedTags,
+    notes:          document.getElementById('fNotes').value.trim(),
     mainImg: currentMainImg ? {
-      url: currentMainImg.url || '',
-      fileId: currentMainImg.fileId || '',
+      url:      isBase64(currentMainImg.url) ? '' : (currentMainImg.url || ''),
+      fileId:   currentMainImg.fileId   || '',
       filename: currentMainImg.filename || '',
-      role: 'main'
+      role:     'main'
     } : null,
-    auxImgs: currentAuxImgs.map(p => ({
-      url: p.url || '',
-      fileId: p.fileId || '',
-      filename: p.filename || '',
-      role: 'aux'
+    auxImgs: currentAuxImgs.map(a => ({
+      url:      isBase64(a.url) ? '' : (a.url || ''),
+      fileId:   a.fileId   || '',
+      filename: a.filename || '',
+      role:     'aux'
     })),
-    createdAt: editingCardId ? (cards.find(c=>c.id===editingCardId)||{}).createdAt || new Date().toISOString() : new Date().toISOString()
+    createdAt: editingCardId
+      ? (cards.find(c => c.id === editingCardId)?.createdAt || new Date().toISOString())
+      : new Date().toISOString()
   };
 
-  if (editingCardId) { const i=cards.findIndex(c=>c.id===editingCardId); if(i>=0) cards[i]=data; }
-  else cards.unshift(data);
-  saveAndSync(); renderLibrary(); closeModal('cardOverlay');
+  if (editingCardId) {
+    const i = cards.findIndex(c => c.id === editingCardId);
+    if (i >= 0) cards[i] = data; else cards.unshift(data);
+  } else {
+    cards.unshift(data);
+  }
 
-  if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '🌱 儲存'; }
+  saveAndSync();
+  renderLibrary();
+  closeModal('cardOverlay');
+  saveBtn.disabled = false; saveBtn.textContent = '🌱 儲存';
 }
 
 // ═══════════════════════════════════════════════
-//  DELETE WITH UNDO
+//  DELETE & UNDO
 // ═══════════════════════════════════════════════
 function deleteCard(id) {
-  deletedCard = cards.find(c => c.id===id);
+  deletedCard = cards.find(c => c.id === id);
   if (!deletedCard) return;
-  cards = cards.filter(c => c.id!==id);
+  cards = cards.filter(c => c.id !== id);
   saveAndSync(); renderLibrary();
-  showToast('已刪除：' + (deletedCard.cardName || deletedCard.name || '明信片'));
+  showToast('已刪除');
 }
 
 function undoDelete() {
   if (!deletedCard) return;
-  cards.unshift(deletedCard); deletedCard = null;
-  saveAndSync(); renderLibrary(); hideToast();
+  cards.unshift(deletedCard);
+  deletedCard = null;
+  saveAndSync(); renderLibrary();
+  hideToast();
 }
 
 function showToast(msg) {
+  clearTimeout(toastTimer);
   document.getElementById('toastMsg').textContent = msg;
   document.getElementById('toast').classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(hideToast, 5000);
+  toastTimer = setTimeout(hideToast, 4000);
 }
 
 function hideToast() {
   document.getElementById('toast').classList.remove('show');
-  deletedCard = null;
 }
 
 // ═══════════════════════════════════════════════
-//  FRIENDS
+//  FRIEND SELECTS
 // ═══════════════════════════════════════════════
 function renderFriendSelects() {
-  const opts = '<option value="">（無）</option>' + friends.map(f=>`<option value="${f.name}">${f.name}</option>`).join('');
-  const sf=document.getElementById('fSourceFriend');
-  if(sf){ const v=sf.value; sf.innerHTML=opts; sf.value=v; }
+  const opts = '<option value="">（無）</option>' + friends.map(f => `<option value="${escapeHtml(f.name)}">${escapeHtml(f.name)}</option>`).join('');
+  const sf = document.getElementById('fSourceFriend');
+  if (sf) { const v = sf.value; sf.innerHTML = opts; sf.value = v; }
   renderRecipFriendGrid();
 }
 
 function renderRecipFriendGrid(selectedNames) {
-  const grid = document.getElementById('recipFriendGrid');
-  if (!grid) return;
-  // 保留目前已勾選的（若沒傳入 selectedNames）
+  const grid = document.getElementById('recipFriendGrid'); if (!grid) return;
   const cur = selectedNames !== undefined ? selectedNames :
     Array.from(grid.querySelectorAll('input:checked')).map(cb => cb.value);
   if (!friends.length) {
@@ -2021,60 +1618,72 @@ function renderRecipFriendGrid(selectedNames) {
   ).join('');
 }
 
+// ═══════════════════════════════════════════════
+//  FRIENDS PAGE
+// ═══════════════════════════════════════════════
 function renderFriends() {
-  const q=(document.getElementById('friendSearch')?.value||'').toLowerCase();
-  const fl=document.getElementById('friendList');
-  const filtered=friends.filter(f=>!q||f.name.toLowerCase().includes(q)||((f.note||'').toLowerCase().includes(q)));
-  if(!filtered.length){ fl.innerHTML=`<div class="empty-state"><div class="ei">👥</div><p>尚無好友，快新增吧！</p></div>`; return; }
-  fl.innerHTML=filtered.map(f=>{
-    const sent=cards.filter(c=>getRecipNames(c).includes(f.name)).length;
-    const recv=cards.filter(c=>c.sourceFriend===f.name).length;
-    const initial=(f.name||'?').charAt(0).toUpperCase();
-    return `<div class="friend-card">
-      <div class="friend-avatar">${initial}</div>
-      <div class="friend-info">
-        <div class="friend-name">${escapeHtml(f.name)}</div>
-        ${f.note?`<div class="friend-note">${escapeHtml(f.note)}</div>`:''}
-        <div class="friend-stats">收到 ${recv} 張 · 送出 ${sent} 張</div>
-      </div>
-      <div class="friend-acts">
-        <button class="act" data-friend-id="${f.id}" onclick="openFriendModal(this.dataset.friendId)">✏️</button>
-        <button class="act del" data-friend-id="${f.id}" onclick="deleteFriend(this.dataset.friendId)">🗑️</button>
-      </div>
-    </div>`;
-  }).join('');
+  const q = (document.getElementById('friendSearch')?.value || '').toLowerCase();
+  const list = friends.filter(f => !q || f.name.toLowerCase().includes(q));
+  document.getElementById('friendList').innerHTML = !list.length
+    ? '<div class="empty-state"><div class="ei">👥</div><p>尚無好友</p></div>'
+    : list.map(f => {
+        const recv = cards.filter(c => c.sourceFriend === f.name).length;
+        const sent = cards.filter(c => getRecipNames(c).includes(f.name)).length;
+        const initial = f.name.charAt(0);
+        return `<div class="friend-card">
+          <div class="friend-avatar">${initial}</div>
+          <div class="friend-info">
+            <div class="friend-name">${escapeHtml(f.name)}</div>
+            ${f.note ? `<div class="friend-note">${escapeHtml(f.note)}</div>` : ''}
+            <div class="friend-stats">收到 ${recv} 張 · 送出 ${sent} 張</div>
+          </div>
+          <div class="friend-acts">
+            <button class="act" data-friend-id="${f.id}" onclick="openFriendModal(this.dataset.friendId)">✏️</button>
+            <button class="act del" data-friend-id="${f.id}" onclick="deleteFriend(this.dataset.friendId)">🗑️</button>
+          </div>
+        </div>`;
+      }).join('');
 }
 
-function openFriendModal(id=null) {
-  editingFriendId=id;
-  document.getElementById('friendModalTitle').textContent=id?'編輯好友':'新增好友';
-  document.getElementById('fFriendName').value='';
-  document.getElementById('fFriendNote').value='';
-  if(id){ const f=friends.find(x=>x.id===id); if(f){ document.getElementById('fFriendName').value=f.name; document.getElementById('fFriendNote').value=f.note||''; } }
+function openFriendModal(id = null) {
+  editingFriendId = id;
+  document.getElementById('friendModalTitle').textContent = id ? '編輯好友' : '新增好友';
+  const f = id ? friends.find(x => x.id === id) : null;
+  document.getElementById('fFriendName').value = f?.name || '';
+  document.getElementById('fFriendNote').value = f?.note || '';
   document.getElementById('friendOverlay').classList.add('open');
 }
 
 function saveFriend() {
-  const name=document.getElementById('fFriendName').value.trim();
-  if(!name){ alert('請輸入好友名稱'); return; }
-  const data={id:editingFriendId||Date.now().toString(),name,note:document.getElementById('fFriendNote').value.trim()};
-  if(editingFriendId){ const i=friends.findIndex(f=>f.id===editingFriendId); if(i>=0) friends[i]=data; }
-  else friends.push(data);
+  const name = document.getElementById('fFriendName').value.trim();
+  const note = document.getElementById('fFriendNote').value.trim();
+  if (!name) { alert('請輸入名稱'); return; }
+  if (editingFriendId) {
+    const f = friends.find(x => x.id === editingFriendId);
+    if (f) { f.name = name; f.note = note; }
+  } else {
+    if (friends.find(f => f.name === name)) { alert('好友已存在'); return; }
+    friends.push({ id: Date.now().toString(), name, note });
+  }
   saveAndSync();
-  renderFriends(); renderFriendSelects(); closeModal('friendOverlay');
-  if(pendingFriendTarget){
-    const target = pendingFriendTarget;
-    const savedCardId = editingCardId; // 暫存目前編輯中的卡片 id
+  closeModal('friendOverlay');
+  renderFriends();
+  renderFriendSelects();
+  renderSettingsFriendList();
+
+  // 若是從 quickAddFriend 呼叫，重新開啟卡片 modal
+  if (pendingFriendTarget) {
+    const target   = pendingFriendTarget;
+    const savedId  = editingCardId;
     pendingFriendTarget = null;
-    setTimeout(()=>{
-      // 用 openCardModal 完整重新初始化，確保所有選單都更新
-      openCardModal(savedCardId);
-      setTimeout(()=>{
+    setTimeout(() => {
+      openCardModal(savedId);
+      setTimeout(() => {
         if (target === 'source') {
           const sel = document.getElementById('fSourceFriend');
           if (sel) sel.value = name;
         } else {
-          const cur = Array.from(document.querySelectorAll('#recipFriendGrid input:checked')).map(cb=>cb.value);
+          const cur = Array.from(document.querySelectorAll('#recipFriendGrid input:checked')).map(cb => cb.value);
           renderRecipFriendGrid([...cur, name]);
         }
       }, 80);
@@ -2083,406 +1692,583 @@ function saveFriend() {
 }
 
 function deleteFriend(id) {
-  if(!confirm('確定要刪除這位好友嗎？相關明信片記錄不受影響。')) return;
-  friends=friends.filter(f=>f.id!==id);
-  saveAndSync();
-  renderFriends(); renderFriendSelects();
+  const f = friends.find(x => x.id === id); if (!f) return;
+  if (!confirm(`確定刪除好友「${f.name}」？`)) return;
+  friends = friends.filter(x => x.id !== id);
+  saveAndSync(); renderFriends(); renderFriendSelects(); renderSettingsFriendList();
 }
 
 function quickAddFriend(target) {
-  pendingFriendTarget=target;
+  pendingFriendTarget = target;
   closeModal('cardOverlay');
-  setTimeout(()=>openFriendModal(),100);
+  openFriendModal();
 }
 
 // ═══════════════════════════════════════════════
-//  FILTER BUILDER
+//  FILTERS
 // ═══════════════════════════════════════════════
 function toggleFilterPanel() {
-  const p=document.getElementById('filterPanel');
-  p.classList.toggle('open');
-  if(p.classList.contains('open') && !filterConditions.length) addFilterRow();
+  document.getElementById('filterPanel').classList.toggle('open');
 }
 
 function toggleLogic() {
-  filterLogic=filterLogic==='AND'?'OR':'AND';
-  const btn=document.getElementById('logicBtn');
-  btn.textContent=filterLogic;
-  btn.className='filter-logic '+(filterLogic==='AND'?'and':'or');
+  filterLogic = filterLogic === 'AND' ? 'OR' : 'AND';
+  const btn = document.getElementById('logicBtn');
+  btn.textContent = filterLogic;
+  btn.className = 'filter-logic ' + filterLogic.toLowerCase();
   renderLibrary();
 }
 
 function addFilterRow() {
-  const id=Date.now().toString();
-  filterConditions.push({id,field:'status',op:'eq',value:''});
+  filterConditions.push({ id: Date.now(), field: 'status', op: 'eq', value: '' });
   renderFilterRows();
 }
 
 function removeFilterRow(id) {
-  filterConditions=filterConditions.filter(c=>c.id!==id);
-  renderFilterRows(); renderLibrary();
+  filterConditions = filterConditions.filter(c => c.id !== id);
+  renderFilterRows(); renderLibrary(); updateFilterCount();
 }
 
 function clearFilters() {
-  filterConditions=[];
+  filterConditions = [];
   showDuplicatesOnly = false;
   const dupBtn = document.getElementById('dupFilterBtn');
   if (dupBtn) dupBtn.classList.remove('active');
-  renderFilterRows(); renderLibrary();
-  updateFilterCount();
+  renderFilterRows(); renderLibrary(); updateFilterCount();
 }
 
 function renderFilterRows() {
-  const container=document.getElementById('filterRows');
-  container.innerHTML=filterConditions.map((cond,idx)=>{
-    const field=FILTER_FIELDS.find(f=>f.v===cond.field)||FILTER_FIELDS[0];
-    let valueEl='';
-    if(field.type==='select'||field.type==='dynamic'){
-      let opts=[];
-      if(field.type==='select') opts=field.opts.map((o,i)=>`<option value="${o}" ${cond.value===o?'selected':''}>${field.labels?.[i]||o}</option>`);
-      else if(field.src==='friends') opts=friends.map(f=>`<option value="${f.name}" ${cond.value===f.name?'selected':''}>${f.name}</option>`);
-      else if(field.src==='methods') opts=methods.map(m=>`<option value="${m}" ${cond.value===m?'selected':''}>${m}</option>`);
-      else if(field.src==='tags') opts=Object.keys(tagMap).map(t=>`<option value="${t}" ${cond.value===t?'selected':''}>${tagMap[t]} ${t}</option>`);
-      else if(field.src==='favorites') opts=favorites.map(f=>`<option value="${f.value}" ${cond.value===f.value?'selected':''}>${f.icon} ${f.label}</option>`);
-      else if(field.src==='countries') opts=countries.map(c=>`<option value="${c}" ${cond.value===c?'selected':''}>${c}</option>`);
-      valueEl=`<select onchange="updateFilter('${cond.id}','value',this.value);renderLibrary()"><option value="">請選擇</option>${opts.join('')}</select>`;
-    } else if(field.type==='date'){
-      valueEl=`<input type="date" value="${cond.value||''}" onchange="updateFilter('${cond.id}','value',this.value);renderLibrary()">
-               <select onchange="updateFilter('${cond.id}','op',this.value);renderLibrary()">
-                 <option value="eq" ${cond.op==='eq'?'selected':''}>當天</option>
-                 <option value="gte" ${cond.op==='gte'?'selected':''}>此日期之後</option>
-                 <option value="lte" ${cond.op==='lte'?'selected':''}>此日期之前</option>
-               </select>`;
+  const el = document.getElementById('filterRows'); if (!el) return;
+  el.innerHTML = filterConditions.map(cond => {
+    const field = FILTER_FIELDS.find(f => f.v === cond.field) || FILTER_FIELDS[0];
+    const fieldSel = FILTER_FIELDS.map(f => `<option value="${f.v}" ${cond.field===f.v?'selected':''}>${f.l}</option>`).join('');
+    let valInput = '';
+    if (field.type === 'select') {
+      const opts = field.opts.map((o,i) => `<option value="${o}" ${cond.value===o?'selected':''}>${field.labels?.[i]||o}</option>`).join('');
+      valInput = `<select onchange="updateFilter(${cond.id},'value',this.value);renderLibrary()"><option value="">請選擇</option>${opts}</select>`;
+    } else if (field.type === 'dynamic') {
+      let opts = '';
+      if (field.src==='friends')   opts = friends.map(f=>`<option value="${escapeHtml(f.name)}" ${cond.value===f.name?'selected':''}>${escapeHtml(f.name)}</option>`).join('');
+      else if (field.src==='methods')  opts = methods.map(m=>`<option value="${escapeHtml(m)}" ${cond.value===m?'selected':''}>${m}</option>`).join('');
+      else if (field.src==='tags')     opts = Object.keys(tagMap).map(t=>`<option value="${escapeHtml(t)}" ${cond.value===t?'selected':''}>${tagMap[t]} ${t}</option>`).join('');
+      else if (field.src==='favorites')opts = favorites.map(f=>`<option value="${escapeHtml(f.value)}" ${cond.value===f.value?'selected':''}>${f.icon} ${f.label}</option>`).join('');
+      else if (field.src==='countries')opts = countries.map(c=>`<option value="${escapeHtml(c)}" ${cond.value===c?'selected':''}>${c}</option>`).join('');
+      valInput = `<select onchange="updateFilter(${cond.id},'value',this.value);renderLibrary()"><option value="">請選擇</option>${opts}</select>`;
+    } else if (field.type === 'date') {
+      valInput = `<select onchange="updateFilter(${cond.id},'op',this.value);renderLibrary()" style="width:100px">
+        <option value="eq"  ${cond.op==='eq' ?'selected':''}>當天</option>
+        <option value="gte" ${cond.op==='gte'?'selected':''}>此日期之後</option>
+        <option value="lte" ${cond.op==='lte'?'selected':''}>此日期之前</option>
+      </select>
+      <input type="date" value="${cond.value||''}" onchange="updateFilter(${cond.id},'value',this.value);renderLibrary()">`;
     } else {
-      valueEl=`<input type="text" placeholder="輸入關鍵字" value="${cond.value||''}" oninput="updateFilter('${cond.id}','value',this.value);renderLibrary()">`;
+      valInput = `<input type="text" placeholder="關鍵字" value="${escapeHtml(cond.value||'')}" oninput="updateFilter(${cond.id},'value',this.value);renderLibrary()">`;
     }
     return `<div class="filter-row">
-      <select onchange="updateFilter('${cond.id}','field',this.value);renderFilterRows();renderLibrary()">
-        ${FILTER_FIELDS.map(f=>`<option value="${f.v}" ${cond.field===f.v?'selected':''}>${f.l}</option>`).join('')}
-      </select>
-      ${valueEl}
-      <button class="rm-filter" onclick="removeFilterRow('${cond.id}')">✕</button>
+      <select onchange="updateFilter(${cond.id},'field',this.value);renderFilterRows();renderLibrary()">${fieldSel}</select>
+      ${valInput}
+      <button class="rm-filter" onclick="removeFilterRow(${cond.id})">✕</button>
     </div>`;
   }).join('');
+}
+
+function updateFilter(id, key, val) {
+  const c = filterConditions.find(x => x.id === id);
+  if (c) {
+    c[key] = val;
+    if (key === 'field') { c.value = ''; c.op = 'eq'; }
+  }
   updateFilterCount();
 }
 
-function updateFilter(id,key,val){const c=filterConditions.find(x=>x.id===id);if(c)c[key]=val;updateFilterCount();}
-
-function updateFilterCount(){
-  const active=filterConditions.filter(c=>c.value).length;
-  document.getElementById('filterCount').textContent=active?`(${active})`:'';
+function updateFilterCount() {
+  const active = filterConditions.filter(c => c.value).length;
+  document.getElementById('filterCount').textContent = active ? `(${active})` : '';
 }
 
 function applyFilters(list) {
-  const active=filterConditions.filter(c=>c.value);
-  if(!active.length) return list;
-  return list.filter(card=>{
-    const results=active.map(cond=>{
-      const val=cond.value; const field=cond.field;
-      if(field==='tags') return (card.tags||[]).includes(val);
-      if(field==='recipFriend') return getRecipNames(card).includes(val);
-      const cv=(card[field]||'').toString();
-      if(cond.op==='gte') return cv>=val;
-      if(cond.op==='lte') return cv<=val;
-      return cv===val || cv.toLowerCase().includes(val.toLowerCase());
+  const active = filterConditions.filter(c => c.value);
+  if (!active.length) return list;
+  return list.filter(card => {
+    const results = active.map(cond => {
+      const val = cond.value, field = cond.field;
+      if (field === 'tags')       return (card.tags||[]).includes(val);
+      if (field === 'recipFriend')return getRecipNames(card).includes(val);
+      const cv = String(card[field]||'');
+      if (cond.op === 'gte') return cv >= val;
+      if (cond.op === 'lte') return cv <= val;
+      return cv === val || cv.toLowerCase().includes(val.toLowerCase());
     });
-    return filterLogic==='AND'?results.every(Boolean):results.some(Boolean);
+    return filterLogic === 'AND' ? results.every(Boolean) : results.some(Boolean);
   });
+}
+
+function toggleDuplicateFilter() {
+  showDuplicatesOnly = !showDuplicatesOnly;
+  document.getElementById('dupFilterBtn').classList.toggle('active', showDuplicatesOnly);
+  renderLibrary();
+}
+
+function getDuplicateCardNames() {
+  const cnt = {};
+  cards.forEach(c => { const n = (c.cardName||'').trim(); if (n) cnt[n] = (cnt[n]||0)+1; });
+  return new Set(Object.keys(cnt).filter(n => cnt[n] > 1));
 }
 
 // ═══════════════════════════════════════════════
 //  LIBRARY RENDER
 // ═══════════════════════════════════════════════
-let showDuplicatesOnly = false;
+let currentView_g = 'grid';
 
-function toggleDuplicateFilter() {
-  showDuplicatesOnly = !showDuplicatesOnly;
-  const btn = document.getElementById('dupFilterBtn');
-  btn.classList.toggle('active', showDuplicatesOnly);
+function setView(v) {
+  currentView_g = v;
+  document.getElementById('vGrid').classList.toggle('active', v==='grid');
+  document.getElementById('vList').classList.toggle('active', v==='list');
+  document.getElementById('cardGrid').className = v==='grid' ? 'card-grid' : 'card-list';
   renderLibrary();
 }
 
-function getDuplicateCardNames() {
-  const nameCount = {};
-  cards.forEach(c => {
-    const n = (c.cardName || '').trim();
-    if (n) nameCount[n] = (nameCount[n] || 0) + 1;
-  });
-  return new Set(Object.keys(nameCount).filter(n => nameCount[n] > 1));
-}
-
-function setView(v){
-  currentView=v;
-  document.getElementById('vGrid').classList.toggle('active',v==='grid');
-  document.getElementById('vList').classList.toggle('active',v==='list');
-  const g=document.getElementById('cardGrid');
-  g.className=v==='grid'?'card-grid':'card-list';
-  renderLibrary();
-}
-
-function renderLibrary(){
-  const q=(document.getElementById('searchInput')?.value||'').toLowerCase();
-  let list=cards.filter(c=>!q||[c.cardName,c.name,c.region,c.sourceFriend,...getRecipNames(c),c.notes,c.mainImg?.filename,...(c.tags||[])].some(x=>x&&x.toLowerCase().includes(q)));
-  list=applyFilters(list);
-
-  // 重複名稱篩選
+function renderLibrary() {
+  const q = (document.getElementById('searchInput')?.value||'').toLowerCase();
+  let list = cards.filter(c => !q || [c.cardName,c.name,c.region,c.sourceFriend,...getRecipNames(c),c.notes,c.mainImg?.filename,...(c.tags||[])].some(x => x&&x.toLowerCase().includes(q)));
+  list = applyFilters(list);
   if (showDuplicatesOnly) {
-    const dupNames = getDuplicateCardNames();
-    list = list.filter(c => dupNames.has((c.cardName||'').trim()));
+    const dup = getDuplicateCardNames();
+    list = list.filter(c => dup.has((c.cardName||'').trim()));
   }
 
-  document.getElementById('hTot').textContent=cards.length;
-  document.getElementById('hSent').textContent=cards.filter(c=>c.status==='sent').length;
-  document.getElementById('hPend').textContent=cards.filter(c=>c.status==='pending').length;
-
-  const grid=document.getElementById('cardGrid');
-  if(!list.length){
-    grid.innerHTML=`<div class="empty-state"><div class="ei">${cards.length?'🔍':'🌼'}</div><p>${cards.length?'找不到符合條件的明信片':'還沒有明信片，快去冒險收集吧！'}</p></div>`;
-    return;
+  const grid = document.getElementById('cardGrid');
+  if (!list.length) {
+    grid.innerHTML = '<div class="empty-state"><div class="ei">🌸</div><p>尚無明信片</p></div>';
+  } else {
+    grid.innerHTML = list.map(c => currentView_g==='grid' ? cardGridHTML(c) : cardListHTML(c)).join('');
   }
-  if(currentView==='grid') grid.innerHTML=list.map(cardGridHTML).join('');
-  else grid.innerHTML=list.map(cardListHTML).join('');
+
+  // 更新統計 pills
+  document.getElementById('hTot').textContent  = cards.length;
+  document.getElementById('hSent').textContent = cards.filter(c=>c.status==='sent').length;
+  document.getElementById('hPend').textContent = cards.filter(c=>c.status==='pending').length;
 }
 
-function cardGridHTML(c){
-  const st=STATUS_MAP[c.status]||STATUS_MAP.pending;
-  const ricon=getFavIcon(c.rarity);
-  // FIX: use cardTagMap (global tagMap) not local variable named 'tags'
-  const tagHtml=(c.tags||[]).map(t=>`<span class="ptag pt-type">${tagMap[t]||'#'} ${t}</span>`).join('');
-  const region=c.region?`<span class="ptag pt-loc">🌍${c.region}</span>`:'';
-  const src=c.mainImg?.url;
-  const photoCount=(c.auxImgs||[]).length;
-  const imgEl=src?`<img class="pcard-img" src="${src}" alt="" loading="lazy">`:`<div class="pcard-noimg"><span>🖼️</span>尚無照片</div>`;
+function cardGridHTML(c) {
+  const st = STATUS_MAP[c.status] || STATUS_MAP.pending;
+  const ri = getFavIcon(c.rarity);
+  const tags = (c.tags||[]).map(t=>`<span class="ptag pt-type">${tagMap[t]||'#'} ${t}</span>`).join('');
+  const imgUrl = getImgUrl(c.mainImg);
+  const imgHtml = imgUrl
+    ? `<img class="pcard-img" src="${escapeHtml(imgUrl)}" alt="" loading="lazy">`
+    : `<div class="pcard-noimg"><span>🌸</span><p>無照片</p>${(c.auxImgs||[]).length?`<div class="photo-count">+${c.auxImgs.length}</div>`:''}</div>`;
   return `<div class="pcard" onclick="openDetail('${c.id}')">
-    ${ricon?`<span class="rare-badge">${ricon}</span>`:''}
+    ${imgHtml}
     <span class="status-badge ${st.c}">${st.l}</span>
-    ${photoCount>0?`<span class="photo-count">+${photoCount}</span>`:''}
-    ${imgEl}
+    ${ri?`<span class="rare-badge">${ri}</span>`:''}
     <div class="pcard-body">
-      <div class="pcard-name">${c.cardName||'（未命名）'}</div>
-      <div class="pcard-region">📍 ${c.name||'未知地點'}</div>
-      <div class="ptags">${tagHtml}${region}</div>
+      <div class="pcard-name">${escapeHtml(c.cardName||'（未命名）')}</div>
+      <div class="pcard-region">${c.region?`🌍${escapeHtml(c.region)} `:''}${escapeHtml(c.name||'')}</div>
+      <div class="ptags">${tags}</div>
       <div class="pcard-meta">
-        ${c.obtainedDate?`<div>📅 ${c.obtainedDate}${c.obtainedMethod?'　🎯 '+c.obtainedMethod:''}</div>`:''}
-        ${c.sourceFriend?`<div>🤝 ${c.sourceFriend}</div>`:''}
-        ${c.status==='sent'&&getRecipNames(c).length?`<div>💌 → ${getRecipStr(c)}</div>`:''}
-        ${c.dupes&&c.dupes>1?`<div>🔢 重複 ${c.dupes} 張</div>`:''}
+        ${c.obtainedDate?`📅 ${c.obtainedDate}<br>`:''}
+        ${c.sourceFriend?`🤝 ${escapeHtml(c.sourceFriend)}<br>`:''}
+        ${c.status==='sent'&&getRecipNames(c).length?`💌 → ${escapeHtml(getRecipStr(c))}<br>`:''}
       </div>
     </div>
-    <div class="pcard-actions" onclick="event.stopPropagation()">
-      <button class="act" onclick="openCardModal('${c.id}')">✏️ 編輯</button>
-      <button class="act del" onclick="deleteCard('${c.id}')">🗑️ 刪除</button>
+    <div class="pcard-actions">
+      <button class="act" onclick="event.stopPropagation();openCardModal('${c.id}')">✏️ 編輯</button>
+      <button class="act del" onclick="event.stopPropagation();deleteCard('${c.id}')">🗑️</button>
     </div>
   </div>`;
 }
 
-function cardListHTML(c){
-  const st=STATUS_MAP[c.status]||STATUS_MAP.pending;
-  const ricon=getFavIcon(c.rarity);
-  const src=c.mainImg?.url;
-  const imgEl=src?`<img class="prow-img" src="${src}" alt="" loading="lazy">`:`<div class="prow-noimg">🖼️</div>`;
+function cardListHTML(c) {
+  const st = STATUS_MAP[c.status] || STATUS_MAP.pending;
+  const ri = getFavIcon(c.rarity);
+  const imgUrl = getImgUrl(c.mainImg);
+  const imgHtml = imgUrl
+    ? `<img class="prow-img" src="${escapeHtml(imgUrl)}" alt="" loading="lazy">`
+    : `<div class="prow-noimg">🌸</div>`;
   return `<div class="prow" onclick="openDetail('${c.id}')">
-    ${imgEl}
+    ${imgHtml}
     <div class="prow-info">
-      <div class="prow-name">${ricon} ${c.cardName||'（未命名）'}</div>
-      <div class="prow-sub">📍 ${c.name||'—'} · 📅 ${c.obtainedDate||'—'} · 🎯 ${c.obtainedMethod||'—'}</div>
-      <div class="prow-tags" style="margin-top:3px;display:flex;flex-wrap:wrap;gap:3px">
-        <span class="status-badge ${st.c}" style="position:static;font-size:.6rem">${st.l}</span>
-        ${(c.tags||[]).slice(0,3).map(t=>`<span class="ptag pt-type">${tagMap[t]||'#'} ${t}</span>`).join('')}
-      </div>
+      <div class="prow-name">${ri?ri+' ':''}${escapeHtml(c.cardName||'（未命名）')}</div>
+      <div class="prow-sub">${c.region?escapeHtml(c.region)+' · ':''}${escapeHtml(c.name||'')}${c.sourceFriend?' · 🤝'+escapeHtml(c.sourceFriend):''}${getRecipNames(c).length?' · 💌'+escapeHtml(getRecipStr(c)):''}</div>
     </div>
     <div class="prow-right">
-      ${c.sourceFriend?`<span style="font-size:.68rem;color:var(--muted)">🤝 ${c.sourceFriend}</span>`:''}
-      ${getRecipNames(c).length?`<span style="font-size:.68rem;color:var(--muted)">💌 ${getRecipStr(c)}</span>`:''}
-      <div class="prow-acts" onclick="event.stopPropagation()">
-        <button class="act" onclick="openCardModal('${c.id}')">✏️</button>
-        <button class="act del" onclick="deleteCard('${c.id}')">🗑️</button>
+      <span class="status-badge ${st.c}">${st.l}</span>
+      <div class="prow-acts">
+        <button class="act" onclick="event.stopPropagation();openCardModal('${c.id}')">✏️</button>
+        <button class="act del" onclick="event.stopPropagation();deleteCard('${c.id}')">🗑️</button>
       </div>
     </div>
   </div>`;
 }
 
-// ═══════════════════════════════════════════════
-//  DETAIL VIEW
-// ═══════════════════════════════════════════════
-function openDetail(id){
-  const c=cards.find(x=>x.id===id); if(!c) return;
-  const st=STATUS_MAP[c.status]||STATUS_MAP.pending;
-  const ricon=getFavIcon(c.rarity);
-  const src=c.mainImg?.url;
-  let photoHtml='';
-  if(src) photoHtml=`<img src="${src}" style="width:100%;max-height:240px;object-fit:cover;border-radius:0 0 4px 4px;display:block;margin-bottom:12px" alt="">`;
-  if((c.auxImgs||[]).length>0){
-    photoHtml+=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px">
-      ${(c.auxImgs||[]).map(p=>`<img src="${p.url}" style="width:100%;height:80px;object-fit:cover;border-radius:6px" alt="">`).join('')}
-    </div>`;
-  }
-  const tagList=(c.tags||[]).map(t=>`${tagMap[t]||'#'} ${t}`).join('、');
-  document.getElementById('detailBody').innerHTML=`
-    ${photoHtml}
-    <div style="padding:0 4px">
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-      <span style="font-size:1.2rem;font-family:'Nunito',sans-serif;font-weight:900">${ricon} ${c.cardName||'（未命名）'}</span>
-      <span class="status-badge ${st.c}" style="position:static">${st.l}</span>
-    </div>
-    <table style="width:100%;border-collapse:collapse;font-size:.8rem;line-height:2">
-      <tr><td style="color:var(--gd);font-weight:700;width:90px">明信片名稱</td><td>${c.cardName||'—'}</td></tr>
-      <tr><td style="color:var(--gd);font-weight:700">取得地點</td><td>${c.name||'—'}</td></tr>
-      ${c.mainImg?.filename?`<tr><td style="color:var(--gd);font-weight:700">檔案名稱</td><td style="font-size:.78rem;word-break:break-all">${escapeHtml(c.mainImg.filename)}</td></tr>`:''}
-      <tr><td style="color:var(--gd);font-weight:700">取得國家</td><td>${c.region||'—'}</td></tr>
-      <tr><td style="color:var(--gd);font-weight:700">取得日期</td><td>${c.obtainedDate||'—'}</td></tr>
-      <tr><td style="color:var(--gd);font-weight:700">取得方式</td><td>${c.obtainedMethod||'—'}</td></tr>
-      <tr><td style="color:var(--gd);font-weight:700">來源好友</td><td>${c.sourceFriend||'—'}</td></tr>
-      <tr><td style="color:var(--gd);font-weight:700">喜好度</td><td>${ricon} ${c.rarity||'—'}</td></tr>
-      <tr><td style="color:var(--gd);font-weight:700">重複張數</td><td>${c.dupes||1} 張</td></tr>
-      ${c.status==='sent'?`<tr><td style="color:var(--gd);font-weight:700">送出日期</td><td>${c.sentDate||'—'}</td></tr>
-      <tr><td style="color:var(--gd);font-weight:700">送給誰</td><td>${getRecipStr(c)||'—'}</td></tr>`:''}
-      <tr><td style="color:var(--gd);font-weight:700">標籤</td><td>${tagList||'—'}</td></tr>
-      ${c.notes?`<tr><td style="color:var(--gd);font-weight:700;vertical-align:top">備註</td><td>${c.notes}</td></tr>`:''}
-    </table>
-    </div>`;
-  document.getElementById('detailEditBtn').onclick=()=>{ closeModal('detailOverlay'); openCardModal(id); };
+function openDetail(id) {
+  const c = cards.find(x => x.id === id); if (!c) return;
+  const st = STATUS_MAP[c.status] || STATUS_MAP.pending;
+  const ri = getFavIcon(c.rarity);
+  const imgUrl = getImgUrl(c.mainImg);
+  const auxHtml = (c.auxImgs||[]).filter(a => !isBase64(a.url) && a.url).map(a =>
+    `<img src="${escapeHtml(a.url)}" style="width:70px;height:70px;object-fit:cover;border-radius:8px;margin:3px" alt="" loading="lazy">`
+  ).join('');
+
+  document.getElementById('detailBody').innerHTML = `
+    ${imgUrl ? `<img src="${escapeHtml(imgUrl)}" style="width:100%;max-height:260px;object-fit:cover;border-radius:10px;margin-bottom:12px" alt="">` : ''}
+    ${auxHtml ? `<div style="display:flex;flex-wrap:wrap;margin-bottom:10px">${auxHtml}</div>` : ''}
+    <table style="width:100%;font-size:.82rem;border-collapse:collapse">
+      <tr><td style="color:var(--gd);font-weight:700;padding:4px 0;width:80px">名稱</td><td>${escapeHtml(c.cardName||'—')}</td></tr>
+      <tr><td style="color:var(--gd);font-weight:700;padding:4px 0">取得地點</td><td>${escapeHtml(c.name||'—')}</td></tr>
+      ${c.mainImg?.filename?`<tr><td style="color:var(--gd);font-weight:700;padding:4px 0">檔案名稱</td><td style="font-size:.75rem;word-break:break-all">${escapeHtml(c.mainImg.filename)}</td></tr>`:''}
+      <tr><td style="color:var(--gd);font-weight:700;padding:4px 0">國家</td><td>${escapeHtml(c.region||'—')}</td></tr>
+      <tr><td style="color:var(--gd);font-weight:700;padding:4px 0">取得日期</td><td>${c.obtainedDate||'—'}</td></tr>
+      <tr><td style="color:var(--gd);font-weight:700;padding:4px 0">取得方式</td><td>${escapeHtml(c.obtainedMethod||'—')}</td></tr>
+      <tr><td style="color:var(--gd);font-weight:700;padding:4px 0">來源好友</td><td>${escapeHtml(c.sourceFriend||'—')}</td></tr>
+      <tr><td style="color:var(--gd);font-weight:700;padding:4px 0">喜好度</td><td>${ri} ${escapeHtml(c.rarity||'—')}</td></tr>
+      <tr><td style="color:var(--gd);font-weight:700;padding:4px 0">狀態</td><td><span class="status-badge ${st.c}" style="position:static">${st.l}</span></td></tr>
+      ${c.status==='sent'?`<tr><td style="color:var(--gd);font-weight:700;padding:4px 0">送給誰</td><td>${escapeHtml(getRecipStr(c)||'—')}</td></tr>
+      <tr><td style="color:var(--gd);font-weight:700;padding:4px 0">送出日期</td><td>${c.sentDate||'—'}</td></tr>`:''}
+      <tr><td style="color:var(--gd);font-weight:700;padding:4px 0">標籤</td><td>${(c.tags||[]).map(t=>`<span class="ptag pt-type">${tagMap[t]||'#'} ${t}</span>`).join(' ')||'—'}</td></tr>
+      ${c.notes?`<tr><td style="color:var(--gd);font-weight:700;padding:4px 0">備註</td><td>${escapeHtml(c.notes)}</td></tr>`:''}
+    </table>`;
+  document.getElementById('detailEditBtn').onclick = () => { closeModal('detailOverlay'); openCardModal(id); };
   document.getElementById('detailOverlay').classList.add('open');
 }
 
 // ═══════════════════════════════════════════════
 //  STATS
 // ═══════════════════════════════════════════════
-function renderStats(){
-  document.getElementById('statTotal').textContent=cards.length;
-  document.getElementById('statSent').textContent=cards.filter(c=>c.status==='sent').length;
-  document.getElementById('statPend').textContent=cards.filter(c=>c.status==='pending').length;
-  document.getElementById('statKept').textContent=cards.filter(c=>c.status==='kept').length;
+function renderStats() {
+  document.getElementById('statTotal').textContent = cards.length;
+  document.getElementById('statSent').textContent  = cards.filter(c=>c.status==='sent').length;
+  document.getElementById('statPend').textContent  = cards.filter(c=>c.status==='pending').length;
+  document.getElementById('statKept').textContent  = cards.filter(c=>c.status==='kept').length;
 
-  const mc={};
-  cards.forEach(c=>{ if(c.obtainedMethod) mc[c.obtainedMethod]=(mc[c.obtainedMethod]||0)+1; });
-  buildChart('chartMethod','doughnut',Object.keys(mc),Object.values(mc),['#4a9a4a','#f5c518','#4d8ef0','#e05555','#9966cc','#f08040','#7cc56e','#a8d8ea']);
+  const mc = {}; methods.forEach(m => mc[m]=0);
+  cards.forEach(c => { if (c.obtainedMethod) mc[c.obtainedMethod]=(mc[c.obtainedMethod]||0)+1; });
+  buildChart('chartMethod','doughnut',Object.keys(mc),Object.values(mc),['#4d8ef0','#4caf50','#f5c518','#f08040','#9966cc','#e05555']);
 
-  const mm={};
-  cards.forEach(c=>{ if(c.obtainedDate){ const m=c.obtainedDate.slice(0,7); mm[m]=(mm[m]||0)+1; } });
-  const months=Object.keys(mm).sort().slice(-12);
-  buildChart('chartMonthly','bar',months,months.map(m=>mm[m]),['#7cc56e']);
+  const monthly = {};
+  cards.forEach(c => { if (c.obtainedDate) { const m=c.obtainedDate.slice(0,7); monthly[m]=(monthly[m]||0)+1; } });
+  const sortedM = Object.keys(monthly).sort().slice(-12);
+  buildChart('chartMonthly','bar',sortedM,sortedM.map(m=>monthly[m]),['#4a9a4a']);
 
-  const tc={};
-  cards.forEach(c=>(c.tags||[]).forEach(t=>tc[t]=(tc[t]||0)+1));
-  buildChart('chartTags','doughnut',Object.keys(tc),Object.values(tc),['#4a9a4a','#f5c518','#4d8ef0','#e05555','#9966cc','#f08040','#7cc56e','#a8d8ea']);
+  const tc = {}; Object.keys(tagMap).forEach(t => tc[t]=0);
+  cards.forEach(c => (c.tags||[]).forEach(t => tc[t]=(tc[t]||0)+1));
+  const topTags = Object.entries(tc).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  buildChart('chartTags','doughnut',topTags.map(x=>x[0]),topTags.map(x=>x[1]),['#4d8ef0','#4caf50','#f5c518','#f08040','#9966cc','#e05555','#a8d8ea','#4a9a4a']);
 
-  const rc={};
-  favorites.forEach(f => rc[f.value] = 0);
-  cards.forEach(c=>{ if(c.rarity) rc[c.rarity]=(rc[c.rarity]||0)+1; });
-  const favLabels = favorites.map(f => f.icon + ' ' + f.label);
-  const favData = favorites.map(f => rc[f.value]||0);
-  buildChart('chartRare','doughnut',favLabels,favData,['#ff9999','#66bb6a','#ab47bc','#42a5f5','#ffa726','#ef5350']);
+  const rc = {}; favorites.forEach(f => rc[f.value]=0);
+  cards.forEach(c => { if (c.rarity) rc[c.rarity]=(rc[c.rarity]||0)+1; });
+  buildChart('chartRare','doughnut',favorites.map(f=>f.icon+' '+f.label),favorites.map(f=>rc[f.value]||0),['#ff9999','#66bb6a','#ab47bc','#42a5f5','#ffa726']);
 
-  renderFriendRank('rankReceived',friends.map(f=>({name:f.name,count:cards.filter(c=>c.sourceFriend===f.name).length})));
-  renderFriendRank('rankSent',friends.map(f=>({name:f.name,count:cards.filter(c=>getRecipNames(c).includes(f.name)).length})));
+  renderFriendRank('rankReceived', friends.map(f=>({name:f.name,count:cards.filter(c=>c.sourceFriend===f.name).length})));
+  renderFriendRank('rankSent',     friends.map(f=>({name:f.name,count:cards.filter(c=>getRecipNames(c).includes(f.name)).length})));
 }
 
-function buildChart(id,type,labels,data,colors){
-  const ctx=document.getElementById(id); if(!ctx) return;
-  if(chartInstances[id]) chartInstances[id].destroy();
-  chartInstances[id]=new Chart(ctx,{
-    type,data:{labels,datasets:[{data,backgroundColor:colors,borderWidth:1,borderColor:'#fff'}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11},padding:8}}}}
+function buildChart(id, type, labels, data, colors) {
+  if (chartInstances[id]) { chartInstances[id].destroy(); }
+  const el = document.getElementById(id); if (!el) return;
+  chartInstances[id] = new Chart(el, {
+    type, data: { labels, datasets:[{ data, backgroundColor:colors, borderWidth:1 }] },
+    options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom', labels:{ font:{size:11}, boxWidth:12 } } } }
   });
 }
 
-function renderFriendRank(elId,data){
-  const sorted=data.filter(x=>x.count>0).sort((a,b)=>b.count-a.count).slice(0,6);
-  const max=sorted[0]?.count||1;
-  const el=document.getElementById(elId);
-  if(!sorted.length){ el.innerHTML='<div style="font-size:.78rem;color:var(--muted);text-align:center;padding:10px">尚無資料</div>'; return; }
-  el.innerHTML=sorted.map(x=>`
-    <div class="frank-row">
-      <div class="frank-name">${x.name}</div>
-      <div class="frank-bar-bg"><div class="frank-bar" style="width:${Math.round(x.count/max*100)}%"></div></div>
-      <div class="frank-num">${x.count}</div>
-    </div>`).join('');
+function renderFriendRank(elId, data) {
+  const el = document.getElementById(elId); if (!el) return;
+  const sorted = data.filter(x=>x.count>0).sort((a,b)=>b.count-a.count).slice(0,5);
+  const max = sorted[0]?.count || 1;
+  el.innerHTML = !sorted.length ? '<div style="font-size:.78rem;color:var(--muted)">尚無資料</div>'
+    : sorted.map(x=>`<div class="frank-row">
+        <div class="frank-name">${escapeHtml(x.name)}</div>
+        <div class="frank-bar-bg"><div class="frank-bar" style="width:${Math.round(x.count/max*100)}%"></div></div>
+        <div class="frank-num">${x.count}</div>
+      </div>`).join('');
 }
 
 // ═══════════════════════════════════════════════
-//  DATA PERSISTENCE
+//  DRIVE SCAN MODAL
 // ═══════════════════════════════════════════════
-function saveLocal(){
-  localStorage.setItem('pkm_cards',JSON.stringify(cards));
-  localStorage.setItem('pkm_friends',JSON.stringify(friends));
+async function openScanModal() {
+  if (!CFG.scriptUrl) { alert('請先設定 GAS 網址'); return; }
+  scanFilter = 'all'; scanPage = 0; scannedPhotos = [];
+  document.getElementById('scanList').innerHTML = '';
+  document.getElementById('scanStatus').textContent = '掃描中…';
+  document.getElementById('scanImportBtn').style.display = 'none';
+  document.getElementById('scanAIBtn').style.display = 'none';
+  document.getElementById('scanToolbar').style.display = 'none';
+  document.getElementById('scanPager').style.display = 'none';
+  document.getElementById('scanOverlay').classList.add('open');
+
+  setSyncStatus('ing', '掃描 Drive 中…');
+  const res = await callGAS('scan', {});
+  if (!res?.success) {
+    document.getElementById('scanStatus').textContent = '掃描失敗：' + (res?.error || '網路錯誤');
+    setSyncStatus('err', '掃描失敗'); return;
+  }
+  scannedPhotos = res.photos || [];
+  setSyncStatus('ok', '掃描完成');
+  renderScanModal();
 }
 
-// 清除 cards 中的 base64，只保留必要欄位供雲端同步
-function cleanCardsForSync(cardsArr) {
-  return cardsArr.map(c => ({
-    ...c,
-    mainImg: c.mainImg ? {
-      url: (c.mainImg.url||'').startsWith('data:') ? '' : (c.mainImg.url||''),
-      fileId: c.mainImg.fileId || '',
-      filename: c.mainImg.filename || '',
-      role: 'main'
-    } : null,
-    auxImgs: (c.auxImgs||[]).map(a => ({
-      url: (a.url||'').startsWith('data:') ? '' : (a.url||''),
-      fileId: a.fileId || '',
-      filename: a.filename || '',
-      role: 'aux'
-    }))
-  }));
+function getFilteredPhotos() {
+  if (scanFilter === 'new')    return scannedPhotos.filter(p => !isPhotoInUse(p.fileId));
+  if (scanFilter === 'exists') return scannedPhotos.filter(p =>  isPhotoInUse(p.fileId));
+  return scannedPhotos;
 }
 
-// 儲存本地並同步到雲端（跨裝置共用的核心）
-// 自動觸發的同步用 silent=true，不跳防呆確認
-function saveAndSync(){
-  saveLocal();
-  if (CFG.scriptUrl) syncAll(true);
+function setScanFilter(f) {
+  scanFilter = f; scanPage = 0;
+  ['All','New','Exists'].forEach(k => {
+    document.getElementById('scanFilter' + k)?.classList.toggle('active', k.toLowerCase() === f);
+  });
+  renderScanList();
 }
 
-function exportJSON(){
-  const data={cards,friends,methods,tags:tagMap,countries,favorites,exportedAt:new Date().toISOString()};
-  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
-  a.download=`pikmin_backup_${new Date().toISOString().slice(0,10)}.json`;
-  a.click();
+function changeScanPage(dir) {
+  const total = Math.max(1, Math.ceil(getFilteredPhotos().length / SCAN_PAGE_SIZE));
+  scanPage = Math.min(total-1, Math.max(0, scanPage + dir));
+  renderScanList();
 }
 
-function importJSON(e){
-  const file=e.target.files[0]; if(!file) return;
-  const reader=new FileReader();
-  reader.onload=ev=>{
-    try{
-      const data=JSON.parse(ev.target.result);
-      if(data.cards) cards=data.cards;
-      if(data.friends) friends=data.friends;
-      if(data.methods) methods=data.methods;
-      if(data.tags) tagMap=data.tags;
-      if(data.countries) countries=data.countries;
-      if(data.favorites) favorites=data.favorites;
-      saveLocal();
-      localStorage.setItem('pkm_methods',JSON.stringify(methods));
-      localStorage.setItem('pkm_tags',JSON.stringify(tagMap));
-      localStorage.setItem('pkm_countries',JSON.stringify(countries));
-      localStorage.setItem('pkm_favorites',JSON.stringify(favorites));
-      renderLibrary(); renderFriendSelects(); renderMethodTags(); renderFavoriteList(); renderFavoriteSelect(); renderSettingsFriendList();
-      alert(`✅ 匯入成功！共 ${cards.length} 張明信片`);
-      if(CFG.scriptUrl) syncAll(); // 匯入後同步到雲端
-    }catch(err){ alert('⚠️ 匯入失敗：檔案格式錯誤'); }
-  };
-  reader.readAsText(file);
-  e.target.value='';
+function scanSelectAll(checked) {
+  const filtered = getFilteredPhotos();
+  const start = scanPage * SCAN_PAGE_SIZE;
+  filtered.slice(start, start + SCAN_PAGE_SIZE).forEach(p => {
+    if (isPhotoInUse(p.fileId)) return;
+    const chk = document.getElementById(`scanChk_${scannedPhotos.indexOf(p)}`);
+    if (chk) chk.checked = checked;
+  });
+}
+
+function renderScanModal() {
+  const newCount = scannedPhotos.filter(p => !isPhotoInUse(p.fileId)).length;
+  document.getElementById('scanStatus').textContent = `掃描完成，共 ${scannedPhotos.length} 張，其中 ${newCount} 張尚未建檔`;
+  if (!scannedPhotos.length) return;
+  document.getElementById('scanToolbar').style.display = 'flex';
+  if (newCount > 0) {
+    document.getElementById('scanImportBtn').style.display = '';
+    document.getElementById('scanAIBtn').style.display = '';
+  }
+  renderScanList();
+}
+
+function renderScanList() {
+  const filtered = getFilteredPhotos();
+  const total = Math.max(1, Math.ceil(filtered.length / SCAN_PAGE_SIZE));
+  scanPage = Math.min(scanPage, total - 1);
+  const start = scanPage * SCAN_PAGE_SIZE;
+  const items = filtered.slice(start, start + SCAN_PAGE_SIZE);
+
+  const pager = document.getElementById('scanPager');
+  if (filtered.length > SCAN_PAGE_SIZE) {
+    pager.style.display = 'flex';
+    document.getElementById('scanPageInfo').textContent = `第 ${scanPage+1} / ${total} 頁（共 ${filtered.length} 張）`;
+    document.getElementById('scanPrevBtn').disabled = scanPage === 0;
+    document.getElementById('scanNextBtn').disabled = scanPage >= total - 1;
+  } else { pager.style.display = 'none'; }
+
+  document.getElementById('scanList').innerHTML = items.map(p => {
+    const gIdx = scannedPhotos.indexOf(p);
+    const isNew = !isPhotoInUse(p.fileId);
+    return `<div class="scan-item">
+      <div style="width:60px;height:60px;flex-shrink:0;border-radius:6px;overflow:hidden;background:#e8f5e0;display:flex;align-items:center;justify-content:center;font-size:1.6rem">
+        <img src="${p.thumbUrl||p.url}" alt="" style="width:100%;height:100%;object-fit:cover" onerror="this.parentNode.innerHTML='🖼️'">
+      </div>
+      <div class="scan-item-info">
+        <div class="scan-item-name">${escapeHtml(p.filename)}</div>
+        <div class="scan-item-status ${isNew?'new':'exists'}">${isNew?'✅ 尚未建檔':'⚠️ 已存在'}</div>
+        <div id="scanAIResult_${gIdx}" style="font-size:.68rem;color:var(--b);margin-top:2px"></div>
+      </div>
+      ${isNew ? `<div class="scan-actions"><input type="checkbox" id="scanChk_${gIdx}" checked style="width:16px;height:16px;cursor:pointer"></div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+async function batchAIScan() {
+  const btn = document.getElementById('scanAIBtn');
+  btn.disabled = true;
+  const filtered = getFilteredPhotos();
+  const start = scanPage * SCAN_PAGE_SIZE;
+  const selected = filtered.slice(start, start + SCAN_PAGE_SIZE)
+    .map(p => ({ p, idx: scannedPhotos.indexOf(p) }))
+    .filter(({ idx }) => document.getElementById(`scanChk_${idx}`)?.checked);
+
+  const CONCURRENT = 5;
+  let done = 0;
+  btn.textContent = `⏳ AI 辨識中… 0/${selected.length}`;
+  selected.forEach(({ idx }) => { const el = document.getElementById(`scanAIResult_${idx}`); if(el) el.textContent='⏳ 等待…'; });
+
+  for (let i = 0; i < selected.length; i += CONCURRENT) {
+    await Promise.all(selected.slice(i, i+CONCURRENT).map(async ({ p, idx }) => {
+      const el = document.getElementById(`scanAIResult_${idx}`);
+      if (el) el.textContent = '辨識中…';
+      try {
+        const res = await callGAS('aiScan', { fileId: p.fileId, methods, tags: tagMap });
+        if (res?.success && res.data) {
+          p._ai = res.data;
+          const d = res.data;
+          if (el) el.textContent = `🤖 ${d.cardName||'?'} | ${d.country||''} | ${d.obtainedMethod||'?'}`;
+        } else { if (el) el.textContent = '❌ ' + (res?.error||'失敗'); }
+      } catch(e) { if (el) el.textContent = '❌ ' + e.message; }
+      done++; btn.textContent = `⏳ AI 辨識中… ${done}/${selected.length}`;
+    }));
+  }
+  btn.disabled = false;
+  btn.textContent = `🤖 批次 AI 辨識（完成 ${done}/${selected.length}）`;
+  setTimeout(() => { btn.textContent = '🤖 批次 AI 辨識'; }, 3000);
+}
+
+async function importScannedPhotos() {
+  const filtered = getFilteredPhotos();
+  const start = scanPage * SCAN_PAGE_SIZE;
+  const items = filtered.slice(start, start + SCAN_PAGE_SIZE);
+  let count = 0;
+
+  for (let i = 0; i < items.length; i++) {
+    const p = items[i];
+    const gIdx = scannedPhotos.indexOf(p);
+    const chk = document.getElementById(`scanChk_${gIdx}`);
+    if (!chk?.checked || isPhotoInUse(p.fileId)) continue;
+
+    const ai = p._ai || {};
+    if (ai.country && !countries.includes(ai.country)) {
+      countries.push(ai.country);
+      localStorage.setItem('pkm_countries', JSON.stringify(countries));
+    }
+    const friendName = cleanFriendName(ai.friendName||'');
+    if (friendName) ensureFriendExists(friendName);
+
+    cards.unshift({
+      id:             `${Date.now()}_${i}_${gIdx}`,
+      cardName:       ai.cardName || '',
+      name:           ai.location || p.filename.replace(/\.[^/.]+$/,''),
+      region:         ai.country  || '',
+      obtainedDate:   new Date().toISOString().split('T')[0],
+      obtainedMethod: ai.obtainedMethod || '',
+      sourceFriend:   friendName,
+      rarity:         '',
+      dupes:          '1',
+      status:         friendName ? 'kept' : 'pending',
+      sentDate:       '',
+      recipFriend:    [],
+      tags:           (ai.tags||[]).filter(t => tagMap[t]),
+      notes:          p._ai ? '' : '（自 Drive 掃描建立，請補充資訊）',
+      mainImg:        { url: p.url, fileId: p.fileId, filename: p.filename||'', role:'main' },
+      auxImgs:        [],
+      createdAt:      new Date().toISOString()
+    });
+    count++;
+  }
+
+  saveAndSync(); renderLibrary();
+  showToast(`已匯入 ${count} 張明信片`);
+
+  // 匯入後重新渲染（讓已建檔狀態即時更新），並翻下一頁
+  const newFiltered = getFilteredPhotos();
+  const totalPages = Math.max(1, Math.ceil(newFiltered.length / SCAN_PAGE_SIZE));
+  if (scanPage < totalPages - 1) scanPage++;
+  renderScanModal(); renderScanList();
 }
 
 // ═══════════════════════════════════════════════
-//  MODAL HELPERS
+//  DRIVE PICKER MODAL（輔助照片）
 // ═══════════════════════════════════════════════
-// 防止好友名稱等含特殊符號的字串破壞 HTML
-function escapeHtml(str) {
-  return String(str||'')
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;')
-    .replace(/'/g,'&#39;');
+async function openDrivePickerModal() {
+  if (!CFG.scriptUrl) { alert('請先設定 GAS 網址'); return; }
+  dpFilter = 'all'; dpPage = 0; dpPhotos = [];
+  document.getElementById('drivePickerList').innerHTML = '';
+  document.getElementById('drivePickerStatus').textContent = '掃描 Drive 中…';
+  document.getElementById('dpPager').style.display = 'none';
+  document.getElementById('drivePickerOverlay').classList.add('open');
+
+  const res = await callGAS('scan', {});
+  if (!res?.success) {
+    document.getElementById('drivePickerStatus').textContent = '掃描失敗：' + (res?.error||'錯誤');
+    return;
+  }
+  dpPhotos = res.photos || [];
+  if (dpPhotos.length > 0) scannedPhotos = dpPhotos; // 同步快取
+  renderDpList();
 }
-function closeModal(id){document.getElementById(id).classList.remove('open');}
-function overlayClick(e,id){if(e.target===document.getElementById(id)) closeModal(id);}
+
+function getDpFiltered() {
+  if (dpFilter === 'new')    return dpPhotos.filter(p => !isPhotoInUse(p.fileId));
+  if (dpFilter === 'exists') return dpPhotos.filter(p =>  isPhotoInUse(p.fileId));
+  return dpPhotos;
+}
+
+function setDpFilter(f) {
+  dpFilter = f; dpPage = 0;
+  ['All','New','Exists'].forEach(k => {
+    document.getElementById('dpFilter' + k)?.classList.toggle('active', k.toLowerCase() === f);
+  });
+  renderDpList();
+}
+
+function changeDpPage(dir) {
+  const total = Math.max(1, Math.ceil(getDpFiltered().length / DP_PAGE_SIZE));
+  dpPage = Math.min(total-1, Math.max(0, dpPage + dir));
+  renderDpList();
+}
+
+function dpSelectAll(checked) {
+  document.querySelectorAll('#drivePickerList input[type="checkbox"]').forEach(cb => cb.checked = checked);
+}
+
+function renderDpList() {
+  const filtered = getDpFiltered();
+  const total = Math.max(1, Math.ceil(filtered.length / DP_PAGE_SIZE));
+  dpPage = Math.min(dpPage, total - 1);
+  const items = filtered.slice(dpPage * DP_PAGE_SIZE, (dpPage+1) * DP_PAGE_SIZE);
+
+  document.getElementById('drivePickerStatus').textContent = `共 ${dpPhotos.length} 張，顯示 ${filtered.length} 張`;
+
+  const pager = document.getElementById('dpPager');
+  if (filtered.length > DP_PAGE_SIZE) {
+    pager.style.display = 'flex';
+    document.getElementById('dpPageInfo').textContent = `第 ${dpPage+1} / ${total} 頁`;
+    document.getElementById('dpPrevBtn').disabled = dpPage === 0;
+    document.getElementById('dpNextBtn').disabled = dpPage >= total - 1;
+  } else { pager.style.display = 'none'; }
+
+  document.getElementById('drivePickerList').innerHTML = items.map(p => {
+    const inUse = isPhotoInUse(p.fileId);
+    const alreadyAdded = currentAuxImgs.find(a => a.fileId === p.fileId);
+    return `<div style="display:flex;align-items:center;gap:8px;padding:7px 8px;background:${alreadyAdded?'#e8f5e0':'#f8fff4'};border:1.5px solid var(--border);border-radius:8px">
+      <div style="width:50px;height:50px;flex-shrink:0;border-radius:6px;overflow:hidden;background:#e0f0d8;display:flex;align-items:center;justify-content:center;font-size:1.3rem">
+        <img src="${p.thumbUrl||p.url}" alt="" style="width:100%;height:100%;object-fit:cover" onerror="this.parentNode.innerHTML='🖼️'">
+      </div>
+      <div style="flex:1;min-width:0;font-size:.75rem">
+        <div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(p.filename)}</div>
+        <div style="color:var(--muted);font-size:.68rem;margin-top:2px">${inUse?'已建檔':'未建檔'}${alreadyAdded?' · ✅ 已加入':''}</div>
+      </div>
+      <input type="checkbox" data-fileid="${p.fileId}" data-url="${escapeHtml(p.url)}" data-filename="${escapeHtml(p.filename)}"
+        ${alreadyAdded?'checked':''} style="width:16px;height:16px;cursor:pointer;flex-shrink:0">
+    </div>`;
+  }).join('');
+}
+
+function confirmDrivePick() {
+  let added = 0;
+  document.querySelectorAll('#drivePickerList input[type="checkbox"]:checked').forEach(cb => {
+    const fileId   = cb.dataset.fileid;
+    const url      = cb.dataset.url;
+    const filename = cb.dataset.filename;
+    if (!currentAuxImgs.find(a => a.fileId === fileId)) {
+      currentAuxImgs.push({ url, fileId, filename, base64: null, originalBase64: null, fromDrive: true, role: 'aux' });
+      added++;
+    }
+  });
+  renderPhotoGallery();
+  closeModal('drivePickerOverlay');
+  if (added > 0) showToast(`已加入 ${added} 張輔助照片`);
+}
+
+// ═══════════════════════════════════════════════
+//  MODAL UTILS
+// ═══════════════════════════════════════════════
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function overlayClick(e, id) { if (e.target === document.getElementById(id)) closeModal(id); }
 </script>
 </body>
 </html>
