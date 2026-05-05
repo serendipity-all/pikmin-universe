@@ -199,12 +199,20 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
 .cfg-tab.active{background:var(--g);color:#fff;box-shadow:0 2px 8px var(--sh)}
 .cfg-panel{display:none}
 .cfg-panel.active{display:block}
-.friend-grid-card{background:var(--card);border:2px solid var(--border);border-radius:14px;padding:14px;display:flex;flex-direction:column;align-items:center;gap:6px;box-shadow:0 2px 8px var(--sh);cursor:pointer;transition:transform .18s;text-align:center}
-.friend-grid-card:hover{transform:translateY(-2px);box-shadow:0 6px 18px var(--sh)}
-.friend-grid-avatar{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--gl),var(--g));display:flex;align-items:center;justify-content:center;font-size:1.3rem;color:#fff;font-family:'Nunito',sans-serif;font-weight:900}
-.friend-grid-name{font-family:'Nunito',sans-serif;font-weight:800;font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px}
-.friend-grid-stats{font-size:.68rem;color:var(--muted)}
-.friend-grid-acts{display:flex;gap:4px;margin-top:2px}
+.friend-grid-card{background:var(--card);border:2px solid var(--border);border-radius:14px;padding:0;display:flex;flex-direction:column;box-shadow:0 2px 10px var(--sh);cursor:pointer;transition:transform .18s;overflow:hidden}
+.friend-grid-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px var(--sh)}
+.friend-grid-header{background:linear-gradient(135deg,var(--gl),var(--g));padding:16px 12px 12px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.friend-grid-avatar{width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.25);border:2px solid rgba(255,255,255,.6);display:flex;align-items:center;justify-content:center;font-size:1.3rem;color:#fff;font-family:'Nunito',sans-serif;font-weight:900}
+.friend-grid-name{font-family:'Nunito',sans-serif;font-weight:800;font-size:.85rem;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px;text-align:center}
+.friend-grid-body{padding:10px 10px 8px;flex:1}
+.friend-grid-stats{display:flex;justify-content:space-around;text-align:center;margin-bottom:8px}
+.friend-grid-stat{display:flex;flex-direction:column;gap:1px}
+.friend-grid-stat .n{font-family:'Nunito',sans-serif;font-weight:900;font-size:1.1rem}
+.friend-grid-stat .l{font-size:.6rem;color:var(--muted)}
+.friend-grid-acts{display:flex;gap:4px;padding:0 8px 8px}
+.friend-grid-acts button{flex:1;padding:4px;border:1.5px solid var(--border);border-radius:7px;background:#fff;font-size:.7rem;cursor:pointer;font-family:inherit;color:var(--muted);transition:all .15s}
+.friend-grid-acts button:hover{border-color:var(--g);color:var(--g)}
+.friend-grid-acts button.del:hover{border-color:var(--r);color:var(--r)}
 ::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
@@ -328,25 +336,34 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
         <span class="si">🔍</span>
         <input type="text" id="friendSearch" placeholder="搜尋好友…" oninput="renderFriends()">
       </div>
+      <div style="display:flex;gap:4px">
+        <button class="btn active" id="frdFilterAll"  onclick="setFriendFilter('all',this)"  style="padding:5px 10px;font-size:.74rem">全部</button>
+        <button class="btn" id="frdFilterRecv" onclick="setFriendFilter('recv',this)" style="padding:5px 10px;font-size:.74rem">📬 有收</button>
+        <button class="btn" id="frdFilterSent" onclick="setFriendFilter('sent',this)" style="padding:5px 10px;font-size:.74rem">💌 有送</button>
+      </div>
       <button class="btn primary" onclick="openFriendModal()">＋ 新增好友</button>
     </div>
     <!-- 好友概覽統計 -->
     <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
-      <div class="stat-card" style="flex:1;min-width:120px;padding:12px;text-align:center">
-        <div style="font-size:.72rem;color:var(--muted)">好友總數</div>
+      <div class="stat-card" style="flex:1;min-width:100px;padding:12px;text-align:center">
+        <div style="font-size:.68rem;color:var(--muted)">好友總數</div>
         <div id="friendStatTotal" style="font-family:'Nunito',sans-serif;font-weight:900;font-size:1.8rem;color:var(--g)">0</div>
       </div>
-      <div class="stat-card" style="flex:1;min-width:120px;padding:12px;text-align:center">
-        <div style="font-size:.72rem;color:var(--muted)">收到明信片</div>
+      <div class="stat-card" style="flex:1;min-width:100px;padding:12px;text-align:center">
+        <div style="font-size:.68rem;color:var(--muted)">有互動好友</div>
+        <div id="friendStatActive" style="font-family:'Nunito',sans-serif;font-weight:900;font-size:1.8rem;color:var(--pu)">0</div>
+      </div>
+      <div class="stat-card" style="flex:1;min-width:100px;padding:12px;text-align:center">
+        <div style="font-size:.68rem;color:var(--muted)">收到明信片</div>
         <div id="friendStatRecv" style="font-family:'Nunito',sans-serif;font-weight:900;font-size:1.8rem;color:var(--b)">0</div>
       </div>
-      <div class="stat-card" style="flex:1;min-width:120px;padding:12px;text-align:center">
-        <div style="font-size:.72rem;color:var(--muted)">送出明信片</div>
+      <div class="stat-card" style="flex:1;min-width:100px;padding:12px;text-align:center">
+        <div style="font-size:.68rem;color:var(--muted)">送出明信片</div>
         <div id="friendStatSent" style="font-family:'Nunito',sans-serif;font-weight:900;font-size:1.8rem;color:var(--or)">0</div>
       </div>
     </div>
-    <!-- 好友列表（格狀）-->
-    <div id="friendList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px"></div>
+    <!-- 好友卡片列表 -->
+    <div id="friendList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px"></div>
   </div>
 
   <!-- SETTINGS PAGE -->
@@ -587,6 +604,45 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
   <div class="mfoot">
     <button class="btn-cancel" onclick="closeModal('drivePickerOverlay')">取消</button>
     <button class="btn-save" onclick="confirmDrivePick()">✅ 加入輔助照片</button>
+  </div>
+</div>
+</div>
+
+<!-- FRIEND DETAIL MODAL -->
+<div class="overlay" id="friendDetailOverlay" onclick="overlayClick(event,'friendDetailOverlay')">
+<div class="modal" style="max-width:560px">
+  <div class="mhead" id="friendDetailHead" style="background:linear-gradient(135deg,var(--g),var(--gd))">
+    <div class="mtitle">👤 <span id="friendDetailName"></span></div>
+    <button class="xbtn" onclick="closeModal('friendDetailOverlay')">✕</button>
+  </div>
+  <div class="mbody" style="padding:14px 16px">
+    <!-- 統計列 -->
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <div style="flex:1;text-align:center;background:#f8fff4;border-radius:10px;padding:10px;border:1.5px solid var(--border)">
+        <div style="font-size:.68rem;color:var(--muted)">收到</div>
+        <div id="fdStatRecv" style="font-family:'Nunito',sans-serif;font-weight:900;font-size:1.5rem;color:var(--g)">0</div>
+      </div>
+      <div style="flex:1;text-align:center;background:#f8fff4;border-radius:10px;padding:10px;border:1.5px solid var(--border)">
+        <div style="font-size:.68rem;color:var(--muted)">送出</div>
+        <div id="fdStatSent" style="font-family:'Nunito',sans-serif;font-weight:900;font-size:1.5rem;color:var(--or)">0</div>
+      </div>
+      <div style="flex:1;text-align:center;background:#f8fff4;border-radius:10px;padding:10px;border:1.5px solid var(--border)">
+        <div style="font-size:.68rem;color:var(--muted)">合計</div>
+        <div id="fdStatTotal" style="font-family:'Nunito',sans-serif;font-weight:900;font-size:1.5rem;color:var(--b)">0</div>
+      </div>
+    </div>
+    <!-- 篩選 -->
+    <div style="display:flex;gap:6px;margin-bottom:10px">
+      <button class="btn active" id="fdFilterAll"  onclick="setFdFilter('all',this)"  style="padding:4px 12px;font-size:.74rem">全部</button>
+      <button class="btn" id="fdFilterRecv" onclick="setFdFilter('recv',this)" style="padding:4px 12px;font-size:.74rem">📬 收到</button>
+      <button class="btn" id="fdFilterSent" onclick="setFdFilter('sent',this)" style="padding:4px 12px;font-size:.74rem">💌 送出</button>
+    </div>
+    <!-- 卡片列表 -->
+    <div id="friendDetailCards" style="display:flex;flex-direction:column;gap:6px;max-height:360px;overflow-y:auto"></div>
+  </div>
+  <div class="mfoot">
+    <button class="btn-cancel" onclick="closeModal('friendDetailOverlay')">關閉</button>
+    <button class="btn-save" id="fdEditBtn">✏️ 編輯好友</button>
   </div>
 </div>
 </div>
@@ -1718,34 +1774,154 @@ function renderRecipFriendGrid(selectedNames) {
 // ═══════════════════════════════════════════════
 //  FRIENDS PAGE
 // ═══════════════════════════════════════════════
+let friendFilter = 'all';
+
+function setFriendFilter(f, btn) {
+  friendFilter = f;
+  document.querySelectorAll('[id^="frdFilter"]').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderFriends();
+}
+
 function renderFriends() {
   const q = (document.getElementById('friendSearch')?.value || '').toLowerCase();
-  const list = friends.filter(f => !q || f.name.toLowerCase().includes(q));
+
+  // 計算每個好友的互動數
+  const friendData = friends.map(f => {
+    const recv = cards.filter(c => c.sourceFriend === f.name).length;
+    const sent = cards.filter(c => getRecipNames(c).includes(f.name)).length;
+    return { ...f, recv, sent, total: recv + sent };
+  });
 
   // 統計
-  const totalRecv = cards.filter(c => c.sourceFriend).length;
-  const totalSent = cards.filter(c => getRecipNames(c).length > 0).length;
-  document.getElementById('friendStatTotal').textContent = friends.length;
-  document.getElementById('friendStatRecv').textContent  = totalRecv;
-  document.getElementById('friendStatSent').textContent  = totalSent;
+  const activeCount = friendData.filter(f => f.total > 0).length;
+  const totalRecv   = friendData.reduce((s, f) => s + f.recv, 0);
+  const totalSent   = friendData.reduce((s, f) => s + f.sent, 0);
+  document.getElementById('friendStatTotal').textContent  = friends.length;
+  document.getElementById('friendStatActive').textContent = activeCount;
+  document.getElementById('friendStatRecv').textContent   = totalRecv;
+  document.getElementById('friendStatSent').textContent   = totalSent;
+
+  // 篩選
+  let list = friendData.filter(f => f.total > 0); // 只顯示有互動的
+  if (friendFilter === 'recv') list = list.filter(f => f.recv > 0);
+  if (friendFilter === 'sent') list = list.filter(f => f.sent > 0);
+  if (q) list = list.filter(f => f.name.toLowerCase().includes(q));
+
+  // 依互動數排序
+  list.sort((a, b) => b.total - a.total);
 
   document.getElementById('friendList').innerHTML = !list.length
-    ? '<div class="empty-state" style="grid-column:1/-1"><div class="ei">👥</div><p>尚無好友</p></div>'
+    ? '<div class="empty-state" style="grid-column:1/-1"><div class="ei">👥</div><p>尚無互動記錄</p></div>'
     : list.map(f => {
-        const recv = cards.filter(c => c.sourceFriend === f.name).length;
-        const sent = cards.filter(c => getRecipNames(c).includes(f.name)).length;
-        const initial = [...f.name][0] || '?'; // 支援 emoji / 中文
-        return `<div class="friend-grid-card">
-          <div class="friend-grid-avatar">${initial}</div>
-          <div class="friend-grid-name" title="${escapeHtml(f.name)}">${escapeHtml(f.name)}</div>
-          ${f.note ? `<div class="friend-grid-stats" style="color:var(--muted);font-style:italic">${escapeHtml(f.note)}</div>` : ''}
-          <div class="friend-grid-stats">📬 ${recv} 收 · 💌 ${sent} 送</div>
+        const initial = [...f.name][0] || '?';
+        // 漸層顏色依互動量變化
+        const hue = (f.name.charCodeAt(0) * 37) % 360;
+        return `<div class="friend-grid-card" onclick="openFriendDetail('${escapeHtml(f.id)}')">
+          <div class="friend-grid-header" style="background:linear-gradient(135deg,hsl(${hue},60%,55%),hsl(${hue},70%,35%))">
+            <div class="friend-grid-avatar">${initial}</div>
+            <div class="friend-grid-name" title="${escapeHtml(f.name)}">${escapeHtml(f.name)}</div>
+          </div>
+          <div class="friend-grid-body">
+            <div class="friend-grid-stats">
+              <div class="friend-grid-stat">
+                <span class="n" style="color:var(--b)">${f.recv}</span>
+                <span class="l">📬 收到</span>
+              </div>
+              <div class="friend-grid-stat">
+                <span class="n" style="color:var(--or)">${f.sent}</span>
+                <span class="l">💌 送出</span>
+              </div>
+            </div>
+            ${f.note ? `<div style="font-size:.68rem;color:var(--muted);text-align:center;margin-bottom:4px;font-style:italic">${escapeHtml(f.note)}</div>` : ''}
+          </div>
           <div class="friend-grid-acts">
-            <button class="act" style="padding:3px 8px;font-size:.7rem" data-friend-id="${f.id}" onclick="openFriendModal(this.dataset.friendId)">✏️</button>
-            <button class="act del" style="padding:3px 8px;font-size:.7rem" data-friend-id="${f.id}" onclick="deleteFriend(this.dataset.friendId)">🗑️</button>
+            <button onclick="event.stopPropagation();openFriendModal('${f.id}')">✏️</button>
+            <button class="del" onclick="event.stopPropagation();deleteFriend('${f.id}')">🗑️</button>
           </div>
         </div>`;
       }).join('');
+}
+
+let currentFriendId = null;
+let fdFilter = 'all';
+
+function setFdFilter(f, btn) {
+  fdFilter = f;
+  document.querySelectorAll('[id^="fdFilter"]').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderFriendDetailCards();
+}
+
+function openFriendDetail(id) {
+  const f = friends.find(x => x.id === id); if (!f) return;
+  currentFriendId = id;
+  fdFilter = 'all';
+  document.querySelectorAll('[id^="fdFilter"]').forEach(b => b.classList.remove('active'));
+  document.getElementById('fdFilterAll').classList.add('active');
+
+  const recv  = cards.filter(c => c.sourceFriend === f.name);
+  const sent  = cards.filter(c => getRecipNames(c).includes(f.name));
+  const total = new Set([...recv.map(c=>c.id), ...sent.map(c=>c.id)]).size;
+
+  document.getElementById('friendDetailName').textContent  = f.name;
+  document.getElementById('fdStatRecv').textContent  = recv.length;
+  document.getElementById('fdStatSent').textContent  = sent.length;
+  document.getElementById('fdStatTotal').textContent = total;
+
+  document.getElementById('fdEditBtn').onclick = () => {
+    closeModal('friendDetailOverlay');
+    openFriendModal(id);
+  };
+
+  renderFriendDetailCards();
+  document.getElementById('friendDetailOverlay').classList.add('open');
+}
+
+function renderFriendDetailCards() {
+  const f = friends.find(x => x.id === currentFriendId); if (!f) return;
+  const recvCards = cards.filter(c => c.sourceFriend === f.name);
+  const sentCards = cards.filter(c => getRecipNames(c).includes(f.name));
+
+  let list;
+  if (fdFilter === 'recv') list = recvCards;
+  else if (fdFilter === 'sent') list = sentCards;
+  else {
+    // 全部（合併去重）
+    const seen = new Set();
+    list = [];
+    [...recvCards, ...sentCards].forEach(c => { if (!seen.has(c.id)) { seen.add(c.id); list.push(c); } });
+  }
+
+  const el = document.getElementById('friendDetailCards');
+  if (!list.length) {
+    el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:.82rem">此篩選條件下無明信片</div>';
+    return;
+  }
+
+  el.innerHTML = list.map(c => {
+    const isRecv = c.sourceFriend === f.name;
+    const isSent = getRecipNames(c).includes(f.name);
+    const st = STATUS_MAP[c.status] || STATUS_MAP.pending;
+    const imgUrl = getImgUrl(c.mainImg);
+    const badge = isRecv && isSent ? '📬💌' : isRecv ? '📬 收到' : '💌 送出';
+    const badgeColor = isRecv && isSent ? '#9966cc' : isRecv ? 'var(--b)' : 'var(--or)';
+    return `<div style="display:flex;align-items:center;gap:10px;padding:9px 10px;background:#f8fff4;border:1.5px solid var(--border);border-radius:10px;cursor:pointer"
+        onclick="closeModal('friendDetailOverlay');openDetail('${c.id}')">
+      ${imgUrl
+        ? `<img src="${escapeHtml(imgUrl)}" style="width:52px;height:52px;object-fit:contain;border-radius:7px;flex-shrink:0;background:#eee" alt="" loading="lazy">`
+        : `<div style="width:52px;height:52px;border-radius:7px;flex-shrink:0;background:linear-gradient(135deg,#e8f5e0,var(--sky));display:flex;align-items:center;justify-content:center;font-size:1.4rem">🌸</div>`}
+      <div style="flex:1;min-width:0">
+        <div style="font-family:'Nunito',sans-serif;font-weight:800;font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(c.cardName||'（未命名）')}</div>
+        <div style="font-size:.7rem;color:var(--muted);margin-top:2px">${escapeHtml(c.name||'')}${c.region?' · '+escapeHtml(c.region):''}</div>
+        <div style="font-size:.68rem;margin-top:3px;display:flex;gap:6px;align-items:center">
+          <span style="color:${badgeColor};font-weight:700">${badge}</span>
+          <span class="status-badge ${st.c}" style="position:static;padding:1px 6px">${st.l}</span>
+          ${c.obtainedDate?`<span style="color:var(--muted)">${c.obtainedDate}</span>`:''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 function openFriendModal(id = null) {
