@@ -1543,8 +1543,6 @@ function openCardModal(id = null) {
     const c = cards.find(x => x.id === id);
     if (c) fillCardForm(c);
   }
-  renderTagGrid();
-  renderFavoriteSelect();
   document.getElementById('cardOverlay').classList.add('open');
   initImageListeners();
 }
