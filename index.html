@@ -727,16 +727,22 @@ function compressImage(base64, maxPx, q) {
 // ═══════════════════════════════════════════════
 async function callGAS(action, data) {
   if (!CFG.scriptUrl) return null;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 30000); // 30 秒 timeout
   try {
     const res = await fetch(CFG.scriptUrl + '?action=' + action, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify(data)
+      body: JSON.stringify(data),
+      signal: controller.signal
     });
     return await res.json();
   } catch(e) {
-    console.error('GAS 呼叫失敗:', e);
+    if (e.name === 'AbortError') console.error('GAS 請求逾時:', action);
+    else console.error('GAS 呼叫失敗:', e);
     return null;
+  } finally {
+    clearTimeout(timer);
   }
 }
 
@@ -875,7 +881,12 @@ function importJSON(e) {
   reader.onload = ev => {
     try {
       const data = JSON.parse(ev.target.result);
-      if (data.cards)     cards    = data.cards;
+      if (!data || typeof data !== 'object') { alert('無效的備份檔案'); return; }
+      if (data.cards && !Array.isArray(data.cards)) { alert('備份檔案格式錯誤：cards 不是陣列'); return; }
+      if (data.cards && data.cards.length === 0 && cards.length > 0) {
+        if (!confirm(`⚠️ 備份檔案中沒有明信片資料，但目前有 ${cards.length} 筆。確定要匯入嗎？`)) return;
+      }
+      if (data.cards) cards    = data.cards;
       if (data.friends)   friends  = data.friends;
       if (data.methods)   methods  = data.methods;
       if (data.tags)      tagMap   = data.tags;
@@ -907,23 +918,26 @@ window.onload = async () => {
   updateSetupCard();
 
   if (CFG.scriptUrl) {
-    // 載入期間鎖定新增/儲存，防止 race condition
     setSyncStatus('ing', '載入雲端資料中…');
     const lockBtns = document.querySelectorAll('.btn.primary, .btn-save');
     lockBtns.forEach(b => { b.disabled = true; b.title = '載入中…'; });
 
-    const res = await callGAS('loadData', {});
-    if (res?.success) {
-      cards   = res.cards   || [];
-      friends = res.friends || [];
-      saveLocal();
-      _cloudDataLoaded = true;
-      setSyncStatus('ok', `已載入 ${cards.length} 張明信片`);
-    } else {
-      setSyncStatus('err', '雲端載入失敗，使用本地資料');
+    try {
+      const res = await callGAS('loadData', {});
+      if (res?.success) {
+        cards   = res.cards   || [];
+        friends = res.friends || [];
+        saveLocal();
+        _cloudDataLoaded = true;
+        setSyncStatus('ok', `已載入 ${cards.length} 張明信片`);
+      } else {
+        setSyncStatus('err', '雲端載入失敗，使用本地資料');
+      }
+    } catch(e) {
+      setSyncStatus('err', '雲端載入失敗：' + e.message);
+    } finally {
+      lockBtns.forEach(b => { b.disabled = false; b.title = ''; });
     }
-
-    lockBtns.forEach(b => { b.disabled = false; b.title = ''; });
   } else {
     setSyncStatus('', '離線模式');
   }
@@ -1239,15 +1253,15 @@ function handleImg(e, role) {
   if (!files.length) return;
   (async () => {
     for (const file of files) {
-		const b64 = await new Promise((res, rej) => {
-		  const r = new FileReader();
-		  r.onload  = ev => res(ev.target.result);
-		  r.onerror = ()  => rej(new Error('圖片讀取失敗'));
-		  r.readAsDataURL(file);
-		}).catch(err => { console.error(err); return null; });
-		if (!b64) continue;
-      // 壓縮版供顯示和 AI
-      const compressed = await compressImage(b64, 800, 0.8);
+      const b64 = await new Promise((res, rej) => {
+        const r = new FileReader();
+        r.onload  = ev => res(ev.target.result);
+        r.onerror = ()  => rej(new Error('圖片讀取失敗'));
+        r.readAsDataURL(file);
+      }).catch(err => { console.error(err); return null; });
+      if (!b64) continue;
+      // 壓縮版供顯示和 AI（800px，iOS 較保守）
+      const compressed = await compressImage(b64, 800, 0.80);
       const obj = {
         base64:       compressed, // 顯示用
         originalBase64: b64,      // 上傳 Drive 用（原尺寸）
