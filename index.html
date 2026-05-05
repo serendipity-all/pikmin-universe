@@ -71,7 +71,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
 .pcard{background:var(--card);border-radius:14px;overflow:hidden;border:2px solid var(--border);box-shadow:0 3px 14px var(--sh);transition:transform .18s,box-shadow .18s;position:relative;animation:fadeIn .25s ease;cursor:pointer}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .pcard:hover{transform:translateY(-3px);box-shadow:0 8px 24px var(--sh)}
-.pcard-img{width:100%;height:160px;object-fit:cover;display:block;background:linear-gradient(135deg,#e0f0d8,var(--sky))}
+.pcard-img{width:100%;height:160px;object-fit:contain;display:block;background:linear-gradient(135deg,#e0f0d8,var(--sky))}
 .pcard-noimg{width:100%;height:160px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;background:linear-gradient(135deg,#e8f5e0,var(--sky));color:var(--muted);font-size:.75rem;position:relative}
 .pcard-noimg span{font-size:2rem;opacity:.4}
 .photo-count{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.6);color:#fff;padding:3px 8px;border-radius:8px;font-size:.65rem;font-weight:700}
@@ -271,6 +271,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
       </div>
       <button class="btn" onclick="toggleFilterPanel()">🔧 篩選 <span id="filterCount"></span></button>
       <button class="btn" id="dupFilterBtn" onclick="toggleDuplicateFilter()" title="顯示名稱重複的明信片">♊ 重複名稱</button>
+      <button class="btn" id="unnamedFilterBtn" onclick="toggleUnnamedFilter()" title="顯示未填名稱的明信片">📭 未命名</button>
       <button class="btn primary" onclick="openCardModal()">＋ 新增明信片</button>
     </div>
     <div class="filter-panel" id="filterPanel">
@@ -640,6 +641,7 @@ let deletedCard     = null;
 let toastTimer      = null;
 let aiSuggestion    = null;
 let showDuplicatesOnly = false;
+let showUnnamedOnly    = false;
 let chartInstances  = {};
 
 // ── 目前編輯中的照片（僅記憶體，不含 base64 存入資料庫）──
@@ -1346,6 +1348,12 @@ async function aiScan() {
       }
       if (!res?.success) throw new Error(res?.error || '辨識失敗');
       aiSuggestion = res.data;
+      if (aiSuggestion.isExpeditionSnapshot) {
+        alert('⚠️ 偵測到「探險快照」！\n\n這張圖片是探險系統截圖，不是明信片。\n請將它作為輔助照片手動加入既有的明信片，不建議單獨建立。');
+        document.getElementById('aiBox').style.display = 'none';
+        aiSuggestion = null;
+        break;
+      }
       // 清除結尾「上」字
       if (aiSuggestion.friendName) aiSuggestion.friendName = cleanFriendName(aiSuggestion.friendName);
       const d = aiSuggestion;
@@ -1748,8 +1756,9 @@ function removeFilterRow(id) {
 function clearFilters() {
   filterConditions = [];
   showDuplicatesOnly = false;
-  const dupBtn = document.getElementById('dupFilterBtn');
-  if (dupBtn) dupBtn.classList.remove('active');
+  showUnnamedOnly    = false;
+  document.getElementById('dupFilterBtn').classList.remove('active');
+  document.getElementById('unnamedFilterBtn').classList.remove('active');
   renderFilterRows(); renderLibrary(); updateFilterCount();
 }
 
@@ -1821,7 +1830,17 @@ function applyFilters(list) {
 
 function toggleDuplicateFilter() {
   showDuplicatesOnly = !showDuplicatesOnly;
+  showUnnamedOnly = false;
   document.getElementById('dupFilterBtn').classList.toggle('active', showDuplicatesOnly);
+  document.getElementById('unnamedFilterBtn').classList.remove('active');
+  renderLibrary();
+}
+
+function toggleUnnamedFilter() {
+  showUnnamedOnly = !showUnnamedOnly;
+  showDuplicatesOnly = false;
+  document.getElementById('unnamedFilterBtn').classList.toggle('active', showUnnamedOnly);
+  document.getElementById('dupFilterBtn').classList.remove('active');
   renderLibrary();
 }
 
@@ -1851,6 +1870,9 @@ function renderLibrary() {
   if (showDuplicatesOnly) {
     const dup = getDuplicateCardNames();
     list = list.filter(c => dup.has((c.cardName||'').trim()));
+  }
+  if (showUnnamedOnly) {
+    list = list.filter(c => !(c.cardName||'').trim());
   }
 
   const grid = document.getElementById('cardGrid');
@@ -2121,9 +2143,14 @@ async function batchAIScan() {
       try {
         const res = await callGAS('aiScan', { fileId: p.fileId, methods, tags: tagMap });
         if (res?.success && res.data) {
-          p._ai = res.data;
-          const d = res.data;
-          if (el) el.textContent = `🤖 ${d.cardName||'?'} | ${d.country||''} | ${d.obtainedMethod||'?'}`;
+          if (res.data.isExpeditionSnapshot) {
+            if (el) el.textContent = '⚠️ 探險快照！請人工處理，已略過';
+            p._ai = null; // 不儲存 AI 結果
+          } else {
+            p._ai = res.data;
+            const d = res.data;
+            if (el) el.textContent = `🤖 ${d.cardName||'?'} | ${d.country||''} | ${d.obtainedMethod||'?'}`;
+          }
         } else { if (el) el.textContent = '❌ ' + (res?.error||'失敗'); }
       } catch(e) { if (el) el.textContent = '❌ ' + e.message; }
       done++; btn.textContent = `⏳ AI 辨識中… ${done}/${selected.length}`;
@@ -2147,6 +2174,7 @@ async function importScannedPhotos() {
     if (!chk?.checked || isPhotoInUse(p.fileId)) continue;
 
     const ai = p._ai || {};
+    if (ai.isExpeditionSnapshot) continue; // 探險快照略過，不建立
     if (ai.country && !countries.includes(ai.country)) {
       countries.push(ai.country);
       localStorage.setItem('pkm_countries', JSON.stringify(countries));
