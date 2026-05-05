@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>🌸 Pikmin 明信片收藏</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌸</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
@@ -117,7 +117,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
 .fi:focus,.fta:focus,.fsel:focus{border-color:var(--g)}
 .fta{min-height:68px;resize:vertical}
 .frow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.mfoot{padding:12px 18px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;align-items:center;flex-wrap:wrap;background:var(--card);flex-shrink:0}
+.mfoot{padding:12px 18px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;align-items:center;flex-wrap:wrap;background:var(--card);flex-shrink:0;padding-bottom:max(12px, env(safe-area-inset-bottom))}
 .btn-cancel{padding:8px 16px;border:2px solid var(--border);border-radius:10px;background:#fff;font-family:'Nunito',sans-serif;font-weight:700;font-size:.84rem;cursor:pointer;color:var(--muted)}
 .btn-save{padding:8px 20px;background:linear-gradient(135deg,var(--g),var(--gd));border:none;border-radius:10px;color:#fff;font-family:'Nunito',sans-serif;font-weight:800;font-size:.84rem;cursor:pointer;box-shadow:0 2px 8px var(--sh)}
 .btn-save:disabled{opacity:.5;cursor:not-allowed;transform:none}
@@ -1239,13 +1239,15 @@ function handleImg(e, role) {
   if (!files.length) return;
   (async () => {
     for (const file of files) {
-      const b64 = await new Promise(res => {
-        const r = new FileReader();
-        r.onload = ev => res(ev.target.result);
-        r.readAsDataURL(file);
-      });
+		const b64 = await new Promise((res, rej) => {
+		  const r = new FileReader();
+		  r.onload  = ev => res(ev.target.result);
+		  r.onerror = ()  => rej(new Error('圖片讀取失敗'));
+		  r.readAsDataURL(file);
+		}).catch(err => { console.error(err); return null; });
+		if (!b64) continue;
       // 壓縮版供顯示和 AI
-      const compressed = await compressImage(b64, 1024, 0.85);
+      const compressed = await compressImage(b64, 800, 0.8);
       const obj = {
         base64:       compressed, // 顯示用
         originalBase64: b64,      // 上傳 Drive 用（原尺寸）
