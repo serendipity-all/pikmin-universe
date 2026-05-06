@@ -882,7 +882,7 @@ function compressImage(base64, maxPx, q) {
 async function callGAS(action, data) {
   if (!CFG.scriptUrl) return null;
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 30000); // 30 秒 timeout
+  const timer = setTimeout(() => controller.abort(), 30000);
   try {
     const res = await fetch(CFG.scriptUrl + '?action=' + action, {
       method: 'POST',
@@ -894,6 +894,28 @@ async function callGAS(action, data) {
   } catch(e) {
     if (e.name === 'AbortError') console.error('GAS 請求逾時:', action);
     else console.error('GAS 呼叫失敗:', e);
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// 上傳照片專用，timeout 延長到 120 秒
+async function callGASLong(action, data) {
+  if (!CFG.scriptUrl) return null;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 120000);
+  try {
+    const res = await fetch(CFG.scriptUrl + '?action=' + action, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(data),
+      signal: controller.signal
+    });
+    return await res.json();
+  } catch(e) {
+    if (e.name === 'AbortError') console.error('上傳逾時（120秒）:', action);
+    else console.error('上傳失敗:', e);
     return null;
   } finally {
     clearTimeout(timer);
@@ -1534,7 +1556,7 @@ async function aiScan() {
 
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      const res = await callGAS('aiScan', payload);
+      const res = await callGASLong('aiScan', payload);
       if (!res?.success && attempt === 0 && (res?.error?.includes('quota') || res?.error?.includes('overloaded'))) {
         btn.textContent = '⏳ 重試中…';
         await new Promise(r => setTimeout(r, 5000));
@@ -1700,32 +1722,49 @@ async function saveCard() {
   // 上傳新照片到 Drive
   if (CFG.scriptUrl) {
     // 主照片
-    if (currentMainImg && currentMainImg.originalBase64 && !currentMainImg.url) {
+    if (currentMainImg && currentMainImg.originalBase64) {
       let fn = currentMainImg.filename;
-      const chk = await callGAS('checkFilename', { filename: fn });
-      if (chk?.exists) {
-        if (!confirm(`Drive 中已有同名檔案「${fn}」，要自動加編號繼續上傳嗎？`)) {
-          saveBtn.disabled = false; saveBtn.textContent = '🌱 儲存';
-          return;
+      saveBtn.textContent = '⏳ 上傳主照片…';
+      try {
+        const chk = await callGAS('checkFilename', { filename: fn });
+        if (chk?.exists) {
+          if (!confirm(`Drive 中已有同名檔案「${fn}」，要自動加編號繼續上傳嗎？`)) {
+            saveBtn.disabled = false; saveBtn.textContent = '🌱 儲存';
+            return;
+          }
+          fn = chk.suggestedName;
+          currentMainImg.filename = fn;
         }
-        fn = chk.suggestedName;
-        currentMainImg.filename = fn;
-      }
-      const up = await callGAS('uploadPhoto', { base64: currentMainImg.originalBase64, mimeType: currentMainImg.mime, filename: fn });
-      if (up?.success) {
-        currentMainImg.url    = up.url;
-        currentMainImg.fileId = up.fileId;
-      }
+        const up = await callGASLong('uploadPhoto', {
+          base64: currentMainImg.originalBase64,
+          mimeType: currentMainImg.mime || 'image/jpeg',
+          filename: fn
+        });
+        if (up?.success) {
+          currentMainImg.url    = up.url;
+          currentMainImg.fileId = up.fileId;
+        } else {
+          console.error('主照片上傳失敗:', up?.error);
+        }
+      } catch(e) { console.error('主照片上傳例外:', e); }
     }
 
     // 輔助照片
-    for (const aux of currentAuxImgs) {
+    for (let i = 0; i < currentAuxImgs.length; i++) {
+      const aux = currentAuxImgs[i];
       if (aux.originalBase64 && !aux.url) {
+        saveBtn.textContent = `⏳ 上傳輔助照片 ${i+1}/${currentAuxImgs.filter(a=>a.originalBase64&&!a.url).length}…`;
         let fn = aux.filename;
-        const chk = await callGAS('checkFilename', { filename: fn });
-        if (chk?.exists) { fn = chk.suggestedName; aux.filename = fn; }
-        const up = await callGAS('uploadPhoto', { base64: aux.originalBase64, mimeType: aux.mime, filename: fn });
-        if (up?.success) { aux.url = up.url; aux.fileId = up.fileId; }
+        try {
+          const chk = await callGAS('checkFilename', { filename: fn });
+          if (chk?.exists) { fn = chk.suggestedName; aux.filename = fn; }
+          const up = await callGASLong('uploadPhoto', {
+            base64: aux.originalBase64,
+            mimeType: aux.mime || 'image/jpeg',
+            filename: fn
+          });
+          if (up?.success) { aux.url = up.url; aux.fileId = up.fileId; }
+        } catch(e) { console.error('輔助照片上傳例外:', e); }
       }
     }
   }
