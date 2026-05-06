@@ -821,15 +821,31 @@ function getPreviewUrl(img) {
 // 依 ID 查好友名字（找不到就原樣回傳，相容舊資料）
 const getFriendName = (id) => {
   if (!id) return '';
-  const f = friends.find(f => f.id === id);
-  return f ? f.name : id; // 找不到就顯示原值（可能是舊的名字字串）
+  // 先用 ID 找
+  const byId = friends.find(f => f.id === id);
+  if (byId) return byId.name;
+  // 再用名字找（相容舊資料）
+  const byName = friends.find(f => f.name === id);
+  if (byName) return byName.name;
+  return id; // 完全找不到就原樣顯示
 };
 
 // 依名字查好友 ID（找不到就回傳名字本身，相容舊資料）
 const getFriendId = (name) => {
   if (!name) return '';
+  // 先確認是否已經是 ID
+  if (friends.find(f => f.id === name)) return name;
+  // 再用名字查
   const f = friends.find(f => f.name === name);
   return f ? f.id : name;
+};
+
+// 把 sourceFriend 統一解析成 ID（相容名字和ID兩種格式）
+const resolveFriendId = (val) => {
+  if (!val) return '';
+  if (friends.find(f => f.id === val)) return val; // 已經是 ID
+  const f = friends.find(f => f.name === val);
+  return f ? f.id : val; // 找到就轉，找不到保留原值
 };
 
 // recipFriend 存的是 ID 陣列（相容舊版名字字串）
@@ -1893,8 +1909,8 @@ function renderFriends() {
   const q = (document.getElementById('friendSearch')?.value || '').toLowerCase();
 
   const friendData = friends.map(f => {
-    const recv = cards.filter(c => c.sourceFriend === f.id).length;
-    const sent = cards.filter(c => getRecipIds(c).includes(f.id)).length;
+    const recv = cards.filter(c => resolveFriendId(c.sourceFriend) === f.id).length;
+    const sent = cards.filter(c => getRecipIds(c).map(resolveFriendId).includes(f.id)).length;
     return { ...f, recv, sent, total: recv + sent };
   });
 
@@ -1975,8 +1991,8 @@ function openFriendDetail(id) {
   document.querySelectorAll('[id^="fdFilter"]').forEach(b => b.classList.remove('active'));
   document.getElementById('fdFilterAll').classList.add('active');
 
-  const recv  = cards.filter(c => c.sourceFriend === f.id);
-  const sent  = cards.filter(c => getRecipIds(c).includes(f.id));
+  const recv  = cards.filter(c => resolveFriendId(c.sourceFriend) === f.id);
+  const sent  = cards.filter(c => getRecipIds(c).map(resolveFriendId).includes(f.id));
   const total = new Set([...recv.map(c=>c.id), ...sent.map(c=>c.id)]).size;
 
   // 更新好友資訊卡
@@ -2002,8 +2018,8 @@ function openFriendDetail(id) {
 
 function renderFriendDetailCards() {
   const f = friends.find(x => x.id === currentFriendId); if (!f) return;
-  const recvCards = cards.filter(c => c.sourceFriend === f.id);
-  const sentCards = cards.filter(c => getRecipIds(c).includes(f.id));
+  const recvCards = cards.filter(c => resolveFriendId(c.sourceFriend) === f.id);
+  const sentCards = cards.filter(c => getRecipIds(c).map(resolveFriendId).includes(f.id));
 
   let list;
   if (fdFilter === 'recv') list = recvCards;
@@ -2026,8 +2042,8 @@ function renderFriendDetailCards() {
   el.style.gap = '8px';
 
   el.innerHTML = list.map(c => {
-    const isRecv = c.sourceFriend === f.id;
-    const isSent = getRecipIds(c).includes(f.id);
+    const isRecv = resolveFriendId(c.sourceFriend) === f.id;
+    const isSent = getRecipIds(c).map(resolveFriendId).includes(f.id);
     const imgUrl = getImgUrl(c.mainImg);
     const badge  = isRecv && isSent ? '📬💌' : isRecv ? '📬' : '💌';
     return `<div style="background:var(--card);border:2px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:transform .18s;box-shadow:0 2px 8px var(--sh)"
@@ -2206,8 +2222,8 @@ function applyFilters(list) {
     const results = active.map(cond => {
       const val = cond.value, field = cond.field;
       if (field === 'tags')       return (card.tags||[]).includes(val);
-      if (field === 'recipFriend') return getRecipIds(card).includes(getFriendId(val));
-      if (field === 'sourceFriend') return card.sourceFriend === getFriendId(val);
+      if (field === 'recipFriend') return getRecipIds(card).map(resolveFriendId).includes(getFriendId(val));
+      if (field === 'sourceFriend') return resolveFriendId(card.sourceFriend) === getFriendId(val);
       if (field === 'hasAuxImgs') {
         const has = (card.auxImgs||[]).filter(a => a.url && !isBase64(a.url)).length > 0;
         return val === 'yes' ? has : !has;
@@ -2260,7 +2276,7 @@ function renderLibrary() {
   const q = (document.getElementById('searchInput')?.value||'').toLowerCase();
   let list = cards.filter(c => !q || [
     c.cardName, c.name, c.region,
-    getFriendName(c.sourceFriend),
+    getFriendName(resolveFriendId(c.sourceFriend)),
     ...getRecipNames(c),
     c.notes, c.mainImg?.filename,
     ...(c.tags||[])
@@ -2397,8 +2413,8 @@ function renderStats() {
   cards.forEach(c => { if (c.rarity) rc[c.rarity]=(rc[c.rarity]||0)+1; });
   buildChart('chartRare','doughnut',favorites.map(f=>f.icon+' '+f.label),favorites.map(f=>rc[f.value]||0),['#ff9999','#66bb6a','#ab47bc','#42a5f5','#ffa726']);
 
-  renderFriendRank('rankReceived', friends.map(f=>({name:f.name,count:cards.filter(c=>c.sourceFriend===f.id).length})));
-  renderFriendRank('rankSent',     friends.map(f=>({name:f.name,count:cards.filter(c=>getRecipIds(c).includes(f.id)).length})));
+  renderFriendRank('rankReceived', friends.map(f=>({name:f.name,count:cards.filter(c=>resolveFriendId(c.sourceFriend)===f.id).length})));
+  renderFriendRank('rankSent',     friends.map(f=>({name:f.name,count:cards.filter(c=>getRecipIds(c).map(resolveFriendId).includes(f.id)).length})));
 }
 
 function buildChart(id, type, labels, data, colors) {
