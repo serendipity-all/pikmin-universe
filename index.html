@@ -1928,7 +1928,7 @@ function renderFriends() {
   if (friendFilter === 'recv') list = list.filter(f => f.recv > 0);
   else if (friendFilter === 'sent') list = list.filter(f => f.sent > 0);
   if (q) list = list.filter(f => f.name.toLowerCase().includes(q));
-  list.sort((a, b) => b.total - a.total);
+  list.sort((a, b) => String(a.name||'').localeCompare(String(b.name||''), undefined, { sensitivity: 'base' }));
 
   const el = document.getElementById('friendList');
   if (!el) return;
