@@ -670,6 +670,10 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
   </div>
   <div class="mbody">
     <div class="fg"><label class="fl">姓名 / 暱稱</label><input type="text" class="fi" id="fFriendName" placeholder="輸入好友名稱"></div>
+    <div class="fg">
+      <label class="fl">🪪 PPID <span style="font-size:.68rem;color:var(--muted);font-weight:400">（Pikmin Bloom 玩家識別碼，可選填）</span></label>
+      <input type="text" class="fi" id="fFriendPpid" placeholder="例：flower#1234">
+    </div>
     <div class="fg"><label class="fl">備註</label><textarea class="fta" id="fFriendNote" placeholder="例：台南同好會認識" style="min-height:55px"></textarea></div>
   </div>
   <div class="mfoot">
@@ -851,7 +855,7 @@ function cleanFriendName(name) {
 // 確保好友存在名單
 function ensureFriendExists(name) {
   if (!name || friends.find(f => f.name === name)) return;
-  friends.push({ id: Date.now().toString(), name, note: '' });
+  friends.push({ id: Date.now().toString(), name, ppid: '', note: '' });
   saveLocal();
   renderFriendSelects();
   renderSettingsFriendList();
@@ -1298,7 +1302,7 @@ function addFriendFromSettings() {
   const name = document.getElementById('cfgNewFriendName').value.trim();
   if (!name) { alert('請輸入好友名稱'); return; }
   if (friends.find(f => f.name === name)) { alert('好友已存在'); return; }
-  friends.push({ id: Date.now().toString(), name, note: '' });
+  friends.push({ id: Date.now().toString(), name, ppid: '', note: '' });
   saveAndSync();
   document.getElementById('cfgNewFriendName').value = '';
   renderSettingsFriendList();
@@ -1926,6 +1930,7 @@ function renderFriends() {
       <div class="friend-grid-header" style="background:linear-gradient(135deg,hsl(${hue},60%,55%),hsl(${hue},70%,35%))">
         <div class="friend-grid-avatar">${initial}</div>
         <div class="friend-grid-name" title="${escapeHtml(f.name)}">${escapeHtml(f.name)}</div>
+          ${f.ppid ? `<div style="font-size:.65rem;color:rgba(255,255,255,.75);font-family:'Nunito',sans-serif">🪪 ${escapeHtml(f.ppid)}</div>` : ''}
       </div>
       <div class="friend-grid-body">
         <div class="friend-grid-stats">
@@ -1982,7 +1987,7 @@ function openFriendDetail(id) {
     `linear-gradient(135deg,hsl(${hue},60%,55%),hsl(${hue},70%,35%))`;
   document.getElementById('fdInfoAvatar').textContent   = initial;
   document.getElementById('friendDetailName').textContent = name;
-  document.getElementById('fdInfoNote').textContent     = f.note || '';
+  document.getElementById('fdInfoNote').textContent = [f.ppid ? `🪪 ${f.ppid}` : '', f.note || ''].filter(Boolean).join('　');
   document.getElementById('fdStatRecv').textContent     = recv.length;
   document.getElementById('fdStatSent').textContent     = sent.length;
   document.getElementById('fdStatTotal').textContent    = total;
@@ -2046,20 +2051,31 @@ function openFriendModal(id = null) {
   document.getElementById('friendModalTitle').textContent = id ? '編輯好友' : '新增好友';
   const f = id ? friends.find(x => x.id === id) : null;
   document.getElementById('fFriendName').value = f?.name || '';
+  document.getElementById('fFriendPpid').value = f?.ppid || '';
   document.getElementById('fFriendNote').value = f?.note || '';
   document.getElementById('friendOverlay').classList.add('open');
 }
 
 function saveFriend() {
   const name = document.getElementById('fFriendName').value.trim();
+  const ppid = document.getElementById('fFriendPpid').value.trim();
   const note = document.getElementById('fFriendNote').value.trim();
   if (!name) { alert('請輸入名稱'); return; }
+
+  // PPID 重複檢查（同一個 PPID 不能給兩個人）
+  if (ppid) {
+    const dup = friends.find(f => f.ppid === ppid && f.id !== editingFriendId);
+    if (dup) {
+      if (!confirm(`⚠️ PPID「${ppid}」已被好友「${dup.name}」使用。\n\n確定要繼續儲存嗎？（可能是同一人的不同帳號）`)) return;
+    }
+  }
+
   if (editingFriendId) {
     const f = friends.find(x => x.id === editingFriendId);
-    if (f) { f.name = name; f.note = note; }
+    if (f) { f.name = name; f.ppid = ppid; f.note = note; }
   } else {
     if (friends.find(f => f.name === name)) { alert('好友已存在'); return; }
-    friends.push({ id: Date.now().toString(), name, note });
+    friends.push({ id: Date.now().toString(), name, ppid, note });
   }
   saveAndSync();
   closeModal('friendOverlay');
