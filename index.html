@@ -511,6 +511,12 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
           <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(event)">
         </div>
       </div>
+      <div class="settings-section">
+        <h3>🔄 舊資料轉換（一次性）</h3>
+        <p style="font-size:.78rem;color:var(--muted);margin-bottom:10px;line-height:1.7">如果你的明信片資料是在「好友ID制度」更新前建立的，來源好友和送給誰欄位存的是名字而非ID。點此按鈕進行一次性轉換，之後好友改名就不會影響記錄。</p>
+        <button class="btn primary" onclick="migrateFriendNamesToIds()">🔄 轉換好友名稱→ID</button>
+        <div id="migrateResult" style="margin-top:8px;font-size:.78rem;color:var(--g)"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -808,7 +814,23 @@ function getPreviewUrl(img) {
   if (!img) return '';
   return img.base64 || img.url || '';
 }
-const getRecipNames = (c) => Array.isArray(c.recipFriend) ? c.recipFriend : (c.recipFriend ? [c.recipFriend] : []);
+// 依 ID 查好友名字（找不到就原樣回傳，相容舊資料）
+const getFriendName = (id) => {
+  if (!id) return '';
+  const f = friends.find(f => f.id === id);
+  return f ? f.name : id; // 找不到就顯示原值（可能是舊的名字字串）
+};
+
+// 依名字查好友 ID（找不到就回傳名字本身，相容舊資料）
+const getFriendId = (name) => {
+  if (!name) return '';
+  const f = friends.find(f => f.name === name);
+  return f ? f.id : name;
+};
+
+// recipFriend 存的是 ID 陣列（相容舊版名字字串）
+const getRecipIds   = (c) => Array.isArray(c.recipFriend) ? c.recipFriend : (c.recipFriend ? [c.recipFriend] : []);
+const getRecipNames = (c) => getRecipIds(c).map(id => getFriendName(id));
 const getRecipStr   = (c) => getRecipNames(c).join('、') || '';
 const getFavIcon    = (v) => (favorites.find(f => f.value === v)?.icon || '');
 
@@ -1003,6 +1025,48 @@ function saveLocal() {
 function saveAndSync() {
   saveLocal();
   if (CFG.scriptUrl) syncAll(true);
+}
+
+function migrateFriendNamesToIds() {
+  if (!confirm('確定要將所有明信片的好友欄位從名稱轉換為ID嗎？\n\n建議先「匯出 JSON 備份」再執行。')) return;
+
+  let sourceMigrated = 0, recipMigrated = 0, notFound = [];
+
+  cards.forEach(c => {
+    // 轉換 sourceFriend（只轉換看起來不像 ID 的值，即非純數字時間戳）
+    if (c.sourceFriend && !friends.find(f => f.id === c.sourceFriend)) {
+      const f = friends.find(f => f.name === c.sourceFriend);
+      if (f) {
+        c.sourceFriend = f.id;
+        sourceMigrated++;
+      } else if (c.sourceFriend) {
+        notFound.push(c.sourceFriend);
+      }
+    }
+
+    // 轉換 recipFriend 陣列
+    const newRecip = getRecipIds(c).map(val => {
+      // 已經是 ID 就跳過
+      if (friends.find(f => f.id === val)) return val;
+      // 嘗試用名字找 ID
+      const f = friends.find(f => f.name === val);
+      if (f) { recipMigrated++; return f.id; }
+      if (val) notFound.push(val);
+      return val;
+    });
+    c.recipFriend = newRecip;
+  });
+
+  const uniqueNotFound = [...new Set(notFound)];
+  saveAndSync();
+  renderLibrary();
+
+  const el = document.getElementById('migrateResult');
+  if (el) {
+    el.textContent = `✅ 完成！來源好友轉換 ${sourceMigrated} 筆，送給誰轉換 ${recipMigrated} 筆。` +
+      (uniqueNotFound.length ? `\n⚠️ 找不到對應好友：${uniqueNotFound.join('、')}` : '');
+    el.style.color = uniqueNotFound.length ? 'var(--or)' : 'var(--g)';
+  }
 }
 
 function exportJSON() {
@@ -1222,15 +1286,10 @@ function addFriendFromSettings() {
 function updateFriendName(id, newName) {
   newName = newName.trim(); if (!newName) return;
   if (friends.find(f => f.name === newName && f.id !== id)) { alert('名稱已存在'); return; }
-  const old = friends.find(f => f.id === id)?.name;
   const f = friends.find(f => f.id === id);
   if (!f) return;
   f.name = newName;
-  if (old) cards.forEach(c => {
-    if (c.sourceFriend === old) c.sourceFriend = newName;
-    const recips = getRecipNames(c);
-    if (recips.includes(old)) c.recipFriend = recips.map(r => r === old ? newName : r);
-  });
+  // 卡片存的是好友 ID，改名不需要更新卡片
   saveAndSync();
   renderSettingsFriendList();
   renderFriendSelects();
@@ -1578,7 +1637,7 @@ function fillCardForm(c) {
   document.getElementById('fName').value        = c.name || '';
   document.getElementById('fObtDate').value    = c.obtainedDate || '';
   document.getElementById('fObtMethod').value  = c.obtainedMethod || '';
-  document.getElementById('fSourceFriend').value = c.sourceFriend || '';
+  document.getElementById('fSourceFriend').value = getFriendName(c.sourceFriend) || '';
   document.getElementById('fDupes').value      = c.dupes || '1';
   document.getElementById('fStatus').value     = c.status || 'pending';
   document.getElementById('fSentDate').value   = c.sentDate || '';
@@ -1615,7 +1674,7 @@ function copyLastCard() {
   if (!cards.length) return;
   const c = cards[0];
   document.getElementById('fObtMethod').value  = c.obtainedMethod || '';
-  document.getElementById('fSourceFriend').value = c.sourceFriend || '';
+  document.getElementById('fSourceFriend').value = getFriendName(c.sourceFriend) || '';
   document.getElementById('fCountry').value    = c.region || '';
   (c.tags||[]).forEach(t => { const cb = document.querySelector(`#tagGrid input[value="${escapeHtml(t)}"]`); if(cb) cb.checked = true; });
 }
@@ -1681,12 +1740,12 @@ async function saveCard() {
     region:         document.getElementById('fCountry').value,
     obtainedDate:   document.getElementById('fObtDate').value,
     obtainedMethod: document.getElementById('fObtMethod').value,
-    sourceFriend:   document.getElementById('fSourceFriend').value,
+    sourceFriend:   getFriendId(document.getElementById('fSourceFriend').value),
     rarity:         document.querySelector('input[name="rare"]:checked')?.value || '',
     dupes:          document.getElementById('fDupes').value || '1',
     status,
     sentDate:       status === 'sent' ? document.getElementById('fSentDate').value : '',
-    recipFriend:    status === 'sent' ? Array.from(document.querySelectorAll('#recipFriendGrid input:checked')).map(cb => cb.value) : [],
+    recipFriend:    status === 'sent' ? Array.from(document.querySelectorAll('#recipFriendGrid input:checked')).map(cb => getFriendId(cb.value)) : [],
     tags:           selectedTags,
     notes:          document.getElementById('fNotes').value.trim(),
     mainImg: currentMainImg ? {
@@ -1791,8 +1850,8 @@ function renderFriends() {
   const q = (document.getElementById('friendSearch')?.value || '').toLowerCase();
 
   const friendData = friends.map(f => {
-    const recv = cards.filter(c => c.sourceFriend === f.name).length;
-    const sent = cards.filter(c => getRecipNames(c).includes(f.name)).length;
+    const recv = cards.filter(c => c.sourceFriend === f.id).length;
+    const sent = cards.filter(c => getRecipIds(c).includes(f.id)).length;
     return { ...f, recv, sent, total: recv + sent };
   });
 
@@ -1872,8 +1931,8 @@ function openFriendDetail(id) {
   document.querySelectorAll('[id^="fdFilter"]').forEach(b => b.classList.remove('active'));
   document.getElementById('fdFilterAll').classList.add('active');
 
-  const recv  = cards.filter(c => c.sourceFriend === f.name);
-  const sent  = cards.filter(c => getRecipNames(c).includes(f.name));
+  const recv  = cards.filter(c => c.sourceFriend === f.id);
+  const sent  = cards.filter(c => getRecipIds(c).includes(f.id));
   const total = new Set([...recv.map(c=>c.id), ...sent.map(c=>c.id)]).size;
 
   // 更新好友資訊卡
@@ -1899,8 +1958,8 @@ function openFriendDetail(id) {
 
 function renderFriendDetailCards() {
   const f = friends.find(x => x.id === currentFriendId); if (!f) return;
-  const recvCards = cards.filter(c => c.sourceFriend === f.name);
-  const sentCards = cards.filter(c => getRecipNames(c).includes(f.name));
+  const recvCards = cards.filter(c => c.sourceFriend === f.id);
+  const sentCards = cards.filter(c => getRecipIds(c).includes(f.id));
 
   let list;
   if (fdFilter === 'recv') list = recvCards;
@@ -1923,8 +1982,8 @@ function renderFriendDetailCards() {
   el.style.gap = '8px';
 
   el.innerHTML = list.map(c => {
-    const isRecv = c.sourceFriend === f.name;
-    const isSent = getRecipNames(c).includes(f.name);
+    const isRecv = c.sourceFriend === f.id;
+    const isSent = getRecipIds(c).includes(f.id);
     const imgUrl = getImgUrl(c.mainImg);
     const badge  = isRecv && isSent ? '📬💌' : isRecv ? '📬' : '💌';
     return `<div style="background:var(--card);border:2px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:transform .18s;box-shadow:0 2px 8px var(--sh)"
@@ -2092,7 +2151,8 @@ function applyFilters(list) {
     const results = active.map(cond => {
       const val = cond.value, field = cond.field;
       if (field === 'tags')       return (card.tags||[]).includes(val);
-      if (field === 'recipFriend')return getRecipNames(card).includes(val);
+      if (field === 'recipFriend') return getRecipIds(card).includes(getFriendId(val));
+      if (field === 'sourceFriend') return card.sourceFriend === getFriendId(val);
       if (field === 'hasAuxImgs') {
         const has = (card.auxImgs||[]).filter(a => a.url && !isBase64(a.url)).length > 0;
         return val === 'yes' ? has : !has;
@@ -2143,7 +2203,13 @@ function setView(v) {
 
 function renderLibrary() {
   const q = (document.getElementById('searchInput')?.value||'').toLowerCase();
-  let list = cards.filter(c => !q || [c.cardName,c.name,c.region,c.sourceFriend,...getRecipNames(c),c.notes,c.mainImg?.filename,...(c.tags||[])].some(x => x&&x.toLowerCase().includes(q)));
+  let list = cards.filter(c => !q || [
+    c.cardName, c.name, c.region,
+    getFriendName(c.sourceFriend),
+    ...getRecipNames(c),
+    c.notes, c.mainImg?.filename,
+    ...(c.tags||[])
+  ].some(x => x && x.toLowerCase().includes(q)));
   list = applyFilters(list);
   if (showDuplicatesOnly) {
     const dup = getDuplicateCardNames();
@@ -2184,7 +2250,7 @@ function cardGridHTML(c) {
       <div class="ptags">${tags}</div>
       <div class="pcard-meta">
         ${c.obtainedDate?`📅 ${c.obtainedDate}<br>`:''}
-        ${c.sourceFriend?`🤝 ${escapeHtml(c.sourceFriend)}<br>`:''}
+        ${c.sourceFriend?`🤝 ${escapeHtml(getFriendName(c.sourceFriend))}<br>`:''}
         ${c.status==='sent'&&getRecipNames(c).length?`💌 → ${escapeHtml(getRecipStr(c))}<br>`:''}
       </div>
     </div>
@@ -2206,7 +2272,7 @@ function cardListHTML(c) {
     ${imgHtml}
     <div class="prow-info">
       <div class="prow-name">${ri?ri+' ':''}${escapeHtml(c.cardName||'（未命名）')}</div>
-      <div class="prow-sub">${c.region?escapeHtml(c.region)+' · ':''}${escapeHtml(c.name||'')}${c.sourceFriend?' · 🤝'+escapeHtml(c.sourceFriend):''}${getRecipNames(c).length?' · 💌'+escapeHtml(getRecipStr(c)):''}</div>
+      <div class="prow-sub">${c.region?escapeHtml(c.region)+' · ':''}${escapeHtml(c.name||'')}${c.sourceFriend?' · 🤝'+escapeHtml(getFriendName(c.sourceFriend)):''}${getRecipNames(c).length?' · 💌'+escapeHtml(getRecipStr(c)):''}</div>
     </div>
     <div class="prow-right">
       <span class="status-badge ${st.c}">${st.l}</span>
@@ -2237,7 +2303,7 @@ function openDetail(id) {
       <tr><td style="color:var(--gd);font-weight:700;padding:4px 0">國家</td><td>${escapeHtml(c.region||'—')}</td></tr>
       <tr><td style="color:var(--gd);font-weight:700;padding:4px 0">取得日期</td><td>${c.obtainedDate||'—'}</td></tr>
       <tr><td style="color:var(--gd);font-weight:700;padding:4px 0">取得方式</td><td>${escapeHtml(c.obtainedMethod||'—')}</td></tr>
-      <tr><td style="color:var(--gd);font-weight:700;padding:4px 0">來源好友</td><td>${escapeHtml(c.sourceFriend||'—')}</td></tr>
+      <tr><td style="color:var(--gd);font-weight:700;padding:4px 0">來源好友</td><td>${escapeHtml(getFriendName(c.sourceFriend)||'—')}</td></tr>
       <tr><td style="color:var(--gd);font-weight:700;padding:4px 0">喜好度</td><td>${ri} ${escapeHtml(c.rarity||'—')}</td></tr>
       <tr><td style="color:var(--gd);font-weight:700;padding:4px 0">狀態</td><td><span class="status-badge ${st.c}" style="position:static">${st.l}</span></td></tr>
       ${c.status==='sent'?`<tr><td style="color:var(--gd);font-weight:700;padding:4px 0">送給誰</td><td>${escapeHtml(getRecipStr(c)||'—')}</td></tr>
@@ -2276,8 +2342,8 @@ function renderStats() {
   cards.forEach(c => { if (c.rarity) rc[c.rarity]=(rc[c.rarity]||0)+1; });
   buildChart('chartRare','doughnut',favorites.map(f=>f.icon+' '+f.label),favorites.map(f=>rc[f.value]||0),['#ff9999','#66bb6a','#ab47bc','#42a5f5','#ffa726']);
 
-  renderFriendRank('rankReceived', friends.map(f=>({name:f.name,count:cards.filter(c=>c.sourceFriend===f.name).length})));
-  renderFriendRank('rankSent',     friends.map(f=>({name:f.name,count:cards.filter(c=>getRecipNames(c).includes(f.name)).length})));
+  renderFriendRank('rankReceived', friends.map(f=>({name:f.name,count:cards.filter(c=>c.sourceFriend===f.id).length})));
+  renderFriendRank('rankSent',     friends.map(f=>({name:f.name,count:cards.filter(c=>getRecipIds(c).includes(f.id)).length})));
 }
 
 function buildChart(id, type, labels, data, colors) {
@@ -2467,7 +2533,7 @@ async function importScannedPhotos() {
       region:         ai.country  || '',
       obtainedDate:   new Date().toISOString().split('T')[0],
       obtainedMethod: ai.obtainedMethod || '',
-      sourceFriend:   friendName,
+      sourceFriend:   friendName ? getFriendId(friendName) : '',
       rarity:         '',
       dupes:          '1',
       status:         friendName ? 'kept' : 'pending',
