@@ -821,13 +821,12 @@ function getPreviewUrl(img) {
 // 依 ID 查好友名字（找不到就原樣回傳，相容舊資料）
 const getFriendName = (id) => {
   if (!id) return '';
-  // 先用 ID 找
-  const byId = friends.find(f => f.id === id);
+  const s = String(id);
+  const byId = friends.find(f => f.id === s);
   if (byId) return byId.name;
-  // 再用名字找（相容舊資料）
-  const byName = friends.find(f => f.name === id);
+  const byName = friends.find(f => f.name === s);
   if (byName) return byName.name;
-  return id; // 完全找不到就原樣顯示
+  return s;
 };
 
 // 依名字查好友 ID（找不到就回傳名字本身，相容舊資料）
@@ -843,9 +842,10 @@ const getFriendId = (name) => {
 // 把 sourceFriend 統一解析成 ID（相容名字和ID兩種格式）
 const resolveFriendId = (val) => {
   if (!val) return '';
-  if (friends.find(f => f.id === val)) return val; // 已經是 ID
-  const f = friends.find(f => f.name === val);
-  return f ? f.id : val; // 找到就轉，找不到保留原值
+  const s = String(val);
+  if (friends.find(f => f.id === s)) return s; // 已經是 ID
+  const f = friends.find(f => f.name === s);
+  return f ? f.id : s;
 };
 
 // recipFriend 存的是 ID 陣列（相容舊版名字字串）
