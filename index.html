@@ -745,7 +745,7 @@ const FILTER_FIELDS = [
   {v:'region',      l:'取得國家',        type:'dynamic', src:'countries'},
   {v:'rarity',      l:'喜好度',         type:'dynamic', src:'favorites'},
   {v:'tags',        l:'標籤',           type:'dynamic', src:'tags'},
-  {v:'obtainedDate',l:'取得日期',        type:'date'},
+  {v:'hasAuxImgs', l:'輔助照片',  type:'select', opts:['yes','no'], labels:['有輔助照片','無輔助照片']},
   {v:'sentDate',    l:'送出日期',        type:'date'},
 ];
 
@@ -2092,6 +2092,10 @@ function applyFilters(list) {
       const val = cond.value, field = cond.field;
       if (field === 'tags')       return (card.tags||[]).includes(val);
       if (field === 'recipFriend')return getRecipNames(card).includes(val);
+      if (field === 'hasAuxImgs') {
+        const has = (card.auxImgs||[]).filter(a => a.url && !isBase64(a.url)).length > 0;
+        return val === 'yes' ? has : !has;
+      }
       const cv = String(card[field]||'');
       if (cond.op === 'gte') return cv >= val;
       if (cond.op === 'lte') return cv <= val;
