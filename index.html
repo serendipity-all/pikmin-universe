@@ -344,7 +344,14 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
           <button class="btn" id="frdFilterRecv" onclick="setFriendFilter('recv',this)" style="padding:5px 10px;font-size:.74rem">📬 有收</button>
           <button class="btn" id="frdFilterSent" onclick="setFriendFilter('sent',this)" style="padding:5px 10px;font-size:.74rem">💌 有送</button>
         </div>
-        <button class="btn primary" onclick="openFriendModal()">＋ 新增好友</button>
+        <select onchange="friendSort=this.value;renderFriends()" style="padding:5px 10px;border:2px solid var(--border);border-radius:10px;font-size:.74rem;font-family:inherit;background:#fff;color:var(--text);cursor:pointer">
+        <option value="name">🔤 姓名排序</option>
+        <option value="recvMost">📬 收最多</option>
+        <option value="sentMost">💌 送最多</option>
+        <option value="newest">🆕 最新加入</option>
+        <option value="oldest">📅 最早加入</option>
+      </select>
+      <button class="btn primary" onclick="openFriendModal()">＋ 新增好友</button>
       </div>
       <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
         <div class="stat-card" style="flex:1;min-width:100px;padding:12px;text-align:center">
@@ -1302,8 +1309,9 @@ function deleteFavorite(idx) {
 // ── 好友管理（設定頁）──
 function renderSettingsFriendList() {
   const el = document.getElementById('settingsFriendList'); if (!el) return;
-  el.innerHTML = !friends.length ? '<div style="font-size:.78rem;color:var(--muted);grid-column:1/-1">尚無好友</div>' :
-    friends.map(f => `
+  const sorted = getSortedFriends();
+  el.innerHTML = !sorted.length ? '<div style="font-size:.78rem;color:var(--muted);grid-column:1/-1">尚無好友</div>' :
+    sorted.map(f => `
       <div style="display:flex;align-items:center;gap:6px;padding:7px 9px;background:#f8fff4;border:1.5px solid var(--border);border-radius:10px">
         <span style="font-size:1rem;flex-shrink:0">👤</span>
         <input type="text" value="${escapeHtml(f.name)}" data-friend-id="${f.id}"
@@ -1871,7 +1879,8 @@ function hideToast() {
 //  FRIEND SELECTS
 // ═══════════════════════════════════════════════
 function renderFriendSelects() {
-  const opts = '<option value="">（無）</option>' + friends.map(f => `<option value="${escapeHtml(f.name)}">${escapeHtml(f.name)}</option>`).join('');
+  const sorted = getSortedFriends();
+  const opts = '<option value="">（無）</option>' + sorted.map(f => `<option value="${escapeHtml(f.name)}">${escapeHtml(f.name)}</option>`).join('');
   const sf = document.getElementById('fSourceFriend');
   if (sf) { const v = sf.value; sf.innerHTML = opts; sf.value = v; }
   renderRecipFriendGrid();
@@ -1881,11 +1890,12 @@ function renderRecipFriendGrid(selectedNames) {
   const grid = document.getElementById('recipFriendGrid'); if (!grid) return;
   const cur = selectedNames !== undefined ? selectedNames :
     Array.from(grid.querySelectorAll('input:checked')).map(cb => cb.value);
-  if (!friends.length) {
+  const sorted = getSortedFriends();
+  if (!sorted.length) {
     grid.innerHTML = '<div style="font-size:.75rem;color:var(--muted)">尚無好友，請先新增好友</div>';
     return;
   }
-  grid.innerHTML = friends.map(f =>
+  grid.innerHTML = sorted.map(f =>
     `<div class="tc">
       <input type="checkbox" id="recip_${f.id}" value="${escapeHtml(f.name)}" ${cur.includes(f.name)?'checked':''}>
       <label for="recip_${f.id}">${escapeHtml(f.name)}</label>
@@ -1897,6 +1907,22 @@ function renderRecipFriendGrid(selectedNames) {
 //  FRIENDS PAGE
 // ═══════════════════════════════════════════════
 let friendFilter = 'all';
+let friendSort   = 'name'; // name | recvMost | sentMost | newest | oldest
+
+function getSortedFriends() {
+  const withStats = friends.map(f => {
+    const recv = cards.filter(c => resolveFriendId(c.sourceFriend) === String(f.id)).length;
+    const sent = cards.filter(c => getRecipIds(c).map(resolveFriendId).includes(String(f.id))).length;
+    return { ...f, recv, sent };
+  });
+  switch (friendSort) {
+    case 'recvMost': return [...withStats].sort((a,b) => b.recv - a.recv);
+    case 'sentMost': return [...withStats].sort((a,b) => b.sent - a.sent);
+    case 'newest':   return [...withStats].sort((a,b) => String(b.id).localeCompare(String(a.id)));
+    case 'oldest':   return [...withStats].sort((a,b) => String(a.id).localeCompare(String(b.id)));
+    default:         return [...withStats].sort((a,b) => String(a.name||'').localeCompare(String(b.name||''), undefined, {sensitivity:'base'}));
+  }
+}
 
 function setFriendFilter(f, btn) {
   friendFilter = f;
@@ -1907,28 +1933,21 @@ function setFriendFilter(f, btn) {
 
 function renderFriends() {
   const q = (document.getElementById('friendSearch')?.value || '').toLowerCase();
+  const sorted = getSortedFriends();
 
-  const friendData = friends.map(f => {
-    const recv = cards.filter(c => resolveFriendId(c.sourceFriend) === f.id).length;
-    const sent = cards.filter(c => getRecipIds(c).map(resolveFriendId).includes(f.id)).length;
-    return { ...f, recv, sent, total: recv + sent };
-  });
-
-  const activeCount = friendData.filter(f => f.total > 0).length;
-  const totalRecv   = friendData.reduce((s, f) => s + f.recv, 0);
-  const totalSent   = friendData.reduce((s, f) => s + f.sent, 0);
-
-  const setEl = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+  const activeCount = sorted.filter(f => f.recv + f.sent > 0).length;
+  const totalRecv   = sorted.reduce((s,f) => s + f.recv, 0);
+  const totalSent   = sorted.reduce((s,f) => s + f.sent, 0);
+  const setEl = (id,v) => { const e=document.getElementById(id); if(e) e.textContent=v; };
   setEl('friendStatTotal',  friends.length);
   setEl('friendStatActive', activeCount);
   setEl('friendStatRecv',   totalRecv);
   setEl('friendStatSent',   totalSent);
 
-  let list = [...friendData];
+  let list = sorted;
   if (friendFilter === 'recv') list = list.filter(f => f.recv > 0);
   else if (friendFilter === 'sent') list = list.filter(f => f.sent > 0);
-  if (q) list = list.filter(f => f.name.toLowerCase().includes(q));
-  list.sort((a, b) => String(a.name||'').localeCompare(String(b.name||''), undefined, { sensitivity: 'base' }));
+  if (q) list = list.filter(f => String(f.name||'').toLowerCase().includes(q));
 
   const el = document.getElementById('friendList');
   if (!el) return;
@@ -1945,8 +1964,8 @@ function renderFriends() {
     return `<div class="friend-grid-card" onclick="openFriendDetail('${f.id}')">
       <div class="friend-grid-header" style="background:linear-gradient(135deg,hsl(${hue},60%,55%),hsl(${hue},70%,35%))">
         <div class="friend-grid-avatar">${initial}</div>
-        <div class="friend-grid-name" title="${escapeHtml(f.name)}">${escapeHtml(f.name)}</div>
-          ${f.ppid ? `<div style="font-size:.65rem;color:rgba(255,255,255,.75);font-family:'Nunito',sans-serif">🪪 ${escapeHtml(f.ppid)}</div>` : ''}
+        <div class="friend-grid-name" title="${escapeHtml(name)}">${escapeHtml(name)}</div>
+        ${f.ppid ? `<div style="font-size:.65rem;color:rgba(255,255,255,.75);font-family:'Nunito',sans-serif">🪪 ${escapeHtml(f.ppid)}</div>` : ''}
       </div>
       <div class="friend-grid-body">
         <div class="friend-grid-stats">
