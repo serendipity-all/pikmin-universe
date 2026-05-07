@@ -284,6 +284,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
       <div class="search-box">
         <span class="si">🔍</span>
         <input type="text" id="searchInput" placeholder="搜尋名稱、地點、好友、備註、檔名…" oninput="renderLibrary()">
+        <span id="searchCount" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:.7rem;color:var(--muted);pointer-events:none"></span>
       </div>
       <div class="view-toggle">
         <button id="vGrid" class="active" onclick="setView('grid')">⊞ 卡片</button>
@@ -538,9 +539,15 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
   <div class="mbody">
     <div class="fg">
       <label class="fl">📷 明信片照片（主照片）</label>
-      <div class="upload-area" onclick="document.getElementById('imgInput').click()">
-        <input type="file" id="imgInput" accept="image/*" style="display:none">
-        <div id="upPrompt"><div class="up-icon">🖼️</div><p>點擊上傳主照片</p></div>
+      <div style="display:flex;gap:6px">
+        <div class="upload-area" style="flex:1" onclick="document.getElementById('imgInput').click()">
+          <input type="file" id="imgInput" accept="image/*" style="display:none">
+          <div id="upPrompt"><div class="up-icon">🖼️</div><p>點擊上傳主照片</p></div>
+        </div>
+        <button type="button" class="btn" onclick="openDrivePickerModal('main')" style="flex-shrink:0;flex-direction:column;gap:3px;padding:8px 12px;height:auto" title="從 Drive 選取主照片">
+          <span style="font-size:1.4rem;opacity:.6">📁</span>
+          <span style="font-size:.65rem">從 Drive</span>
+        </button>
       </div>
     </div>
     <div class="fg">
@@ -551,7 +558,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
           <div style="font-size:1.4rem;opacity:.4">📸</div>
           <p>點擊上傳或拖曳多張照片</p>
         </div>
-        <button type="button" class="btn" onclick="openDrivePickerModal()" style="flex-shrink:0;flex-direction:column;gap:3px;padding:8px 12px;height:auto" title="從 Drive 選取">
+        <button type="button" class="btn" onclick="openDrivePickerModal('aux')" style="flex-shrink:0;flex-direction:column;gap:3px;padding:8px 12px;height:auto" title="從 Drive 選取">
           <span style="font-size:1.4rem;opacity:.6">📁</span>
           <span style="font-size:.65rem">從 Drive</span>
         </button>
@@ -801,6 +808,7 @@ let scannedPhotos   = [];
 let scanFilter      = 'all';
 let scanPage        = 0;
 let dpPhotos        = [];
+let drivePickerMode = 'aux'; // 'main' or 'aux'
 let dpFilter        = 'all';
 let dpPage          = 0;
 let pendingFriendTarget = null;
@@ -2293,13 +2301,18 @@ function setView(v) {
 
 function renderLibrary() {
   const q = (document.getElementById('searchInput')?.value||'').toLowerCase();
-  let list = cards.filter(c => !q || [
-    c.cardName, c.name, c.region,
-    getFriendName(resolveFriendId(c.sourceFriend)),
-    ...getRecipNames(c),
-    c.notes, c.mainImg?.filename,
-    ...(c.tags||[])
-  ].some(x => x && x.toLowerCase().includes(q)));
+  let list = cards.filter(c => {
+    if (!q) return true;
+    try {
+      return [
+        c.cardName, c.name, c.region,
+        getFriendName(resolveFriendId(c.sourceFriend)),
+        ...getRecipNames(c),
+        c.notes, c.mainImg?.filename,
+        ...(c.tags||[])
+      ].some(x => x && String(x).toLowerCase().includes(q));
+    } catch(e) { return false; }
+  });
   list = applyFilters(list);
   if (showDuplicatesOnly) {
     const dup = getDuplicateCardNames();
@@ -2309,6 +2322,8 @@ function renderLibrary() {
     list = list.filter(c => !(c.cardName||'').trim());
   }
 
+  const countEl = document.getElementById('searchCount');
+  if (countEl) countEl.textContent = q ? `${list.length} 筆` : '';
   const grid = document.getElementById('cardGrid');
   if (!list.length) {
     grid.innerHTML = '<div class="empty-state"><div class="ei">🌸</div><p>尚無明信片</p></div>';
@@ -2651,12 +2666,17 @@ async function importScannedPhotos() {
 // ═══════════════════════════════════════════════
 //  DRIVE PICKER MODAL（輔助照片）
 // ═══════════════════════════════════════════════
-async function openDrivePickerModal() {
+async function openDrivePickerModal(mode = 'aux') {
   if (!CFG.scriptUrl) { alert('請先設定 GAS 網址'); return; }
+  drivePickerMode = mode;
   dpFilter = 'all'; dpPage = 0; dpPhotos = [];
   document.getElementById('drivePickerList').innerHTML = '';
   document.getElementById('drivePickerStatus').textContent = '掃描 Drive 中…';
   document.getElementById('dpPager').style.display = 'none';
+  const title = document.querySelector('#drivePickerOverlay .mtitle');
+  if (title) title.textContent = mode === 'main' ? '📁 從 Drive 選取主照片' : '📁 從 Drive 選取輔助照片';
+  const confirmBtn = document.querySelector('#drivePickerOverlay .btn-save');
+  if (confirmBtn) confirmBtn.textContent = mode === 'main' ? '✅ 設為主照片' : '✅ 加入輔助照片';
   document.getElementById('drivePickerOverlay').classList.add('open');
 
   const res = await callGAS('scan', {});
@@ -2665,7 +2685,7 @@ async function openDrivePickerModal() {
     return;
   }
   dpPhotos = res.photos || [];
-  if (dpPhotos.length > 0) scannedPhotos = dpPhotos; // 同步快取
+  if (dpPhotos.length > 0) scannedPhotos = dpPhotos;
   renderDpList();
 }
 
@@ -2699,7 +2719,9 @@ function renderDpList() {
   dpPage = Math.min(dpPage, total - 1);
   const items = filtered.slice(dpPage * DP_PAGE_SIZE, (dpPage+1) * DP_PAGE_SIZE);
 
-  document.getElementById('drivePickerStatus').textContent = `共 ${dpPhotos.length} 張，顯示 ${filtered.length} 張`;
+  document.getElementById('drivePickerStatus').textContent =
+    `共 ${dpPhotos.length} 張，顯示 ${filtered.length} 張` +
+    (drivePickerMode === 'main' ? '（主照片只能選一張）' : '');
 
   const pager = document.getElementById('dpPager');
   if (filtered.length > DP_PAGE_SIZE) {
@@ -2727,19 +2749,37 @@ function renderDpList() {
 }
 
 function confirmDrivePick() {
-  let added = 0;
-  document.querySelectorAll('#drivePickerList input[type="checkbox"]:checked').forEach(cb => {
+  const checked = document.querySelectorAll('#drivePickerList input[type="checkbox"]:checked');
+  if (!checked.length) { closeModal('drivePickerOverlay'); return; }
+
+  if (drivePickerMode === 'main') {
+    // 主照片只能選一張，取第一個勾選的
+    const cb = checked[0];
     const fileId   = cb.dataset.fileid;
     const url      = cb.dataset.url;
     const filename = cb.dataset.filename;
-    if (!currentAuxImgs.find(a => a.fileId === fileId)) {
-      currentAuxImgs.push({ url, fileId, filename, base64: null, originalBase64: null, fromDrive: true, role: 'aux' });
-      added++;
-    }
-  });
-  renderPhotoGallery();
-  closeModal('drivePickerOverlay');
-  if (added > 0) showToast(`已加入 ${added} 張輔助照片`);
+    currentMainImg = { url, fileId, filename, base64: null, originalBase64: null, fromDrive: true, role: 'main' };
+    document.getElementById('upPrompt').style.display = 'none';
+    document.getElementById('aiBtnEl').disabled = false;
+    renderPhotoGallery();
+    closeModal('drivePickerOverlay');
+    showToast('已設定主照片');
+  } else {
+    // 輔助照片可多選
+    let added = 0;
+    checked.forEach(cb => {
+      const fileId   = cb.dataset.fileid;
+      const url      = cb.dataset.url;
+      const filename = cb.dataset.filename;
+      if (!currentAuxImgs.find(a => a.fileId === fileId)) {
+        currentAuxImgs.push({ url, fileId, filename, base64: null, originalBase64: null, fromDrive: true, role: 'aux' });
+        added++;
+      }
+    });
+    renderPhotoGallery();
+    closeModal('drivePickerOverlay');
+    if (added > 0) showToast(`已加入 ${added} 張輔助照片`);
+  }
 }
 
 // ═══════════════════════════════════════════════
