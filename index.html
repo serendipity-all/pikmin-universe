@@ -569,6 +569,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
       <div class="photo-list" id="photoList"></div>
     </div>
     <button class="ai-btn" id="aiBtnEl" onclick="aiScan()" disabled>🤖 AI 辨識地點・標籤・取得方式</button>
+    <div id="aiStatus" style="font-size:.72rem;color:var(--muted);text-align:center;margin-top:3px;min-height:16px"></div>
     <div class="ai-box" id="aiBox">
       <div id="aiText"></div>
       <button class="apply-btn" onclick="applyAI()">✅ 套用建議</button>
@@ -1590,15 +1591,23 @@ async function aiScan() {
     payload = { base64: raw, mime: 'image/jpeg', methods, tags: tagMap };
   }
 
+  const aiStatus = document.getElementById('aiStatus');
+
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
+      if (aiStatus) aiStatus.textContent = attempt > 0 ? '⏳ 重試中（第2次）…' : '';
       const res = await callGASLong('aiScan', payload);
-      if (!res?.success && attempt === 0 && (res?.error?.includes('quota') || res?.error?.includes('overloaded'))) {
+
+      if (!res) {
+        throw new Error('GAS 無回應（可能逾時或網路問題）');
+      }
+      if (!res.success && attempt === 0 && (res.error?.includes('quota') || res.error?.includes('overloaded'))) {
         btn.textContent = '⏳ 重試中…';
         await new Promise(r => setTimeout(r, 5000));
         continue;
       }
-      if (!res?.success) throw new Error(res?.error || '辨識失敗');
+      if (!res.success) throw new Error(res.error || '辨識失敗（未知原因）');
+
       aiSuggestion = res.data;
       if (aiSuggestion.isExpeditionSnapshot) {
         alert('⚠️ 偵測到「探險快照」！\n\n這張圖片是探險系統截圖，不是明信片。\n請將它作為輔助照片手動加入既有的明信片，不建議單獨建立。');
@@ -1606,7 +1615,6 @@ async function aiScan() {
         aiSuggestion = null;
         break;
       }
-      // 清除結尾「上」字
       if (aiSuggestion.friendName) aiSuggestion.friendName = cleanFriendName(aiSuggestion.friendName);
       const d = aiSuggestion;
       document.getElementById('aiText').innerHTML = `
@@ -1618,9 +1626,19 @@ async function aiScan() {
         🏷️ 標籤：<b>${(d.tags||[]).join('、')||'—'}</b><br>
         💭 <i>${d.reason||''}</i>`;
       document.getElementById('aiBox').style.display = '';
+      if (aiStatus) aiStatus.textContent = '';
       break;
     } catch(err) {
-      alert('AI 辨識失敗：' + err.message);
+      if (attempt < 1 && err.message?.includes('quota')) {
+        continue;
+      }
+      // 顯示詳細錯誤在 aiBox
+      document.getElementById('aiBox').style.display = '';
+      document.getElementById('aiText').innerHTML = `
+        <strong style="color:var(--r)">❌ AI 辨識失敗</strong><br>
+        <span style="font-size:.78rem;color:#666">${escapeHtml(err.message)}</span><br>
+        <span style="font-size:.72rem;color:var(--muted)">模式：${currentMainImg?.fromDrive ? 'Drive fileId' : 'base64 上傳'}
+        ${currentMainImg?.fileId ? `　fileId：${currentMainImg.fileId.slice(0,12)}…` : ''}</span>`;
       break;
     }
   }
