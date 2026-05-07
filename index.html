@@ -1625,7 +1625,7 @@ async function aiScan() {
         🎯 取得方式：<b>${d.obtainedMethod||'—'}</b>${d.friendName?` (${d.friendName})`:''}<br>
         🏷️ 標籤：<b>${(d.tags||[]).join('、')||'—'}</b><br>
         💭 <i>${d.reason||''}</i>`;
-      document.getElementById('aiBox').style.display = '';
+      document.getElementById('aiBox').style.display = 'block';
       if (aiStatus) aiStatus.textContent = '';
       break;
     } catch(err) {
@@ -1633,7 +1633,7 @@ async function aiScan() {
         continue;
       }
       // 顯示詳細錯誤在 aiBox
-      document.getElementById('aiBox').style.display = '';
+      document.getElementById('aiBox').style.display = 'block';
       document.getElementById('aiText').innerHTML = `
         <strong style="color:var(--r)">❌ AI 辨識失敗</strong><br>
         <span style="font-size:.78rem;color:#666">${escapeHtml(err.message)}</span><br>
