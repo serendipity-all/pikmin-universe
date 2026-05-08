@@ -882,7 +882,13 @@ const resolveFriendId = (val) => {
 const getRecipIds   = (c) => Array.isArray(c.recipFriend) ? c.recipFriend : (c.recipFriend ? [c.recipFriend] : []);
 const getRecipNames = (c) => getRecipIds(c).map(id => getFriendName(id));
 const getRecipStr   = (c) => getRecipNames(c).join('、') || '';
-const getFavIcon    = (v) => (favorites.find(f => f.value === v)?.icon || '');
+const normalizeDate = (val) => {
+  if (!val) return '';
+  const s = String(val);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  const m = s.match(/(\d{4}-\d{2}-\d{2})/);
+  return m ? m[1] : s;
+};
 
 // 判斷 fileId 是否已在資料庫（主照或輔助）
 function isPhotoInUse(fileId) {
@@ -1941,8 +1947,8 @@ async function saveCard() {
       role:     'aux'
     })),
     createdAt: editingCardId
-      ? (cards.find(c => c.id === editingCardId)?.createdAt || new Date().toISOString())
-      : new Date().toISOString()
+      ? normalizeDate(cards.find(c => c.id === editingCardId)?.createdAt || new Date().toISOString())
+      : new Date().toISOString().split('T')[0]
   };
 
   if (editingCardId) {
@@ -2756,7 +2762,7 @@ async function importScannedPhotos() {
       notes:          p._ai ? '' : '（自 Drive 掃描建立，請補充資訊）',
       mainImg:        { url: p.url, fileId: p.fileId, filename: p.filename||'', role:'main' },
       auxImgs:        [],
-      createdAt:      new Date().toISOString()
+      createdAt:      new Date().toISOString().split('T')[0]
     });
     count++;
   }
