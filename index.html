@@ -889,6 +889,7 @@ const normalizeDate = (val) => {
   const m = s.match(/(\d{4}-\d{2}-\d{2})/);
   return m ? m[1] : s;
 };
+const getFavIcon = (v) => (favorites.find(f => f.value === v)?.icon || '');
 
 // 判斷 fileId 是否已在資料庫（主照或輔助）
 function isPhotoInUse(fileId) {
