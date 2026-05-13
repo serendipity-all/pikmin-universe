@@ -76,7 +76,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
 .pcard-noimg span{font-size:2rem;opacity:.4}
 .photo-count{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.6);color:#fff;padding:3px 8px;border-radius:8px;font-size:.65rem;font-weight:700}
 .status-badge{position:absolute;top:8px;right:8px;padding:2px 8px;border-radius:8px;font-size:.62rem;font-weight:700;font-family:'Nunito',sans-serif}
-.rare-badge{position:absolute;top:8px;left:8px;font-size:.9rem}
+.rare-badge{position:absolute;top:8px;left:8px;font-size:.8rem;background:rgba(255,255,255,.85);border-radius:8px;padding:2px 6px;backdrop-filter:blur(4px);line-height:1.4}
 .sb-sent{background:#4caf50;color:#fff}.sb-pending{background:var(--y);color:#444}.sb-kept{background:var(--sky2);color:#224}
 .pcard-body{padding:10px 12px 8px}
 .pcard-name{font-family:'Nunito',sans-serif;font-weight:900;font-size:.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px}
@@ -883,12 +883,27 @@ const resolveFriendId = (val) => {
 const getRecipIds   = (c) => Array.isArray(c.recipFriend) ? c.recipFriend : (c.recipFriend ? [c.recipFriend] : []);
 const getRecipNames = (c) => getRecipIds(c).map(id => getFriendName(id));
 const getRecipStr   = (c) => getRecipNames(c).join('、') || '';
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+// 統一日期格式為 YYYY-MM-DD
 const normalizeDate = (val) => {
   if (!val) return '';
-  const s = String(val);
+  const s = String(val).trim();
+  // 已經是 YYYY-MM-DD
   if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
-  const m = s.match(/(\d{4}-\d{2}-\d{2})/);
-  return m ? m[1] : s;
+  // ISO：2026-05-04T16:00:00.000Z
+  const m1 = s.match(/^(\d{4}-\d{2}-\d{2})T/);
+  if (m1) return m1[1];
+  // Date.toString()：Mon May 04 2026 00:00:00 GMT+...
+  const m2 = s.match(/\w{3} (\w{3}) (\d{2}) (\d{4})/);
+  if (m2) {
+    const mi = MONTHS.indexOf(m2[1]);
+    if (mi >= 0) return `${m2[3]}-${String(mi+1).padStart(2,'0')}-${m2[2]}`;
+  }
+  // 其他含 YYYY-MM-DD 的字串
+  const m3 = s.match(/(\d{4})-(\d{2})-(\d{2})/);
+  if (m3) return `${m3[1]}-${m3[2]}-${m3[3]}`;
+  return s;
 };
 const getFavIcon = (v) => (favorites.find(f => f.value === v)?.icon || '');
 
@@ -1806,12 +1821,12 @@ function clearCardForm() {
 function fillCardForm(c) {
   document.getElementById('fCardName').value   = c.cardName || '';
   document.getElementById('fName').value        = c.name || '';
-  document.getElementById('fObtDate').value    = c.obtainedDate || '';
+  document.getElementById('fObtDate').value    = normalizeDate(c.obtainedDate);
   document.getElementById('fObtMethod').value  = c.obtainedMethod || '';
   document.getElementById('fSourceFriend').value = getFriendName(c.sourceFriend) || '';
   document.getElementById('fDupes').value      = c.dupes || '1';
   document.getElementById('fStatus').value     = c.status || 'pending';
-  document.getElementById('fSentDate').value   = c.sentDate || '';
+  document.getElementById('fSentDate').value   = normalizeDate(c.sentDate);
   document.getElementById('fNotes').value      = c.notes || '';
   document.getElementById('fCountry').value    = c.region || '';
   toggleSentFields();
@@ -2464,7 +2479,7 @@ function cardGridHTML(c) {
   return `<div class="pcard" onclick="openDetail('${c.id}')">
     ${imgHtml}
     <span class="status-badge ${st.c}">${st.l}</span>
-    ${ri?`<span class="rare-badge">${ri}</span>`:''}
+    ${ri ? `<span class="rare-badge">${ri} ${escapeHtml(c.rarity)}</span>` : ''}
     <div class="pcard-body">
       <div class="pcard-name">${escapeHtml(c.cardName||'（未命名）')}</div>
       <div class="pcard-region">${c.region?`🌍${escapeHtml(c.region)} `:''}${escapeHtml(c.name||'')}</div>
