@@ -756,7 +756,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
     <div id="drivePickerList" style="display:flex;flex-direction:column;gap:6px"></div>
   </div>
   <div class="mfoot">
-    <button class="btn-cancel" onclick="closeModal('drivePickerOverlay')">取消</button>
+    <button class="btn-cancel" onclick="cancelDrivePick()">取消</button>
     <button class="btn-save" onclick="confirmDrivePick()">✅ 加入輔助照片</button>
   </div>
 </div>
@@ -2971,11 +2971,6 @@ async function importScannedPhotos() {
 async function openDrivePickerModal(mode = 'aux') {
   if (!CFG.scriptUrl) { alert('請先設定 GAS 網址'); return; }
   drivePickerMode = mode;
-
-  // 暫時隱藏來源 modal（不關閉，保留狀態）
-  if (mode === 'snap') document.getElementById('snapOverlay').classList.remove('open');
-  else document.getElementById('cardOverlay').classList.remove('open');
-
   dpFilter = 'all'; dpPage = 0; dpPhotos = [];
   document.getElementById('drivePickerList').innerHTML = '';
   document.getElementById('drivePickerStatus').textContent = '載入中…';
@@ -3078,6 +3073,10 @@ function restoreSourceModal() {
   else document.getElementById('cardOverlay').classList.add('open');
 }
 
+function cancelDrivePick() {
+  closeModal('drivePickerOverlay');
+}
+
 function confirmDrivePick() {
   const checked = document.querySelectorAll('#drivePickerList input[type="checkbox"]:checked');
   if (!checked.length) { closeModal('drivePickerOverlay'); return; }
@@ -3088,7 +3087,6 @@ function confirmDrivePick() {
     document.getElementById('snapUpPrompt').style.display = 'none';
     renderSnapPhotoGallery();
     closeModal('drivePickerOverlay');
-    showToast('已設定快照照片');
   } else if (drivePickerMode === 'main') {
     // 主照片只能選一張，取第一個勾選的
     const cb = checked[0];
