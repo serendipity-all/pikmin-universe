@@ -246,6 +246,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
     <button class="ntab active" onclick="showPage('library',this)">📚 收藏庫</button>
     <button class="ntab" onclick="showPage('stats',this)">📊 統計</button>
     <button class="ntab" onclick="showPage('friends',this)">👥 好友</button>
+    <button class="ntab" onclick="showPage('snapshots',this)">🎮 快照</button>
     <button class="ntab" onclick="showPage('settings',this)">⚙️ 設定</button>
   </nav>
   <span class="h-space"></span>
@@ -418,6 +419,22 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
 
   </div>
 
+  <!-- SNAPSHOTS PAGE -->
+  <div class="page" id="page-snapshots">
+    <div class="toolbar">
+      <div class="search-box">
+        <span class="si">🔍</span>
+        <input type="text" id="snapSearchInput" placeholder="搜尋名稱、備註…" oninput="renderSnapshots()">
+        <span id="snapSearchCount" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:.7rem;color:var(--muted);pointer-events:none"></span>
+      </div>
+      <select id="snapTypeFilter" onchange="renderSnapshots()" style="padding:6px 10px;border:2px solid var(--border);border-radius:12px;font-size:.78rem;font-family:inherit;background:#fff">
+        <option value="">所有類型</option>
+      </select>
+      <button class="btn primary" onclick="openSnapshotModal()">＋ 新增快照</button>
+    </div>
+    <div id="snapGrid" class="card-grid"></div>
+  </div>
+
   <!-- SETTINGS PAGE -->
   <div class="page" id="page-settings">
     <!-- 設定分頁標籤 -->
@@ -520,6 +537,15 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
 
     <!-- 資料管理 -->
     <div class="cfg-panel" id="cfgTab-data">
+      <div class="settings-section">
+        <h3>🎮 快照類型管理</h3>
+        <div id="snapTypeList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px"></div>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <input type="text" class="fi" id="cfgNewSnapTypeIcon" placeholder="emoji" style="width:60px;padding:6px 8px;font-size:1rem;text-align:center">
+          <input type="text" class="fi" id="cfgNewSnapTypeLabel" placeholder="類型名稱" style="flex:1;padding:6px 10px;font-size:.8rem">
+          <button class="btn primary" onclick="addSnapType()" style="padding:6px 12px;font-size:.78rem">＋新增</button>
+        </div>
+      </div>
       <div class="settings-section">
         <h3>💾 資料管理</h3>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -689,6 +715,46 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
 </div>
 </div>
 
+<!-- SNAPSHOT MODAL -->
+<div class="overlay" id="snapOverlay" onclick="overlayClick(event,'snapOverlay')">
+<div class="modal">
+  <div class="mhead" style="background:linear-gradient(135deg,#4a6a9a,#2a4a7a)">
+    <div class="mtitle">🎮 <span id="snapModalTitle">新增快照</span></div>
+    <button class="xbtn" onclick="closeModal('snapOverlay')">✕</button>
+  </div>
+  <div class="mbody">
+    <div class="fg">
+      <label class="fl">📷 快照照片</label>
+      <div style="display:flex;gap:6px">
+        <div class="upload-area" style="flex:1" onclick="document.getElementById('snapImgInput').click()">
+          <input type="file" id="snapImgInput" accept="image/*" style="display:none">
+          <div id="snapUpPrompt"><div class="up-icon">🖼️</div><p>點擊上傳照片</p></div>
+        </div>
+        <button type="button" class="btn" onclick="openDrivePickerModal('snap')" style="flex-shrink:0;flex-direction:column;gap:3px;padding:8px 12px;height:auto">
+          <span style="font-size:1.4rem;opacity:.6">📁</span>
+          <span style="font-size:.65rem">從 Drive</span>
+        </button>
+      </div>
+    </div>
+    <div class="photo-gallery" id="snapPhotoGallery">
+      <h4>已選擇的照片</h4>
+      <div class="photo-list" id="snapPhotoList"></div>
+    </div>
+    <div class="fg"><label class="fl">📝 名稱</label><input type="text" class="fi" id="fSnapName" placeholder="輸入快照名稱"></div>
+    <div class="fg"><label class="fl">📅 日期</label><input type="date" class="fi" id="fSnapDate"></div>
+    <div class="fg">
+      <label class="fl">🏷️ 類型（可多選）</label>
+      <div class="tag-grid" id="snapTypeGrid"></div>
+    </div>
+    <div class="fg"><label class="fl">💬 備註</label><textarea class="fta" id="fSnapNotes" placeholder="記下這個快照的故事…"></textarea></div>
+  </div>
+  <div class="mfoot">
+    <button class="btn-cancel" onclick="closeModal('snapOverlay')">取消</button>
+    <button class="btn-save" id="snapSaveBtn" onclick="saveSnapshot()" style="background:linear-gradient(135deg,#4a6a9a,#2a4a7a)">💾 儲存</button>
+  </div>
+</div>
+</div>
+
 <!-- FRIEND MODAL -->
 <div class="overlay" id="friendOverlay" onclick="overlayClick(event,'friendOverlay')">
 <div class="modal" style="max-width:400px">
@@ -808,6 +874,8 @@ let tagMap   = JSON.parse(localStorage.getItem('pkm_tags')      || '{"裝置藝�
 let countries= JSON.parse(localStorage.getItem('pkm_countries') || '["日本","台灣","南韓","泰國","馬來西亞","新加坡","美國","英國","法國","德國","澳洲"]');
 let favorites= JSON.parse(localStorage.getItem('pkm_favorites') || '[{"value":"神片","label":"神片","icon":"🤩"},{"value":"喜歡","label":"喜歡","icon":"💚"},{"value":"特殊","label":"特殊","icon":"✨"},{"value":"傻眼","label":"傻眼","icon":"😂"}]');
 let friendTags = JSON.parse(localStorage.getItem('pkm_friend_tags') || '[{"value":"美菇美片","label":"美菇美片","icon":"🍄"},{"value":"好戰友","label":"好戰友","icon":"⚔️"},{"value":"不見了","label":"不見了","icon":"👻"}]');
+let snapshots  = JSON.parse(localStorage.getItem('pkm_snapshots') || '[]');
+let snapTypes  = JSON.parse(localStorage.getItem('pkm_snap_types') || '[{"value":"散步","label":"散步","icon":"🚶"},{"value":"皮皮日常","label":"皮皮日常","icon":"🐾"}]');
 
 // ── UI 狀態 ──
 let editingCardId   = null;
@@ -836,6 +904,8 @@ let drivePickerMode = 'aux'; // 'main' or 'aux'
 let dpFilter        = 'all';
 let dpPage          = 0;
 let pendingFriendTarget = null;
+let editingSnapshotId   = null;
+let currentSnapImg      = null; // 快照主照片
 
 // ═══════════════════════════════════════════════
 //  HELPERS
@@ -1035,12 +1105,14 @@ function buildSyncPayload() {
       createdAt: c.createdAt || ''
     })),
     friends,
+    snapshots,
     settings: {
       methods,
       tags:       tagMap,
       countries,
       favorites,
-      friendTags
+      friendTags,
+      snapTypes
     }
   };
 }
@@ -1106,24 +1178,14 @@ function setSyncStatus(state, msg) {
 //  DATA PERSISTENCE
 // ═══════════════════════════════════════════════
 function saveLocal() {
-  // 存入 localStorage 前也清除 base64，避免 localStorage 爆滿
   const cleanCards = cards.map(c => ({
     ...c,
-    mainImg: c.mainImg ? {
-      url:      isBase64(c.mainImg.url) ? '' : (c.mainImg.url || ''),
-      fileId:   c.mainImg.fileId   || '',
-      filename: c.mainImg.filename || '',
-      role:     'main'
-    } : null,
-    auxImgs: (c.auxImgs||[]).map(a => ({
-      url:      isBase64(a.url) ? '' : (a.url || ''),
-      fileId:   a.fileId   || '',
-      filename: a.filename || '',
-      role:     'aux'
-    }))
+    mainImg: c.mainImg ? { url: isBase64(c.mainImg.url)?'':(c.mainImg.url||''), fileId: c.mainImg.fileId||'', filename: c.mainImg.filename||'', role:'main' } : null,
+    auxImgs: (c.auxImgs||[]).map(a => ({ url: isBase64(a.url)?'':(a.url||''), fileId: a.fileId||'', filename: a.filename||'', role:'aux' }))
   }));
-  localStorage.setItem('pkm_cards',   JSON.stringify(cleanCards));
-  localStorage.setItem('pkm_friends', JSON.stringify(friends));
+  localStorage.setItem('pkm_cards',     JSON.stringify(cleanCards));
+  localStorage.setItem('pkm_friends',   JSON.stringify(friends));
+  localStorage.setItem('pkm_snapshots', JSON.stringify(snapshots));
 }
 
 function saveAndSync() {
@@ -1174,7 +1236,7 @@ function migrateFriendNamesToIds() {
 }
 
 function exportJSON() {
-  const data = { cards: buildSyncPayload().cards, friends, methods, tags: tagMap, countries, favorites, friendTags, exportedAt: new Date().toISOString() };
+  const data = { cards: buildSyncPayload().cards, friends, snapshots, methods, tags: tagMap, countries, favorites, friendTags, snapTypes, exportedAt: new Date().toISOString() };
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
   a.download = `pikmin_backup_${new Date().toISOString().slice(0,10)}.json`;
@@ -1199,6 +1261,8 @@ function importJSON(e) {
       if (data.countries) countries= data.countries;
       if (data.favorites)  { favorites  = data.favorites;  localStorage.setItem('pkm_favorites',   JSON.stringify(favorites));  }
       if (data.friendTags) { friendTags = data.friendTags; localStorage.setItem('pkm_friend_tags', JSON.stringify(friendTags)); }
+      if (data.snapshots)  { snapshots  = data.snapshots;  localStorage.setItem('pkm_snapshots',   JSON.stringify(snapshots));  }
+      if (data.snapTypes)  { snapTypes  = data.snapTypes;  localStorage.setItem('pkm_snap_types',  JSON.stringify(snapTypes));  }
       saveLocal();
       localStorage.setItem('pkm_methods',   JSON.stringify(methods));
       localStorage.setItem('pkm_tags',      JSON.stringify(tagMap));
@@ -1231,15 +1295,16 @@ window.onload = async () => {
     try {
       const res = await callGAS('loadData', {});
       if (res?.success) {
-        cards   = res.cards   || [];
-        friends = res.friends || [];
-        // 套用雲端設定（以雲端為主，本地為備用）
+        cards     = res.cards     || [];
+        friends   = res.friends   || [];
+        snapshots = res.snapshots || [];
         if (res.settings) {
           if (res.settings.methods   && res.settings.methods.length)   { methods   = res.settings.methods;   localStorage.setItem('pkm_methods',   JSON.stringify(methods));   }
           if (res.settings.tags      && Object.keys(res.settings.tags).length) { tagMap = res.settings.tags; localStorage.setItem('pkm_tags', JSON.stringify(tagMap)); }
           if (res.settings.countries && res.settings.countries.length) { countries = res.settings.countries; localStorage.setItem('pkm_countries', JSON.stringify(countries)); }
-          if (res.settings.favorites  && res.settings.favorites.length)  { favorites   = res.settings.favorites;  localStorage.setItem('pkm_favorites',    JSON.stringify(favorites));   }
-          if (res.settings.friendTags && res.settings.friendTags.length) { friendTags  = res.settings.friendTags; localStorage.setItem('pkm_friend_tags',  JSON.stringify(friendTags));  }
+          if (res.settings.favorites && res.settings.favorites.length) { favorites = res.settings.favorites; localStorage.setItem('pkm_favorites', JSON.stringify(favorites)); }
+          if (res.settings.friendTags && res.settings.friendTags.length) { friendTags = res.settings.friendTags; localStorage.setItem('pkm_friend_tags', JSON.stringify(friendTags)); }
+          if (res.settings.snapTypes  && res.settings.snapTypes.length)  { snapTypes  = res.settings.snapTypes;  localStorage.setItem('pkm_snap_types',  JSON.stringify(snapTypes));  }
         }
         saveLocal();
         _cloudDataLoaded = true;
@@ -1270,9 +1335,10 @@ function showPage(id, btn) {
   document.querySelectorAll('.ntab').forEach(b => b.classList.remove('active'));
   document.getElementById('page-' + id).classList.add('active');
   if (btn) btn.classList.add('active');
-  if (id === 'stats') renderStats();
-  if (id === 'friends') { showFriendSubPage('list'); renderFriends(); }
-  if (id === 'settings') loadSettings();
+  if (id === 'stats')     renderStats();
+  if (id === 'friends')   { showFriendSubPage('list'); renderFriends(); }
+  if (id === 'snapshots') renderSnapshots();
+  if (id === 'settings')  loadSettings();
 }
 
 // ═══════════════════════════════════════════════
@@ -1287,6 +1353,7 @@ function loadSettings() {
   renderSettingsFriendList();
   renderFavoriteList();
   renderFriendTagList();
+  renderSnapTypeList();
 }
 
 function showCfgTab(id, btn) {
@@ -2894,9 +2961,9 @@ async function openDrivePickerModal(mode = 'aux') {
   document.getElementById('drivePickerStatus').textContent = '載入中…';
   document.getElementById('dpPager').style.display = 'none';
   const title = document.querySelector('#drivePickerOverlay .mtitle');
-  if (title) title.textContent = mode === 'main' ? '📁 從 Drive 選取主照片' : '📁 從 Drive 選取輔助照片';
+  if (title) title.textContent = mode === 'main' ? '📁 從 Drive 選取主照片' : mode === 'snap' ? '📁 從 Drive 選取快照照片' : '📁 從 Drive 選取輔助照片';
   const confirmBtn = document.querySelector('#drivePickerOverlay .btn-save');
-  if (confirmBtn) confirmBtn.textContent = mode === 'main' ? '✅ 設為主照片' : '✅ 加入輔助照片';
+  if (confirmBtn) confirmBtn.textContent = mode === 'aux' ? '✅ 加入輔助照片' : '✅ 設為主照片';
   document.getElementById('drivePickerOverlay').classList.add('open');
 
   // 優先使用快取
@@ -2990,7 +3057,14 @@ function confirmDrivePick() {
   const checked = document.querySelectorAll('#drivePickerList input[type="checkbox"]:checked');
   if (!checked.length) { closeModal('drivePickerOverlay'); return; }
 
-  if (drivePickerMode === 'main') {
+  if (drivePickerMode === 'snap') {
+    const cb = checked[0];
+    currentSnapImg = { url: cb.dataset.url, fileId: cb.dataset.fileid, filename: cb.dataset.filename, base64: null, originalBase64: null, fromDrive: true, role: 'main' };
+    document.getElementById('snapUpPrompt').style.display = 'none';
+    renderSnapPhotoGallery();
+    closeModal('drivePickerOverlay');
+    showToast('已設定快照照片');
+  } else if (drivePickerMode === 'main') {
     // 主照片只能選一張，取第一個勾選的
     const cb = checked[0];
     const fileId   = cb.dataset.fileid;
@@ -3018,6 +3092,245 @@ function confirmDrivePick() {
     closeModal('drivePickerOverlay');
     if (added > 0) showToast(`已加入 ${added} 張輔助照片`);
   }
+}
+
+// ═══════════════════════════════════════════════
+//  SNAPSHOTS
+// ═══════════════════════════════════════════════
+function renderSnapshots() {
+  const q    = (document.getElementById('snapSearchInput')?.value || '').toLowerCase();
+  const type = document.getElementById('snapTypeFilter')?.value || '';
+
+  // 更新類型篩選選單
+  const filterEl = document.getElementById('snapTypeFilter');
+  if (filterEl) {
+    const cur = filterEl.value;
+    filterEl.innerHTML = '<option value="">所有類型</option>' +
+      snapTypes.map(t => `<option value="${escapeHtml(t.value)}" ${cur===t.value?'selected':''}>${t.icon} ${t.label}</option>`).join('');
+    filterEl.value = cur;
+  }
+
+  let list = [...snapshots];
+  if (q)    list = list.filter(s => [s.name, s.notes].some(x => x && x.toLowerCase().includes(q)));
+  if (type) list = list.filter(s => (s.types||[]).includes(type));
+
+  const countEl = document.getElementById('snapSearchCount');
+  if (countEl) countEl.textContent = q || type ? `${list.length} 筆` : '';
+
+  const grid = document.getElementById('snapGrid');
+  if (!grid) return;
+  if (!list.length) {
+    grid.innerHTML = '<div class="empty-state"><div class="ei">🎮</div><p>尚無遊戲快照</p></div>';
+    return;
+  }
+  grid.innerHTML = list.map(s => {
+    const imgUrl = getImgUrl(s.mainImg);
+    const typeLabels = (s.types||[]).map(v => { const t = snapTypes.find(x=>x.value===v); return t ? `<span class="ptag pt-type">${t.icon} ${t.label}</span>` : ''; }).join('');
+    return `<div class="pcard" onclick="openSnapDetail('${s.id}')">
+      ${imgUrl
+        ? `<img class="pcard-img" src="${escapeHtml(imgUrl)}" alt="" loading="lazy">`
+        : `<div class="pcard-noimg"><span>🎮</span></div>`}
+      <div class="pcard-body">
+        <div class="pcard-name">${escapeHtml(s.name||'（未命名）')}</div>
+        <div class="pcard-region">${s.date||''}</div>
+        <div class="ptags">${typeLabels}</div>
+      </div>
+      <div class="pcard-actions">
+        <button class="act" onclick="event.stopPropagation();openSnapshotModal('${s.id}')">✏️ 編輯</button>
+        <button class="act del" onclick="event.stopPropagation();deleteSnapshot('${s.id}')">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openSnapDetail(id) {
+  const s = snapshots.find(x => x.id === id); if (!s) return;
+  const imgUrl = getImgUrl(s.mainImg);
+  const typeLabels = (s.types||[]).map(v => { const t = snapTypes.find(x=>x.value===v); return t ? `<span class="ptag pt-type">${t.icon} ${t.label}</span>` : ''; }).join(' ');
+  document.getElementById('detailBody').innerHTML = `
+    ${imgUrl ? `<img src="${escapeHtml(imgUrl)}" style="width:100%;max-height:280px;object-fit:contain;border-radius:10px;margin-bottom:12px" alt="">` : ''}
+    <table style="width:100%;font-size:.82rem;border-collapse:collapse">
+      <tr><td style="color:var(--gd);font-weight:700;padding:4px 0;width:70px">名稱</td><td>${escapeHtml(s.name||'—')}</td></tr>
+      <tr><td style="color:var(--gd);font-weight:700;padding:4px 0">日期</td><td>${s.date||'—'}</td></tr>
+      <tr><td style="color:var(--gd);font-weight:700;padding:4px 0">類型</td><td>${typeLabels||'—'}</td></tr>
+      ${s.notes?`<tr><td style="color:var(--gd);font-weight:700;padding:4px 0">備註</td><td>${escapeHtml(s.notes)}</td></tr>`:''}
+    </table>`;
+  document.getElementById('detailEditBtn').onclick = () => { closeModal('detailOverlay'); openSnapshotModal(id); };
+  document.getElementById('detailOverlay').classList.add('open');
+}
+
+function openSnapshotModal(id = null) {
+  editingSnapshotId = id;
+  document.getElementById('snapModalTitle').textContent = id ? '編輯快照' : '新增快照';
+  currentSnapImg = null;
+  document.getElementById('snapUpPrompt').style.display = '';
+  document.getElementById('fSnapName').value  = '';
+  document.getElementById('fSnapDate').value  = new Date().toISOString().split('T')[0];
+  document.getElementById('fSnapNotes').value = '';
+  renderSnapTypeGrid([]);
+  renderSnapPhotoGallery();
+
+  if (id) {
+    const s = snapshots.find(x => x.id === id);
+    if (s) {
+      document.getElementById('fSnapName').value  = s.name  || '';
+      document.getElementById('fSnapDate').value  = normalizeDate(s.date) || '';
+      document.getElementById('fSnapNotes').value = s.notes || '';
+      renderSnapTypeGrid(s.types || []);
+      if (s.mainImg) {
+        currentSnapImg = { ...s.mainImg, fromDrive: true };
+        document.getElementById('snapUpPrompt').style.display = 'none';
+        renderSnapPhotoGallery();
+      }
+    }
+  }
+  document.getElementById('snapOverlay').classList.add('open');
+  document.getElementById('snapImgInput').onchange = e => handleSnapImg(e);
+}
+
+function handleSnapImg(e) {
+  const file = e.target.files[0]; if (!file) return;
+  (async () => {
+    const b64 = await new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload  = ev => res(ev.target.result);
+      r.onerror = ()  => rej(new Error('讀取失敗'));
+      r.readAsDataURL(file);
+    }).catch(err => { console.error(err); return null; });
+    if (!b64) return;
+    const compressed = await compressImage(b64, 800, 0.80);
+    currentSnapImg = { base64: compressed, originalBase64: b64, url: '', fileId: '', filename: file.name, mime: file.type||'image/jpeg', fromDrive: false };
+    document.getElementById('snapUpPrompt').style.display = 'none';
+    renderSnapPhotoGallery();
+  })();
+  e.target.value = '';
+}
+
+function renderSnapPhotoGallery() {
+  const gallery = document.getElementById('snapPhotoGallery');
+  const list    = document.getElementById('snapPhotoList');
+  if (!currentSnapImg) { gallery.classList.remove('show'); return; }
+  gallery.classList.add('show');
+  const src = currentSnapImg.base64 || (currentSnapImg.url && !isBase64(currentSnapImg.url) ? currentSnapImg.url : '');
+  list.innerHTML = `<div class="photo-item">
+    ${src ? `<img src="${src}" alt="">` : '<div style="background:#eee;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:1.5rem">🖼️</div>'}
+    <span class="photo-main-badge">主</span>
+    <div class="photo-acts"><button class="photo-act" onclick="currentSnapImg=null;document.getElementById('snapUpPrompt').style.display='';renderSnapPhotoGallery()">✕</button></div>
+  </div>`;
+}
+
+function renderSnapTypeGrid(selected = []) {
+  const el = document.getElementById('snapTypeGrid'); if (!el) return;
+  el.innerHTML = snapTypes.map(t => `
+    <div class="tc">
+      <input type="checkbox" id="snaptype_${escapeHtml(t.value)}" value="${escapeHtml(t.value)}" ${selected.includes(t.value)?'checked':''}>
+      <label for="snaptype_${escapeHtml(t.value)}">${t.icon} ${t.label}</label>
+    </div>`).join('');
+}
+
+async function saveSnapshot() {
+  const saveBtn = document.getElementById('snapSaveBtn');
+  saveBtn.disabled = true; saveBtn.textContent = '⏳ 儲存中…';
+
+  const formData = {
+    name:  document.getElementById('fSnapName').value.trim(),
+    date:  document.getElementById('fSnapDate').value,
+    types: Array.from(document.querySelectorAll('#snapTypeGrid input:checked')).map(cb => cb.value),
+    notes: document.getElementById('fSnapNotes').value.trim(),
+  };
+
+  // 上傳照片到 Drive
+  if (CFG.scriptUrl && currentSnapImg && currentSnapImg.originalBase64 && !currentSnapImg.url) {
+    let fn = currentSnapImg.filename;
+    try {
+      const chk = await callGAS('checkFilename', { filename: fn });
+      if (chk?.exists) { fn = chk.suggestedName; currentSnapImg.filename = fn; }
+      const up = await callGASLong('uploadPhoto', { base64: currentSnapImg.originalBase64, mimeType: currentSnapImg.mime, filename: fn });
+      if (up?.success) { currentSnapImg.url = up.url; currentSnapImg.fileId = up.fileId; }
+    } catch(e) { console.error('快照照片上傳失敗:', e); }
+  }
+
+  const data = {
+    id:        editingSnapshotId || Date.now().toString(),
+    name:      formData.name,
+    date:      formData.date,
+    types:     formData.types,
+    notes:     formData.notes,
+    mainImg:   currentSnapImg ? {
+      url:      isBase64(currentSnapImg.url) ? '' : (currentSnapImg.url || ''),
+      fileId:   currentSnapImg.fileId   || '',
+      filename: currentSnapImg.filename || '',
+      role:     'main'
+    } : null,
+    createdAt: editingSnapshotId
+      ? (snapshots.find(s => s.id === editingSnapshotId)?.createdAt || new Date().toISOString().split('T')[0])
+      : new Date().toISOString().split('T')[0]
+  };
+
+  if (editingSnapshotId) {
+    const i = snapshots.findIndex(s => s.id === editingSnapshotId);
+    if (i >= 0) snapshots[i] = data; else snapshots.unshift(data);
+  } else {
+    snapshots.unshift(data);
+  }
+
+  saveAndSync();
+  renderSnapshots();
+  closeModal('snapOverlay');
+  saveBtn.disabled = false; saveBtn.textContent = '💾 儲存';
+}
+
+function deleteSnapshot(id) {
+  if (!confirm('確定刪除此快照記錄？')) return;
+  snapshots = snapshots.filter(s => s.id !== id);
+  saveAndSync(); renderSnapshots();
+}
+
+// ── 快照類型管理 ──
+function renderSnapTypeList() {
+  const el = document.getElementById('snapTypeList'); if (!el) return;
+  el.innerHTML = !snapTypes.length ? '<div style="font-size:.78rem;color:var(--muted)">尚無類型</div>' :
+    snapTypes.map((t, i) => `
+      <div style="display:flex;align-items:center;gap:6px;padding:7px 9px;background:#f8fff4;border:1.5px solid var(--border);border-radius:10px">
+        <input type="text" value="${escapeHtml(t.icon)}" style="width:44px;padding:4px;border:1px solid var(--border);border-radius:6px;font-size:1rem;text-align:center"
+          onchange="updateSnapType(${i},'icon',this.value)">
+        <input type="text" value="${escapeHtml(t.label)}" style="flex:1;padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:.8rem"
+          onchange="updateSnapType(${i},'label',this.value)">
+        <button onclick="deleteSnapType(${i})" style="background:none;border:none;cursor:pointer;color:var(--r);font-size:.9rem">🗑️</button>
+      </div>`).join('');
+}
+
+function addSnapType() {
+  const icon  = (document.getElementById('cfgNewSnapTypeIcon').value  || '').trim();
+  const label = (document.getElementById('cfgNewSnapTypeLabel').value || '').trim();
+  if (!label) { alert('請輸入類型名稱'); return; }
+  if (snapTypes.find(t => t.value === label)) { alert('類型已存在'); return; }
+  snapTypes.push({ value: label, label, icon: icon || '🎮' });
+  localStorage.setItem('pkm_snap_types', JSON.stringify(snapTypes));
+  document.getElementById('cfgNewSnapTypeIcon').value = '';
+  document.getElementById('cfgNewSnapTypeLabel').value = '';
+  renderSnapTypeList();
+}
+
+function updateSnapType(idx, key, val) {
+  val = val.trim(); if (!val) return;
+  if (key === 'label') {
+    const old = snapTypes[idx].value;
+    snapTypes[idx].label = snapTypes[idx].value = val;
+    snapshots.forEach(s => { if (s.types) s.types = s.types.map(t => t===old?val:t); });
+    saveLocal();
+  } else { snapTypes[idx].icon = val; }
+  localStorage.setItem('pkm_snap_types', JSON.stringify(snapTypes));
+  renderSnapTypeList();
+}
+
+function deleteSnapType(idx) {
+  if (!confirm(`確定刪除類型「${snapTypes[idx].icon} ${snapTypes[idx].label}」？`)) return;
+  const val = snapTypes[idx].value;
+  snapTypes.splice(idx, 1);
+  snapshots.forEach(s => { if (s.types) s.types = s.types.filter(t => t!==val); });
+  localStorage.setItem('pkm_snap_types', JSON.stringify(snapTypes));
+  saveLocal(); renderSnapTypeList();
 }
 
 // ═══════════════════════════════════════════════
