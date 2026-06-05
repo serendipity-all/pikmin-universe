@@ -292,6 +292,13 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
         <button id="vList" onclick="setView('list')">☰ 列表</button>
       </div>
       <button class="btn" onclick="toggleFilterPanel()">🔧 篩選 <span id="filterCount"></span></button>
+      <select id="cardSortSelect" onchange="renderLibrary()" style="padding:6px 10px;border:2px solid var(--border);border-radius:12px;font-size:.78rem;font-family:inherit;background:#fff">
+        <option value="newest">🆕 加入順序（新→舊）</option>
+        <option value="oldest">📅 加入順序（舊→新）</option>
+        <option value="cardName">🔤 明信片名稱</option>
+        <option value="region">🌍 取得地區</option>
+        <option value="filename">📁 照片檔名</option>
+      </select>
       <button class="btn" id="dupFilterBtn" onclick="toggleDuplicateFilter()" title="顯示名稱重複的明信片">♊ 重複名稱</button>
       <button class="btn" id="unnamedFilterBtn" onclick="toggleUnnamedFilter()" title="顯示未填名稱的明信片">📭 未命名</button>
       <button class="btn primary" onclick="openCardModal()">＋ 新增明信片</button>
@@ -679,42 +686,6 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
 </div>
 </div>
 
-<!-- DRIVE PICKER MODAL -->
-<div class="overlay" id="drivePickerOverlay" onclick="overlayClick(event,'drivePickerOverlay')">
-<div class="modal" style="max-width:500px">
-  <div class="mhead" style="background:linear-gradient(135deg,#2d7a4a,#1a5c35)">
-    <div class="mtitle">📁 從 Drive 選取輔助照片</div>
-    <button class="xbtn" onclick="closeModal('drivePickerOverlay')">✕</button>
-  </div>
-  <div class="mbody" style="padding:12px 16px">
-    <div id="drivePickerStatus" style="font-size:.82rem;color:var(--muted);margin-bottom:10px">載入中…</div>
-    <div style="display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
-      <button class="btn active" id="dpFilterAll" onclick="setDpFilter('all')" style="padding:4px 10px;font-size:.72rem">全部</button>
-      <button class="btn" id="dpFilterNew" onclick="setDpFilter('new')" style="padding:4px 10px;font-size:.72rem">未建檔</button>
-      <button class="btn" id="dpFilterExists" onclick="setDpFilter('exists')" style="padding:4px 10px;font-size:.72rem">已存在</button>
-      <div class="search-box" style="flex:1;min-width:100px">
-        <span class="si">🔍</span>
-        <input type="text" id="dpSearchInput" placeholder="搜尋檔名…" oninput="renderDpList()" style="font-size:.75rem">
-      </div>
-      <div style="display:flex;gap:4px">
-        <button class="btn" onclick="dpSelectAll(true)" style="padding:4px 10px;font-size:.72rem">☑ 全選</button>
-        <button class="btn" onclick="dpSelectAll(false)" style="padding:4px 10px;font-size:.72rem">☐ 取消</button>
-      </div>
-    </div>
-    <div id="dpPager" style="display:none;align-items:center;gap:6px;margin-bottom:8px;font-size:.78rem;color:var(--muted)">
-      <button class="btn" id="dpPrevBtn" onclick="changeDpPage(-1)" style="padding:3px 10px;font-size:.75rem">‹ 上頁</button>
-      <span id="dpPageInfo"></span>
-      <button class="btn" id="dpNextBtn" onclick="changeDpPage(1)" style="padding:3px 10px;font-size:.75rem">下頁 ›</button>
-    </div>
-    <div id="drivePickerList" style="display:flex;flex-direction:column;gap:6px"></div>
-  </div>
-  <div class="mfoot">
-    <button class="btn-cancel" onclick="closeModal('drivePickerOverlay')">取消</button>
-    <button class="btn-save" onclick="confirmDrivePick()">✅ 加入輔助照片</button>
-  </div>
-</div>
-</div>
-
 <!-- SNAPSHOT MODAL -->
 <div class="overlay" id="snapOverlay" onclick="overlayClick(event,'snapOverlay')">
 <div class="modal">
@@ -755,6 +726,43 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
 </div>
 </div>
 
+<!-- DRIVE PICKER MODAL -->
+<div class="overlay" id="drivePickerOverlay" onclick="overlayClick(event,'drivePickerOverlay')">
+<div class="modal" style="max-width:500px">
+  <div class="mhead" style="background:linear-gradient(135deg,#2d7a4a,#1a5c35)">
+    <div class="mtitle">📁 從 Drive 選取輔助照片</div>
+    <button class="xbtn" onclick="closeModal('drivePickerOverlay')">✕</button>
+  </div>
+  <div class="mbody" style="padding:12px 16px">
+    <div id="drivePickerStatus" style="font-size:.82rem;color:var(--muted);margin-bottom:10px">載入中…</div>
+    <div style="display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
+      <button class="btn active" id="dpFilterAll" onclick="setDpFilter('all')" style="padding:4px 10px;font-size:.72rem">全部</button>
+      <button class="btn" id="dpFilterNew" onclick="setDpFilter('new')" style="padding:4px 10px;font-size:.72rem">未建檔</button>
+      <button class="btn" id="dpFilterExists" onclick="setDpFilter('exists')" style="padding:4px 10px;font-size:.72rem">已存在</button>
+      <div class="search-box" style="flex:1;min-width:100px">
+        <span class="si">🔍</span>
+        <input type="text" id="dpSearchInput" placeholder="搜尋檔名…" oninput="renderDpList()" style="font-size:.75rem">
+      </div>
+      <div style="display:flex;gap:4px">
+        <button class="btn" onclick="dpSelectAll(true)" style="padding:4px 10px;font-size:.72rem">☑ 全選</button>
+        <button class="btn" onclick="dpSelectAll(false)" style="padding:4px 10px;font-size:.72rem">☐ 取消</button>
+      </div>
+    </div>
+    <div id="dpPager" style="display:none;align-items:center;gap:6px;margin-bottom:8px;font-size:.78rem;color:var(--muted)">
+      <button class="btn" id="dpPrevBtn" onclick="changeDpPage(-1)" style="padding:3px 10px;font-size:.75rem">‹ 上頁</button>
+      <span id="dpPageInfo"></span>
+      <button class="btn" id="dpNextBtn" onclick="changeDpPage(1)" style="padding:3px 10px;font-size:.75rem">下頁 ›</button>
+    </div>
+    <div id="drivePickerList" style="display:flex;flex-direction:column;gap:6px"></div>
+  </div>
+  <div class="mfoot">
+    <button class="btn-cancel" onclick="closeModal('drivePickerOverlay')">取消</button>
+    <button class="btn-save" onclick="confirmDrivePick()">✅ 加入輔助照片</button>
+  </div>
+</div>
+</div>
+
+<!-- SNAPSHOT MODAL -->
 <!-- FRIEND MODAL -->
 <div class="overlay" id="friendOverlay" onclick="overlayClick(event,'friendOverlay')">
 <div class="modal" style="max-width:400px">
@@ -2581,6 +2589,13 @@ function renderLibrary() {
     list = list.filter(c => !(c.cardName||'').trim());
   }
 
+  // 排序
+  const sort = document.getElementById('cardSortSelect')?.value || 'newest';
+  if (sort === 'oldest')   list = [...list].reverse();
+  else if (sort === 'cardName') list.sort((a,b) => String(a.cardName||'').localeCompare(String(b.cardName||''), undefined, {sensitivity:'base'}));
+  else if (sort === 'region')   list.sort((a,b) => String(a.region||'').localeCompare(String(b.region||''), undefined, {sensitivity:'base'}));
+  else if (sort === 'filename') list.sort((a,b) => String(a.mainImg?.filename||'').localeCompare(String(b.mainImg?.filename||''), undefined, {sensitivity:'base'}));
+
   const countEl = document.getElementById('searchCount');
   if (countEl) countEl.textContent = q ? `${list.length} 筆` : '';
   const grid = document.getElementById('cardGrid');
@@ -2956,6 +2971,11 @@ async function importScannedPhotos() {
 async function openDrivePickerModal(mode = 'aux') {
   if (!CFG.scriptUrl) { alert('請先設定 GAS 網址'); return; }
   drivePickerMode = mode;
+
+  // 暫時隱藏來源 modal（不關閉，保留狀態）
+  if (mode === 'snap') document.getElementById('snapOverlay').classList.remove('open');
+  else document.getElementById('cardOverlay').classList.remove('open');
+
   dpFilter = 'all'; dpPage = 0; dpPhotos = [];
   document.getElementById('drivePickerList').innerHTML = '';
   document.getElementById('drivePickerStatus').textContent = '載入中…';
@@ -3051,6 +3071,11 @@ function renderDpList() {
         ${alreadyAdded?'checked':''} style="width:16px;height:16px;cursor:pointer;flex-shrink:0">
     </div>`;
   }).join('');
+}
+
+function restoreSourceModal() {
+  if (drivePickerMode === 'snap') document.getElementById('snapOverlay').classList.add('open');
+  else document.getElementById('cardOverlay').classList.add('open');
 }
 
 function confirmDrivePick() {
