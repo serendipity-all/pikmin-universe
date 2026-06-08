@@ -1008,9 +1008,9 @@ const getFavIcon = (v) => (favorites.find(f => f.value === v)?.icon || '');
 // 判斷 fileId 是否已在資料庫（主照或輔助）
 function isPhotoInUse(fileId) {
   if (!fileId) return false;
-  return !!cards.find(c =>
-    c.mainImg?.fileId === fileId ||
-    (c.auxImgs||[]).some(a => a.fileId === fileId)
+  return !!(
+    cards.find(c => c.mainImg?.fileId === fileId || (c.auxImgs||[]).some(a => a.fileId === fileId)) ||
+    snapshots.find(s => s.mainImg?.fileId === fileId)
   );
 }
 
