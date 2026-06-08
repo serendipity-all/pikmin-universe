@@ -295,6 +295,9 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
       <select id="cardSortSelect" onchange="renderLibrary()" style="padding:6px 10px;border:2px solid var(--border);border-radius:12px;font-size:.78rem;font-family:inherit;background:#fff">
         <option value="newest">🆕 加入順序（新→舊）</option>
         <option value="oldest">📅 加入順序（舊→新）</option>
+        <option value="updated">✏️ 最近編輯</option>
+        <option value="sentDate">💌 最近送出</option>
+        <option value="obtainedDate">📬 最近收到</option>
         <option value="cardName">🔤 明信片名稱</option>
         <option value="region">🌍 取得地區</option>
         <option value="filename">📁 照片檔名</option>
@@ -359,6 +362,9 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
         <option value="sentMost">💌 送最多</option>
         <option value="newest">🆕 最新加入</option>
         <option value="oldest">📅 最早加入</option>
+        <option value="updated">✏️ 最近編輯</option>
+        <option value="lastSent">💌 最近送出</option>
+        <option value="lastRecv">📬 最近收到</option>
       </select>
       <button class="btn primary" onclick="openFriendModal()">＋ 新增好友</button>
       </div>
@@ -436,6 +442,12 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
       </div>
       <select id="snapTypeFilter" onchange="renderSnapshots()" style="padding:6px 10px;border:2px solid var(--border);border-radius:12px;font-size:.78rem;font-family:inherit;background:#fff">
         <option value="">所有類型</option>
+      </select>
+      <select id="snapSortSelect" onchange="renderSnapshots()" style="padding:6px 10px;border:2px solid var(--border);border-radius:12px;font-size:.78rem;font-family:inherit;background:#fff">
+        <option value="newest">🆕 加入順序（新→舊）</option>
+        <option value="oldest">📅 加入順序（舊→新）</option>
+        <option value="updated">✏️ 最近編輯</option>
+        <option value="date">📬 最近收到</option>
       </select>
       <button class="btn primary" onclick="openSnapshotModal()">＋ 新增快照</button>
     </div>
@@ -2093,7 +2105,8 @@ async function saveCard() {
     })),
     createdAt: editingCardId
       ? normalizeDate(cards.find(c => c.id === editingCardId)?.createdAt || new Date().toISOString())
-      : new Date().toISOString().split('T')[0]
+      : new Date().toISOString().split('T')[0],
+    updatedAt: new Date().toISOString().split('T')[0]
   };
 
   if (editingCardId) {
@@ -2192,7 +2205,18 @@ function getSortedFriends() {
     case 'sentMost': return [...withStats].sort((a,b) => b.sent - a.sent);
     case 'newest':   return [...withStats].sort((a,b) => String(b.id).localeCompare(String(a.id)));
     case 'oldest':   return [...withStats].sort((a,b) => String(a.id).localeCompare(String(b.id)));
-    default:         return [...withStats].sort((a,b) => String(a.name||'').localeCompare(String(b.name||''), undefined, {sensitivity:'base'}));
+    case 'updated':  return [...withStats].sort((a,b) => (b.updatedAt||'').localeCompare(a.updatedAt||''));
+    case 'lastSent': return [...withStats].sort((a,b) => {
+      const aDate = Math.max(...cards.filter(c => getRecipIds(c).map(resolveFriendId).includes(String(a.id))).map(c => c.sentDate||'').filter(Boolean).map(d => d), '');
+      const bDate = Math.max(...cards.filter(c => getRecipIds(c).map(resolveFriendId).includes(String(b.id))).map(c => c.sentDate||'').filter(Boolean).map(d => d), '');
+      return String(bDate).localeCompare(String(aDate));
+    });
+    case 'lastRecv': return [...withStats].sort((a,b) => {
+      const aDate = Math.max(...cards.filter(c => resolveFriendId(c.sourceFriend) === String(a.id)).map(c => c.obtainedDate||'').filter(Boolean).map(d => d), '');
+      const bDate = Math.max(...cards.filter(c => resolveFriendId(c.sourceFriend) === String(b.id)).map(c => c.obtainedDate||'').filter(Boolean).map(d => d), '');
+      return String(bDate).localeCompare(String(aDate));
+    });
+    default: return [...withStats].sort((a,b) => String(a.name||'').localeCompare(String(b.name||''), undefined, {sensitivity:'base'}));
   }
 }
 
@@ -2382,10 +2406,10 @@ function saveFriend() {
 
   if (editingFriendId) {
     const f = friends.find(x => x.id === editingFriendId);
-    if (f) { f.name = name; f.ppid = ppid; f.note = note; f.tags = tags; }
+    if (f) { f.name = name; f.ppid = ppid; f.note = note; f.tags = tags; f.updatedAt = new Date().toISOString().split('T')[0]; }
   } else {
     if (friends.find(f => f.name === name)) { alert('好友已存在'); return; }
-    friends.push({ id: Date.now().toString(), name, ppid, note, tags });
+    friends.push({ id: Date.now().toString(), name, ppid, note, tags, updatedAt: new Date().toISOString().split('T')[0] });
   }
   saveAndSync();
   closeModal('friendOverlay');
@@ -2591,10 +2615,13 @@ function renderLibrary() {
 
   // 排序
   const sort = document.getElementById('cardSortSelect')?.value || 'newest';
-  if (sort === 'oldest')   list = [...list].reverse();
-  else if (sort === 'cardName') list.sort((a,b) => String(a.cardName||'').localeCompare(String(b.cardName||''), undefined, {sensitivity:'base'}));
-  else if (sort === 'region')   list.sort((a,b) => String(a.region||'').localeCompare(String(b.region||''), undefined, {sensitivity:'base'}));
-  else if (sort === 'filename') list.sort((a,b) => String(a.mainImg?.filename||'').localeCompare(String(b.mainImg?.filename||''), undefined, {sensitivity:'base'}));
+  if      (sort === 'oldest')      list = [...list].reverse();
+  else if (sort === 'updated')     list.sort((a,b) => (b.updatedAt||b.createdAt||'').localeCompare(a.updatedAt||a.createdAt||''));
+  else if (sort === 'sentDate')    list.sort((a,b) => (b.sentDate||'').localeCompare(a.sentDate||''));
+  else if (sort === 'obtainedDate')list.sort((a,b) => (b.obtainedDate||'').localeCompare(a.obtainedDate||''));
+  else if (sort === 'cardName')    list.sort((a,b) => String(a.cardName||'').localeCompare(String(b.cardName||''), undefined, {sensitivity:'base'}));
+  else if (sort === 'region')      list.sort((a,b) => String(a.region||'').localeCompare(String(b.region||''), undefined, {sensitivity:'base'}));
+  else if (sort === 'filename')    list.sort((a,b) => String(a.mainImg?.filename||'').localeCompare(String(b.mainImg?.filename||''), undefined, {sensitivity:'base'}));
 
   const countEl = document.getElementById('searchCount');
   if (countEl) countEl.textContent = q ? `${list.length} 筆` : '';
@@ -3137,6 +3164,11 @@ function renderSnapshots() {
   if (q)    list = list.filter(s => [s.name, s.notes].some(x => x && x.toLowerCase().includes(q)));
   if (type) list = list.filter(s => (s.types||[]).includes(type));
 
+  const snapSort = document.getElementById('snapSortSelect')?.value || 'newest';
+  if      (snapSort === 'oldest')  list = [...list].reverse();
+  else if (snapSort === 'updated') list.sort((a,b) => (b.updatedAt||b.createdAt||'').localeCompare(a.updatedAt||a.createdAt||''));
+  else if (snapSort === 'date')    list.sort((a,b) => (b.date||'').localeCompare(a.date||''));
+
   const countEl = document.getElementById('snapSearchCount');
   if (countEl) countEl.textContent = q || type ? `${list.length} 筆` : '';
 
@@ -3287,7 +3319,8 @@ async function saveSnapshot() {
     } : null,
     createdAt: editingSnapshotId
       ? (snapshots.find(s => s.id === editingSnapshotId)?.createdAt || new Date().toISOString().split('T')[0])
-      : new Date().toISOString().split('T')[0]
+      : new Date().toISOString().split('T')[0],
+    updatedAt: new Date().toISOString().split('T')[0]
   };
 
   if (editingSnapshotId) {
