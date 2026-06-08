@@ -1149,13 +1149,21 @@ async function syncAll(silent = false) {
   const cloud = await callGAS('loadData', {});
 
   if (cloud && cloud.success) {
-    const cloudCount = (cloud.cards || []).length;
-    const localCount = cards.length;
+    const cloudCount     = (cloud.cards     || []).length;
+    const localCount     = cards.length;
+    const cloudSnapCount = (cloud.snapshots || []).length;
+    const localSnapCount = snapshots.length;
 
-    // 靜默模式：本地比雲端少超過 10 筆就停止
-    if (silent && cloudCount > 0 && localCount < cloudCount - 10) {
-      setSyncStatus('err', `⚠️ 自動同步暫停：本地(${localCount})比雲端(${cloudCount})少太多，請手動確認後同步`);
-      return;
+    // 靜默模式：cards 或 snapshots 比雲端少超過門檻就停止
+    if (silent) {
+      if (cloudCount > 0 && localCount < cloudCount - 10) {
+        setSyncStatus('err', `⚠️ 自動同步暫停：明信片本地(${localCount})比雲端(${cloudCount})少太多，請手動確認後同步`);
+        return;
+      }
+      if (cloudSnapCount > 0 && localSnapCount < cloudSnapCount - 3) {
+        setSyncStatus('err', `⚠️ 自動同步暫停：快照本地(${localSnapCount})比雲端(${cloudSnapCount})少太多，請手動確認後同步`);
+        return;
+      }
     }
 
     // 手動模式：提示使用者
@@ -1166,6 +1174,11 @@ async function syncAll(silent = false) {
         }
       } else if (cloudCount > 0 && localCount < cloudCount - 5) {
         if (!confirm(`⚠️ 注意：本地(${localCount}筆)比雲端(${cloudCount}筆)少 ${cloudCount-localCount} 筆。繼續同步會覆蓋雲端，確定嗎？`)) {
+          setSyncStatus('', '已取消'); return;
+        }
+      }
+      if (cloudSnapCount > 0 && localSnapCount === 0) {
+        if (!confirm(`⚠️ 警告：本地快照是空的，但雲端有 ${cloudSnapCount} 筆。繼續同步會清空雲端快照，確定嗎？`)) {
           setSyncStatus('', '已取消'); return;
         }
       }
