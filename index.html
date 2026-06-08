@@ -887,6 +887,7 @@ const FILTER_FIELDS = [
 
 // ── 持久化資料（localStorage） ──
 let CFG      = JSON.parse(localStorage.getItem('pkm_cfg')       || '{}');
+// CFG.snapshotFolderId 從 GAS loadData 取得，不需要使用者設定
 let cards    = JSON.parse(localStorage.getItem('pkm_cards')     || '[]');
 let friends  = JSON.parse(localStorage.getItem('pkm_friends')   || '[]');
 let methods  = JSON.parse(localStorage.getItem('pkm_methods')   || '["打菇","好友送","開花","探險","其他"]');
@@ -1331,6 +1332,11 @@ window.onload = async () => {
         cards     = res.cards     || [];
         friends   = res.friends   || [];
         snapshots = res.snapshots || [];
+        if (res.folderIds) {
+          CFG.cardFolderId     = res.folderIds.cards;
+          CFG.snapshotFolderId = res.folderIds.snapshots;
+          localStorage.setItem('pkm_cfg', JSON.stringify(CFG));
+        }
         if (res.settings) {
           if (res.settings.methods   && res.settings.methods.length)   { methods   = res.settings.methods;   localStorage.setItem('pkm_methods',   JSON.stringify(methods));   }
           if (res.settings.tags      && Object.keys(res.settings.tags).length) { tagMap = res.settings.tags; localStorage.setItem('pkm_tags', JSON.stringify(tagMap)); }
@@ -2814,7 +2820,7 @@ async function openScanModal(forceRefresh = false) {
 
   document.getElementById('scanStatus').textContent = '掃描中…';
   setSyncStatus('ing', '掃描 Drive 中…');
-  const res = await callGAS('scan', {});
+  const res = await callGAS('scan', { folderId: CFG.cardFolderId || '' });
   if (!res?.success) {
     document.getElementById('scanStatus').textContent = '掃描失敗：' + (res?.error || '網路錯誤');
     setSyncStatus('err', '掃描失敗'); return;
@@ -3021,13 +3027,13 @@ async function openDrivePickerModal(mode = 'aux') {
   if (confirmBtn) confirmBtn.textContent = mode === 'aux' ? '✅ 加入輔助照片' : '✅ 設為主照片';
   document.getElementById('drivePickerOverlay').classList.add('open');
 
-  // 優先使用快取
-  const cacheKey = 'pkm_scan_cache';
+  // 優先使用快取（明信片和快照分開快取）
+  const cacheKey = drivePickerMode === 'snap' ? 'pkm_scan_cache_snap' : 'pkm_scan_cache';
   const cached = sessionStorage.getItem(cacheKey);
   if (cached) {
     try {
       dpPhotos = JSON.parse(cached);
-      scannedPhotos = dpPhotos;
+      scannedPhotos = drivePickerMode !== 'snap' ? dpPhotos : scannedPhotos;
       renderDpList();
       return;
     } catch(e) { sessionStorage.removeItem(cacheKey); }
@@ -3035,13 +3041,14 @@ async function openDrivePickerModal(mode = 'aux') {
 
   // 無快取才掃描
   document.getElementById('drivePickerStatus').textContent = '掃描 Drive 中…';
-  const res = await callGAS('scan', {});
+  const folderId = drivePickerMode === 'snap' ? (CFG.snapshotFolderId || '') : (CFG.cardFolderId || '');
+  const res = await callGAS('scan', { folderId });
   if (!res?.success) {
     document.getElementById('drivePickerStatus').textContent = '掃描失敗：' + (res?.error||'錯誤');
     return;
   }
   dpPhotos = res.photos || [];
-  scannedPhotos = dpPhotos;
+  if (drivePickerMode !== 'snap') scannedPhotos = dpPhotos;
   try { sessionStorage.setItem(cacheKey, JSON.stringify(dpPhotos)); } catch(e) {}
   renderDpList();
 }
@@ -3307,13 +3314,14 @@ async function saveSnapshot() {
     notes: document.getElementById('fSnapNotes').value.trim(),
   };
 
-  // 上傳照片到 Drive
+  // 上傳照片到 Drive（快照資料夾）
   if (CFG.scriptUrl && currentSnapImg && currentSnapImg.originalBase64 && !currentSnapImg.url) {
     let fn = currentSnapImg.filename;
+    const snapFolderId = CFG.snapshotFolderId || '';
     try {
-      const chk = await callGAS('checkFilename', { filename: fn });
+      const chk = await callGAS('checkFilename', { filename: fn, folderId: snapFolderId });
       if (chk?.exists) { fn = chk.suggestedName; currentSnapImg.filename = fn; }
-      const up = await callGASLong('uploadPhoto', { base64: currentSnapImg.originalBase64, mimeType: currentSnapImg.mime, filename: fn });
+      const up = await callGASLong('uploadPhoto', { base64: currentSnapImg.originalBase64, mimeType: currentSnapImg.mime, filename: fn, folderId: snapFolderId });
       if (up?.success) { currentSnapImg.url = up.url; currentSnapImg.fileId = up.fileId; }
     } catch(e) { console.error('快照照片上傳失敗:', e); }
   }
