@@ -1887,8 +1887,12 @@ function applyAI() {
   if (d.friendName) {
     ensureFriendExists(d.friendName);
     setTimeout(() => { document.getElementById('fSourceFriend').value = d.friendName; }, 50);
-    document.getElementById('fStatus').value = 'kept';
-    toggleSentFields();
+    // 只在目前狀態是 pending 時才改成 kept，不覆蓋已設定的 sent
+    const curStatus = document.getElementById('fStatus').value;
+    if (curStatus === 'pending') {
+      document.getElementById('fStatus').value = 'kept';
+      toggleSentFields();
+    }
   }
   if (d.tags) document.querySelectorAll('#tagGrid input').forEach(cb => { cb.checked = d.tags.includes(cb.value); });
 
