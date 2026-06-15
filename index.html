@@ -284,7 +284,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
     <div class="toolbar">
       <div class="search-box">
         <span class="si">🔍</span>
-        <input type="text" id="searchInput" placeholder="搜尋名稱、地點、好友、備註、檔名…" oninput="renderLibrary()">
+        <input type="text" id="searchInput" placeholder="搜尋名稱、地點、好友、備註、檔名…" oninput="debouncedRenderLibrary()">
         <span id="searchCount" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:.7rem;color:var(--muted);pointer-events:none"></span>
       </div>
       <div class="view-toggle">
@@ -349,7 +349,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
       <div class="toolbar">
         <div class="search-box">
           <span class="si">🔍</span>
-          <input type="text" id="friendSearch" placeholder="搜尋好友…" oninput="renderFriends()">
+          <input type="text" id="friendSearch" placeholder="搜尋好友…" oninput="debouncedRenderFriends()">
         </div>
         <div style="display:flex;gap:4px">
           <button class="btn active" id="frdFilterAll"  onclick="setFriendFilter('all',this)"  style="padding:5px 10px;font-size:.74rem">全部</button>
@@ -437,7 +437,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
     <div class="toolbar">
       <div class="search-box">
         <span class="si">🔍</span>
-        <input type="text" id="snapSearchInput" placeholder="搜尋名稱、備註…" oninput="renderSnapshots()">
+        <input type="text" id="snapSearchInput" placeholder="搜尋名稱、備註…" oninput="debouncedRenderSnapshots()">
         <span id="snapSearchCount" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:.7rem;color:var(--muted);pointer-events:none"></span>
       </div>
       <select id="snapTypeFilter" onchange="renderSnapshots()" style="padding:6px 10px;border:2px solid var(--border);border-radius:12px;font-size:.78rem;font-family:inherit;background:#fff">
@@ -978,7 +978,17 @@ const resolveFriendId = (val) => {
   return f ? f.id : s;
 };
 
-// recipFriend 存的是 ID 陣列（相容舊版名字字串）
+// 防抖動：輸入停止 300ms 後才執行
+function debounce(fn, delay = 300) {
+  let timer = null;
+  return function(...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn.apply(this, args), delay);
+  };
+}
+const debouncedRenderLibrary   = debounce(() => renderLibrary());
+const debouncedRenderFriends   = debounce(() => renderFriends());
+const debouncedRenderSnapshots = debounce(() => renderSnapshots());
 const getRecipIds   = (c) => Array.isArray(c.recipFriend) ? c.recipFriend : (c.recipFriend ? [c.recipFriend] : []);
 const getRecipNames = (c) => getRecipIds(c).map(id => getFriendName(id));
 const getRecipStr   = (c) => getRecipNames(c).join('、') || '';
