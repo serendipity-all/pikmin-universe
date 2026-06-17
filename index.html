@@ -1855,6 +1855,7 @@ async function aiScan() {
         <strong>🤖 AI 辨識結果</strong><br>
         🎴 卡牌名稱：<b>${d.cardName||'—'}</b>${d.cardNameZh ? ` → <b style="color:var(--g)">${d.cardNameZh}</b>` : ''}<br>
         ${d.description ? `📝 說明：<b>${d.description}</b><br>` : ''}
+        ${d.keywords&&d.keywords.length ? `🔎 延伸關鍵字：<b style="color:var(--b)">${d.keywords.join('、')}</b><br>` : ''}
         📍 取得地點：<b>${d.location||'—'}</b><br>
         🌍 推測國家：<b>${d.country||'—'}</b><br>
         🎯 取得方式：<b>${d.obtainedMethod||'—'}</b>${d.friendName?` (${d.friendName})`:''}<br>
@@ -1910,6 +1911,7 @@ function applyAI() {
   const noteParts = [];
   if (d.cardNameZh) noteParts.push(`【${d.cardNameZh}】`);
   if (d.description) noteParts.push(d.description);
+  if (d.keywords && d.keywords.length) noteParts.push(`🔎 ${d.keywords.join('、')}`);
   if (noteParts.length) {
     const notesEl = document.getElementById('fNotes');
     const existing = notesEl.value.trim();
@@ -2954,7 +2956,8 @@ async function batchAIScan() {
             const d = res.data;
             const zh = d.cardNameZh ? ` →${d.cardNameZh}` : '';
             const desc = d.description ? ` 📝${d.description}` : '';
-            if (el) el.textContent = `🤖 ${d.cardName||'?'}${zh} | ${d.country||''} | ${d.obtainedMethod||'?'}${desc}`;
+            const kw = d.keywords && d.keywords.length ? ` 🔎${d.keywords.join('、')}` : '';
+            if (el) el.textContent = `🤖 ${d.cardName||'?'}${zh} | ${d.country||''} | ${d.obtainedMethod||'?'}${desc}${kw}`;
           }
         } else { if (el) el.textContent = '❌ ' + (res?.error||'失敗'); }
       } catch(e) { if (el) el.textContent = '❌ ' + e.message; }
@@ -2987,10 +2990,11 @@ async function importScannedPhotos() {
     const friendName = cleanFriendName(ai.friendName||'');
     if (friendName) ensureFriendExists(friendName);
 
-    // 組合備註（翻譯 + 說明）
+    // 組合備註（翻譯 + 說明 + 關鍵字）
     const noteParts = [];
     if (ai.cardNameZh) noteParts.push(`【${ai.cardNameZh}】`);
     if (ai.description) noteParts.push(ai.description);
+    if (ai.keywords && ai.keywords.length) noteParts.push(`🔎 ${ai.keywords.join('、')}`);
     const notes = noteParts.length ? noteParts.join('　') : (p._ai ? '' : '（自 Drive 掃描建立，請補充資訊）');
 
     cards.unshift({
