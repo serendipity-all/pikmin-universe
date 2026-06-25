@@ -3480,11 +3480,34 @@ function renderPendingReplies() {
     const isUrgent = oldest >= 14;
     const hue = ((fid.charCodeAt ? fid.charCodeAt(0) : 0) * 37) % 360;
 
-    const itemHtml = (list, isDone) => list.map(p => {
+    // 取該好友送我的明信片，依 obtainedDate → filename → id 排序（新→舊）
+    const recvCards = cards
+      .filter(c => resolveFriendId(c.sourceFriend) === fid)
+      .sort((a, b) => {
+        const dateA = a.obtainedDate || '';
+        const dateB = b.obtainedDate || '';
+        if (dateB !== dateA) return dateB.localeCompare(dateA);
+        const fnA = a.mainImg?.filename || '';
+        const fnB = b.mainImg?.filename || '';
+        if (fnB !== fnA) return fnB.localeCompare(fnA);
+        return String(b.id).localeCompare(String(a.id));
+      });
+
+    const itemHtml = (list, isDone) => list.map((p, idx) => {
       const days = daysSince(p.createdAt);
       const urgent = !isDone && days >= 14;
+      // 對應的明信片縮圖（只在未完成時顯示）
+      const refCard = !isDone ? recvCards[idx] : null;
+      const imgUrl = refCard ? getImgUrl(refCard.mainImg) : null;
       return `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:${isDone?'#f0f0f0':'#fff'};border-radius:8px;border:1.5px solid ${urgent?'var(--or)':'var(--border)'}">
+        ${imgUrl
+          ? `<img src="${escapeHtml(imgUrl)}" style="width:44px;height:44px;object-fit:contain;border-radius:7px;flex-shrink:0;background:#eee;cursor:pointer" title="${escapeHtml(refCard.cardName||'')}" onclick="openDetail('${refCard.id}')" loading="lazy">`
+          : refCard
+            ? `<div style="width:44px;height:44px;border-radius:7px;flex-shrink:0;background:linear-gradient(135deg,#e8f5e0,var(--sky));display:flex;align-items:center;justify-content:center;font-size:1.1rem;cursor:pointer" onclick="openDetail('${refCard.id}')">🌸</div>`
+            : '<div style="width:44px;height:44px;flex-shrink:0"></div>'
+        }
         <div style="flex:1;min-width:0">
+          ${refCard ? `<div style="font-size:.7rem;color:var(--b);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📬 ${escapeHtml(refCard.cardName||'未命名')}</div>` : ''}
           <div style="font-size:.78rem;color:var(--muted)">${p.createdAt}${days>0?` <span style="color:${urgent?'var(--or)':'var(--muted)'}">（${days}天前）</span>`:''}</div>
           ${p.note?`<div style="font-size:.8rem;margin-top:2px">${escapeHtml(p.note)}</div>`:''}
           ${isDone?`<div style="font-size:.72rem;color:var(--g);margin-top:2px">✅ 已完成 ${p.doneAt}（3天後自動移除）</div>`:''}
