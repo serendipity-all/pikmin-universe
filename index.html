@@ -246,6 +246,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
     <button class="ntab active" onclick="showPage('library',this)">📚 收藏庫</button>
     <button class="ntab" onclick="showPage('stats',this)">📊 統計</button>
     <button class="ntab" onclick="showPage('friends',this)">👥 好友</button>
+    <button class="ntab" onclick="showPage('pending',this)">📬 待回覆</button>
     <button class="ntab" onclick="showPage('snapshots',this)">🎮 快照</button>
     <button class="ntab" onclick="showPage('settings',this)">⚙️ 設定</button>
   </nav>
@@ -430,6 +431,24 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
       <div id="friendDetailCards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px"></div>
     </div>
 
+  </div>
+
+  <!-- PENDING REPLIES PAGE -->
+  <div class="page" id="page-pending">
+    <div class="toolbar">
+      <div class="search-box">
+        <span class="si">🔍</span>
+        <input type="text" id="pendingSearch" placeholder="搜尋好友…" oninput="debouncedRenderPending()">
+      </div>
+      <div style="display:flex;gap:4px">
+        <button class="btn active" id="pendingFilterAll"  onclick="setPendingFilter('all',this)"  style="padding:5px 10px;font-size:.74rem">全部</button>
+        <button class="btn"        id="pendingFilterTodo" onclick="setPendingFilter('todo',this)" style="padding:5px 10px;font-size:.74rem">未完成</button>
+        <button class="btn"        id="pendingFilterDone" onclick="setPendingFilter('done',this)" style="padding:5px 10px;font-size:.74rem">已完成</button>
+      </div>
+      <button class="btn primary" onclick="openAddPendingModal()">＋ 新增待回覆</button>
+    </div>
+    <div id="pendingSummary" style="margin-bottom:12px;font-size:.8rem;color:var(--muted)"></div>
+    <div id="pendingList" style="display:flex;flex-direction:column;gap:10px"></div>
   </div>
 
   <!-- SNAPSHOTS PAGE -->
@@ -698,10 +717,33 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
 </div>
 </div>
 
+<!-- PENDING REPLY MODAL -->
+<div class="overlay" id="pendingOverlay" onclick="overlayClick(event,'pendingOverlay')">
+<div class="modal" style="max-width:420px">
+  <div class="mhead" style="background:linear-gradient(135deg,#e07840,#c05020)">
+    <div class="mtitle">📬 新增待回覆</div>
+    <button class="xbtn" onclick="closeModal('pendingOverlay')">✕</button>
+  </div>
+  <div class="mbody">
+    <div class="fg">
+      <label class="fl">👤 好友（可搜尋）</label>
+      <div class="search-box" style="margin-bottom:6px">
+        <span class="si">🔍</span>
+        <input type="text" id="pendingFriendSearch" placeholder="搜尋好友名稱…" oninput="renderPendingFriendGrid()">
+      </div>
+      <div id="pendingFriendGrid" class="tag-grid" style="max-height:180px;overflow-y:auto;padding:10px;background:#f8fff4;border:2px solid var(--border);border-radius:9px"></div>
+    </div>
+    <div class="fg"><label class="fl">💬 備註（可選）</label><textarea class="fta" id="fPendingNote" placeholder="例：等收到台南的再一起寄" style="min-height:55px"></textarea></div>
+  </div>
+  <div class="mfoot">
+    <button class="btn-cancel" onclick="closeModal('pendingOverlay')">取消</button>
+    <button class="btn-save" onclick="savePendingReply()" style="background:linear-gradient(135deg,#e07840,#c05020)">📬 新增</button>
+  </div>
+</div>
+</div>
+
 <!-- SNAPSHOT MODAL -->
 <div class="overlay" id="snapOverlay" onclick="overlayClick(event,'snapOverlay')">
-<div class="modal">
-  <div class="mhead" style="background:linear-gradient(135deg,#4a6a9a,#2a4a7a)">
     <div class="mtitle">🎮 <span id="snapModalTitle">新增快照</span></div>
     <button class="xbtn" onclick="closeModal('snapOverlay')">✕</button>
   </div>
@@ -895,7 +937,8 @@ let tagMap   = JSON.parse(localStorage.getItem('pkm_tags')      || '{"裝置藝�
 let countries= JSON.parse(localStorage.getItem('pkm_countries') || '["日本","台灣","南韓","泰國","馬來西亞","新加坡","美國","英國","法國","德國","澳洲"]');
 let favorites= JSON.parse(localStorage.getItem('pkm_favorites') || '[{"value":"神片","label":"神片","icon":"🤩"},{"value":"喜歡","label":"喜歡","icon":"💚"},{"value":"特殊","label":"特殊","icon":"✨"},{"value":"傻眼","label":"傻眼","icon":"😂"}]');
 let friendTags = JSON.parse(localStorage.getItem('pkm_friend_tags') || '[{"value":"美菇美片","label":"美菇美片","icon":"🍄"},{"value":"好戰友","label":"好戰友","icon":"⚔️"},{"value":"不見了","label":"不見了","icon":"👻"}]');
-let snapshots  = JSON.parse(localStorage.getItem('pkm_snapshots') || '[]');
+let snapshots      = JSON.parse(localStorage.getItem('pkm_snapshots')       || '[]');
+let pendingReplies = JSON.parse(localStorage.getItem('pkm_pending_replies') || '[]');
 let snapTypes  = JSON.parse(localStorage.getItem('pkm_snap_types') || '[{"value":"散步","label":"散步","icon":"🚶"},{"value":"皮皮日常","label":"皮皮日常","icon":"🐾"}]');
 
 // ── UI 狀態 ──
@@ -989,6 +1032,7 @@ function debounce(fn, delay = 300) {
 const debouncedRenderLibrary   = debounce(() => renderLibrary());
 const debouncedRenderFriends   = debounce(() => renderFriends());
 const debouncedRenderSnapshots = debounce(() => renderSnapshots());
+const debouncedRenderPending   = debounce(() => renderPendingReplies());
 const getRecipIds   = (c) => Array.isArray(c.recipFriend) ? c.recipFriend : (c.recipFriend ? [c.recipFriend] : []);
 const getRecipNames = (c) => getRecipIds(c).map(id => getFriendName(id));
 const getRecipStr   = (c) => getRecipNames(c).join('、') || '';
@@ -1137,6 +1181,7 @@ function buildSyncPayload() {
     })),
     friends,
     snapshots,
+    pendingReplies,
     settings: {
       methods,
       tags:       tagMap,
@@ -1229,7 +1274,8 @@ function saveLocal() {
   }));
   localStorage.setItem('pkm_cards',     JSON.stringify(cleanCards));
   localStorage.setItem('pkm_friends',   JSON.stringify(friends));
-  localStorage.setItem('pkm_snapshots', JSON.stringify(snapshots));
+  localStorage.setItem('pkm_snapshots',       JSON.stringify(snapshots));
+  localStorage.setItem('pkm_pending_replies', JSON.stringify(pendingReplies));
 }
 
 function saveAndSync() {
@@ -1280,7 +1326,7 @@ function migrateFriendNamesToIds() {
 }
 
 function exportJSON() {
-  const data = { cards: buildSyncPayload().cards, friends, snapshots, methods, tags: tagMap, countries, favorites, friendTags, snapTypes, exportedAt: new Date().toISOString() };
+  const data = { cards: buildSyncPayload().cards, friends, snapshots, pendingReplies, methods, tags: tagMap, countries, favorites, friendTags, snapTypes, exportedAt: new Date().toISOString() };
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
   a.download = `pikmin_backup_${new Date().toISOString().slice(0,10)}.json`;
@@ -1305,7 +1351,8 @@ function importJSON(e) {
       if (data.countries) countries= data.countries;
       if (data.favorites)  { favorites  = data.favorites;  localStorage.setItem('pkm_favorites',   JSON.stringify(favorites));  }
       if (data.friendTags) { friendTags = data.friendTags; localStorage.setItem('pkm_friend_tags', JSON.stringify(friendTags)); }
-      if (data.snapshots)  { snapshots  = data.snapshots;  localStorage.setItem('pkm_snapshots',   JSON.stringify(snapshots));  }
+      if (data.snapshots)      { snapshots      = data.snapshots;      localStorage.setItem('pkm_snapshots',       JSON.stringify(snapshots));      }
+      if (data.pendingReplies) { pendingReplies = data.pendingReplies; localStorage.setItem('pkm_pending_replies', JSON.stringify(pendingReplies)); }
       if (data.snapTypes)  { snapTypes  = data.snapTypes;  localStorage.setItem('pkm_snap_types',  JSON.stringify(snapTypes));  }
       saveLocal();
       localStorage.setItem('pkm_methods',   JSON.stringify(methods));
@@ -1341,7 +1388,8 @@ window.onload = async () => {
       if (res?.success) {
         cards     = res.cards     || [];
         friends   = res.friends   || [];
-        snapshots = res.snapshots || [];
+        snapshots      = res.snapshots      || [];
+        pendingReplies = res.pendingReplies || [];
         if (res.folderIds) {
           CFG.cardFolderId     = res.folderIds.cards;
           CFG.snapshotFolderId = res.folderIds.snapshots;
@@ -1386,6 +1434,7 @@ function showPage(id, btn) {
   if (btn) btn.classList.add('active');
   if (id === 'stats')     renderStats();
   if (id === 'friends')   { showFriendSubPage('list'); renderFriends(); }
+  if (id === 'pending')   renderPendingReplies();
   if (id === 'snapshots') renderSnapshots();
   if (id === 'settings')  loadSettings();
 }
@@ -3180,6 +3229,183 @@ function confirmDrivePick() {
     closeModal('drivePickerOverlay');
     if (added > 0) showToast(`已加入 ${added} 張輔助照片`);
   }
+}
+
+// ═══════════════════════════════════════════════
+//  PENDING REPLIES
+// ═══════════════════════════════════════════════
+let pendingFilter = 'all';
+
+function setPendingFilter(f, btn) {
+  pendingFilter = f;
+  document.querySelectorAll('[id^="pendingFilter"]').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderPendingReplies();
+}
+
+function daysSince(dateStr) {
+  if (!dateStr) return 0;
+  const diff = Date.now() - new Date(dateStr).getTime();
+  return Math.floor(diff / 86400000);
+}
+
+function renderPendingReplies() {
+  const q = (document.getElementById('pendingSearch')?.value || '').toLowerCase();
+
+  // 自動移除完成超過 3 天的
+  const now = new Date().toISOString().split('T')[0];
+  const before = pendingReplies.length;
+  pendingReplies = pendingReplies.filter(p => {
+    if (!p.doneAt) return true;
+    return daysSince(p.doneAt) < 3;
+  });
+  if (pendingReplies.length !== before) { saveLocal(); }
+
+  // 以好友分組
+  const grouped = {};
+  pendingReplies.forEach(p => {
+    if (!grouped[p.friendId]) grouped[p.friendId] = [];
+    grouped[p.friendId].push(p);
+  });
+
+  // 計算每個好友最久待辦天數（只算未完成）
+  const friendOldest = {};
+  Object.entries(grouped).forEach(([fid, items]) => {
+    const todo = items.filter(p => !p.doneAt);
+    if (todo.length) {
+      friendOldest[fid] = Math.max(...todo.map(p => daysSince(p.createdAt)));
+    } else {
+      friendOldest[fid] = -1;
+    }
+  });
+
+  // 前三名（只算有未完成的）
+  const top3 = Object.entries(friendOldest)
+    .filter(([,d]) => d > 0)
+    .sort((a,b) => b[1]-a[1])
+    .slice(0,3)
+    .map(([fid]) => fid);
+  const medals = ['🥇','🥈','🥉'];
+
+  // 篩選和排序
+  let friendIds = Object.keys(grouped);
+  if (q) friendIds = friendIds.filter(fid => {
+    const name = getFriendName(fid).toLowerCase();
+    return name.includes(q);
+  });
+  if (pendingFilter === 'todo') friendIds = friendIds.filter(fid => grouped[fid].some(p => !p.doneAt));
+  if (pendingFilter === 'done') friendIds = friendIds.filter(fid => grouped[fid].some(p => p.doneAt));
+
+  // 排序：有未完成的排前面，再依最久天數
+  friendIds.sort((a,b) => (friendOldest[b]||0) - (friendOldest[a]||0));
+
+  const todoTotal = pendingReplies.filter(p => !p.doneAt).length;
+  const summaryEl = document.getElementById('pendingSummary');
+  if (summaryEl) summaryEl.textContent = todoTotal > 0 ? `共有 ${todoTotal} 筆待回覆` : '目前沒有待回覆 🎉';
+
+  const el = document.getElementById('pendingList');
+  if (!el) return;
+
+  if (!friendIds.length) {
+    el.innerHTML = '<div class="empty-state"><div class="ei">📬</div><p>尚無待回覆記錄</p></div>';
+    return;
+  }
+
+  el.innerHTML = friendIds.map(fid => {
+    const f = friends.find(x => x.id === fid);
+    const name = f ? f.name : getFriendName(fid);
+    const items = grouped[fid];
+    const todoItems = items.filter(p => !p.doneAt);
+    const doneItems = items.filter(p => p.doneAt);
+    const oldest = friendOldest[fid] || 0;
+    const medalIdx = top3.indexOf(fid);
+    const medal = medalIdx >= 0 ? medals[medalIdx] : '';
+    const isUrgent = oldest >= 14;
+    const hue = ((fid.charCodeAt ? fid.charCodeAt(0) : 0) * 37) % 360;
+
+    const itemHtml = (list, isDone) => list.map(p => {
+      const days = daysSince(p.createdAt);
+      const urgent = !isDone && days >= 14;
+      return `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:${isDone?'#f0f0f0':'#fff'};border-radius:8px;border:1.5px solid ${urgent?'var(--or)':'var(--border)'}">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:.78rem;color:var(--muted)">${p.createdAt}${days>0?` <span style="color:${urgent?'var(--or)':'var(--muted)'}">（${days}天前）</span>`:''}</div>
+          ${p.note?`<div style="font-size:.8rem;margin-top:2px">${escapeHtml(p.note)}</div>`:''}
+          ${isDone?`<div style="font-size:.72rem;color:var(--g);margin-top:2px">✅ 已完成 ${p.doneAt}（3天後自動移除）</div>`:''}
+        </div>
+        ${!isDone
+          ? `<button class="btn" onclick="completePending('${p.id}')" style="padding:4px 10px;font-size:.72rem;flex-shrink:0">✅ 完成</button>
+             <button class="act del" onclick="deletePending('${p.id}')" style="flex-shrink:0;font-size:.8rem">🗑️</button>`
+          : `<button class="act del" onclick="deletePending('${p.id}')" style="flex-shrink:0;font-size:.8rem">🗑️</button>`
+        }
+      </div>`;
+    }).join('');
+
+    return `<div style="background:var(--card);border:2px solid ${isUrgent?'var(--or)':'var(--border)'};border-radius:14px;overflow:hidden;box-shadow:0 2px 8px var(--sh)">
+      <div style="background:linear-gradient(135deg,hsl(${hue},60%,55%),hsl(${hue},70%,35%));padding:12px 14px;display:flex;align-items:center;gap:10px">
+        <div style="font-size:1.2rem;color:#fff;font-family:'Nunito',sans-serif;font-weight:900">${medal}</div>
+        <div style="flex:1">
+          <div style="font-family:'Nunito',sans-serif;font-weight:900;color:#fff;font-size:.95rem">${escapeHtml(name)}</div>
+          <div style="font-size:.72rem;color:rgba(255,255,255,.8)">
+            ${todoItems.length?`${todoItems.length} 筆未完成`:''}
+            ${oldest>=14?`<span style="color:#ffd080;font-weight:700">⚠️ 最久 ${oldest} 天</span>`:''}
+          </div>
+        </div>
+        <button class="btn" onclick="openAddPendingModal('${fid}')" style="background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.4);color:#fff;padding:4px 10px;font-size:.72rem">＋ 新增</button>
+      </div>
+      <div style="padding:10px;display:flex;flex-direction:column;gap:6px">
+        ${itemHtml(todoItems, false)}
+        ${doneItems.length ? `<div style="font-size:.72rem;color:var(--muted);margin-top:4px;padding-top:6px;border-top:1px solid var(--border)">已完成（3天後移除）</div>${itemHtml(doneItems, true)}` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openAddPendingModal(preselectedFriendId = null) {
+  document.getElementById('fPendingNote').value = '';
+  document.getElementById('pendingFriendSearch').value = '';
+  renderPendingFriendGrid(preselectedFriendId);
+  document.getElementById('pendingOverlay').classList.add('open');
+}
+
+function renderPendingFriendGrid(preselectedId = null) {
+  const q = (document.getElementById('pendingFriendSearch')?.value || '').toLowerCase();
+  const grid = document.getElementById('pendingFriendGrid'); if (!grid) return;
+  const sorted = getSortedFriends().filter(f => !q || f.name.toLowerCase().includes(q));
+  grid.innerHTML = sorted.map(f =>
+    `<div class="tc">
+      <input type="radio" name="pendingFriend" id="pf_${f.id}" value="${f.id}" ${preselectedId===f.id?'checked':''}>
+      <label for="pf_${f.id}">${escapeHtml(f.name)}</label>
+    </div>`
+  ).join('');
+}
+
+function savePendingReply() {
+  const selected = document.querySelector('input[name="pendingFriend"]:checked');
+  if (!selected) { alert('請選擇好友'); return; }
+  const note = document.getElementById('fPendingNote').value.trim();
+  pendingReplies.push({
+    id:        Date.now().toString(),
+    friendId:  selected.value,
+    createdAt: new Date().toISOString().split('T')[0],
+    note,
+    doneAt:    ''
+  });
+  saveAndSync();
+  renderPendingReplies();
+  closeModal('pendingOverlay');
+}
+
+function completePending(id) {
+  const p = pendingReplies.find(x => x.id === id); if (!p) return;
+  if (p.doneAt) { alert('這筆已經完成了！'); return; }
+  p.doneAt = new Date().toISOString().split('T')[0];
+  saveAndSync(); renderPendingReplies();
+}
+
+function deletePending(id) {
+  if (!confirm('確定移除此待回覆記錄？')) return;
+  pendingReplies = pendingReplies.filter(x => x.id !== id);
+  saveAndSync(); renderPendingReplies();
 }
 
 // ═══════════════════════════════════════════════
