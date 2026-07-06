@@ -1059,7 +1059,12 @@ const resolveFriendId = (val) => {
   return f ? f.id : s;
 };
 
-// 防抖動：輸入停止 300ms 後才執行
+// 目前時間到分：YYYY-MM-DD HH:MM
+const nowStr = () => {
+  const d = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
 function debounce(fn, delay = 300) {
   let timer = null;
   return function(...args) {
@@ -1080,8 +1085,8 @@ const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov
 const normalizeDate = (val) => {
   if (!val) return '';
   const s = String(val).trim();
-  // 已經是 YYYY-MM-DD
-  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  // 已經是 YYYY-MM-DD 或 YYYY-MM-DD HH:MM
+  if (/^\d{4}-\d{2}-\d{2}( \d{2}:\d{2})?$/.test(s)) return s;
   // ISO：2026-05-04T16:00:00.000Z
   const m1 = s.match(/^(\d{4}-\d{2}-\d{2})T/);
   if (m1) return m1[1];
@@ -2229,7 +2234,7 @@ async function saveCard() {
     createdAt: editingCardId
       ? normalizeDate(cards.find(c => c.id === editingCardId)?.createdAt || new Date().toISOString())
       : new Date().toISOString().split('T')[0],
-    updatedAt: new Date().toISOString().split('T')[0]
+    updatedAt: nowStr()
   };
 
   if (editingCardId) {
@@ -2591,7 +2596,7 @@ function confirmMergeFriend() {
     if (!newAliases.includes(a) && a !== keepF.name) newAliases.push(a);
   });
   keepF.aliases   = newAliases;
-  keepF.updatedAt = new Date().toISOString().split('T')[0];
+  keepF.updatedAt = nowStr();
 
   // 2. 更新所有 cards 的 sourceFriend 和 recipFriend
   cards.forEach(c => {
@@ -2648,10 +2653,10 @@ function saveFriend() {
 
   if (editingFriendId) {
     const f = friends.find(x => x.id === editingFriendId);
-    if (f) { f.name = name; f.ppid = ppid; f.note = note; f.tags = tags; f.aliases = _editingAliases; f.updatedAt = new Date().toISOString().split('T')[0]; }
+    if (f) { f.name = name; f.ppid = ppid; f.note = note; f.tags = tags; f.aliases = _editingAliases; f.updatedAt = nowStr(); }
   } else {
     if (friends.find(f => f.name === name)) { alert('好友已存在'); return; }
-    friends.push({ id: Date.now().toString(), name, ppid, note, tags, aliases: _editingAliases, updatedAt: new Date().toISOString().split('T')[0] });
+    friends.push({ id: Date.now().toString(), name, ppid, note, tags, aliases: _editingAliases, updatedAt: nowStr() });
   }
   saveAndSync();
   closeModal('friendOverlay');
@@ -3030,29 +3035,89 @@ async function openScanModal(forceRefresh = false) {
 
   // 嘗試用 sessionStorage 快取
   const cacheKey = 'pkm_scan_cache';
-  const cached = !forceRefresh && sessionStorage.getItem(cacheKey);
-  if (cached) {
-    try {
-      scannedPhotos = JSON.parse(cached);
-      document.getElementById('scanStatus').textContent = '';
-      setSyncStatus('ok', '使用快取資料');
-      renderScanModal();
-      return;
-    } catch(e) { sessionStorage.removeItem(cacheKey); }
+  if (!forceRefresh) {
+    const cached = sessionStorage.getItem(cacheKey);
+    if (cached) {
+      try {
+        scannedPhotos = JSON.parse(cached);
+        document.getElementById('scanStatus').textContent = '';
+        setSyncStatus('ok', '使用快取資料');
+        renderScanModal();
+        return;
+      } catch(e) { sessionStorage.removeItem(cacheKey); }
+    }
+  }
+
+  // 先取得子資料夾清單
+  document.getElementById('scanStatus').textContent = '讀取資料夾…';
+  const folderRes = await callGAS('listSubfolders', { folderId: CFG.cardFolderId || '' });
+  if (!folderRes?.success) {
+    document.getElementById('scanStatus').textContent = '讀取資料夾失敗：' + (folderRes?.error || '');
+    return;
+  }
+
+  const folders = folderRes.folders || [];
+  let selectedFolderIds = null;
+
+  if (folders.length > 0) {
+    // 顯示資料夾選擇（用 sessionStorage 記住上次選擇）
+    const lastSel = JSON.parse(sessionStorage.getItem('pkm_scan_folders') || 'null');
+    const selected = await showFolderSelector(folders, lastSel);
+    if (selected === null) { closeModal('scanOverlay'); return; } // 使用者取消
+    selectedFolderIds = selected.length > 0 ? selected : null;
+    sessionStorage.setItem('pkm_scan_folders', JSON.stringify(selected));
   }
 
   document.getElementById('scanStatus').textContent = '掃描中…';
   setSyncStatus('ing', '掃描 Drive 中…');
-  const res = await callGAS('scan', { folderId: CFG.cardFolderId || '' });
+  const res = await callGAS('scan', { folderId: CFG.cardFolderId || '', folderIds: selectedFolderIds });
   if (!res?.success) {
     document.getElementById('scanStatus').textContent = '掃描失敗：' + (res?.error || '網路錯誤');
     setSyncStatus('err', '掃描失敗'); return;
   }
   scannedPhotos = res.photos || [];
-  // 存入 sessionStorage 快取
   try { sessionStorage.setItem(cacheKey, JSON.stringify(scannedPhotos)); } catch(e) {}
   setSyncStatus('ok', '掃描完成');
   renderScanModal();
+}
+
+function showFolderSelector(folders, lastSel) {
+  return new Promise(resolve => {
+    // 建立選擇器 UI
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+    const box = document.createElement('div');
+    box.style.cssText = 'background:#fff;border-radius:16px;padding:20px;max-width:400px;width:100%;max-height:80vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.3)';
+    box.innerHTML = `
+      <div style="font-family:'Nunito',sans-serif;font-weight:900;font-size:1rem;margin-bottom:12px">📁 選擇要掃描的資料夾</div>
+      <div style="font-size:.75rem;color:#888;margin-bottom:10px">名稱結尾為 _done / _archived / _skip 的資料夾已自動排除</div>
+      <div style="display:flex;gap:6px;margin-bottom:10px">
+        <button id="fselAll" style="flex:1;padding:5px;border:1.5px solid #ccc;border-radius:8px;background:#fff;cursor:pointer;font-size:.75rem">☑ 全選</button>
+        <button id="fselNone" style="flex:1;padding:5px;border:1.5px solid #ccc;border-radius:8px;background:#fff;cursor:pointer;font-size:.75rem">☐ 取消全選</button>
+      </div>
+      <div id="folderCheckList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px">
+        ${folders.map(f => `
+          <label style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1.5px solid #e0e0e0;border-radius:9px;cursor:pointer">
+            <input type="checkbox" value="${f.id}" ${!lastSel || lastSel.includes(f.id) ? 'checked' : ''}>
+            <span style="font-size:.82rem">📁 ${f.name}</span>
+          </label>`).join('')}
+      </div>
+      <div style="display:flex;gap:8px">
+        <button id="fselCancel" style="flex:1;padding:8px;border:1.5px solid #ccc;border-radius:10px;background:#fff;cursor:pointer">取消</button>
+        <button id="fselConfirm" style="flex:1;padding:8px;border:none;border-radius:10px;background:linear-gradient(135deg,#4a9a4a,#2d6b2d);color:#fff;cursor:pointer;font-weight:700">掃描</button>
+      </div>`;
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+
+    box.querySelector('#fselAll').onclick   = () => box.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = true);
+    box.querySelector('#fselNone').onclick  = () => box.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = false);
+    box.querySelector('#fselCancel').onclick  = () => { document.body.removeChild(overlay); resolve(null); };
+    box.querySelector('#fselConfirm').onclick = () => {
+      const sel = Array.from(box.querySelectorAll('input[type=checkbox]:checked')).map(cb => cb.value);
+      document.body.removeChild(overlay);
+      resolve(sel);
+    };
+  });
 }
 
 function getFilteredPhotos() {
@@ -3766,7 +3831,7 @@ async function saveSnapshot() {
     createdAt: editingSnapshotId
       ? (snapshots.find(s => s.id === editingSnapshotId)?.createdAt || new Date().toISOString().split('T')[0])
       : new Date().toISOString().split('T')[0],
-    updatedAt: new Date().toISOString().split('T')[0]
+    updatedAt: nowStr()
   };
 
   if (editingSnapshotId) {
