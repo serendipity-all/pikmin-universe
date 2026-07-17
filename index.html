@@ -668,10 +668,14 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
       <div class="fg"><label class="fl">🎯 取得方式</label><select class="fsel" id="fObtMethod"></select></div>
     </div>
     <div class="fg">
-      <label class="fl">🤝 來源好友</label>
-      <div class="friend-select-wrap">
-        <select class="fsel" id="fSourceFriend"><option value="">（無）</option></select>
+      <label class="fl">🤝 來源好友（誰送我的）</label>
+      <div id="sourceFriendLangBar" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px"></div>
+      <div class="search-box" style="margin-bottom:6px">
+        <span class="si">🔍</span>
+        <input type="text" id="sourceFriendSearch" placeholder="搜尋好友…"
+          oninput="renderFriendPicker('sourceFriendGrid','sourceFriendSearch',Array.from(document.querySelectorAll('[name=sourceFriend]:checked')).map(x=>x.value),'single','sourceFriend')">
       </div>
+      <div id="sourceFriendGrid" class="tag-grid" style="max-height:150px;overflow-y:auto;padding:8px;background:#f8fff4;border:2px solid var(--border);border-radius:9px"></div>
       <span class="friend-add-inline" onclick="quickAddFriend('source')">＋ 新增好友到名單</span>
     </div>
     <div class="frow">
@@ -700,6 +704,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
     </div>
     <div class="fg" id="recipGrp" style="display:none">
       <label class="fl">💌 送給誰（可多選）<span id="recipCount" style="color:var(--g);font-weight:700;margin-left:6px"></span></label>
+      <div id="recipFriendLangBar" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px"></div>
       <div id="recipFriendGrid" class="tag-grid" style="max-height:150px;overflow-y:auto;padding:10px;background:#fff8f0;border:2px solid #f0c080;border-radius:9px;gap:8px"></div>
       <span class="friend-add-inline" onclick="quickAddFriend('recip')">＋ 新增好友到名單</span>
     </div>
@@ -758,9 +763,11 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
   <div class="mbody">
     <div class="fg">
       <label class="fl">👤 好友（可搜尋）</label>
+      <div id="pendingFriendLangBar" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px"></div>
       <div class="search-box" style="margin-bottom:6px">
         <span class="si">🔍</span>
-        <input type="text" id="pendingFriendSearch" placeholder="搜尋好友名稱…" oninput="renderPendingFriendGrid()">
+        <input type="text" id="pendingFriendSearch" placeholder="搜尋好友名稱…"
+          oninput="renderFriendPicker('pendingFriendGrid','pendingFriendSearch',Array.from(document.querySelectorAll('[name=pendingFriend]:checked')).map(x=>x.value),'single','pendingFriend')">
       </div>
       <div id="pendingFriendGrid" class="tag-grid" style="max-height:180px;overflow-y:auto;padding:10px;background:#f8fff4;border:2px solid var(--border);border-radius:9px"></div>
     </div>
@@ -1065,6 +1072,62 @@ const nowStr = () => {
   const pad = n => String(n).padStart(2,'0');
   return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 };
+// ── 語言偵測 ──
+const LANG_FILTERS = [
+  { id: 'all',   label: '全部' },
+  { id: 'en',    label: '英文',  test: s => /[a-zA-Z]/.test(s) },
+  { id: 'zh',    label: '中文',  test: s => /[\u4e00-\u9fff\u3400-\u4dbf]/.test(s) },
+  { id: 'ja',    label: '日文',  test: s => /[\u3040-\u309f\u30a0-\u30ff]/.test(s) },
+  { id: 'ko',    label: '韓文',  test: s => /[\uac00-\ud7af\u1100-\u11ff]/.test(s) },
+  { id: 'num',   label: '數字',  test: s => /[0-9]/.test(s) },
+  { id: 'sym',   label: '符號',  test: s => /[^\w\u4e00-\u9fff\u3400-\u4dbf\u3040-\u309f\u30a0-\u30ff\uac00-\ud7af\u1100-\u11ff\s]/.test(s) },
+  { id: 'other', label: '其他',  test: s => !/[a-zA-Z\u4e00-\u9fff\u3400-\u4dbf\u3040-\u309f\u30a0-\u30ff\uac00-\ud7af\u1100-\u11ff0-9\W]/.test(s) },
+];
+
+// 共用選好友元件渲染
+function renderFriendPicker(containerId, searchId, selected = [], mode = 'single', name = 'friendPick') {
+  const grid = document.getElementById(containerId); if (!grid) return;
+  const q    = (document.getElementById(searchId)?.value || '').toLowerCase();
+  const lang = grid.dataset.lang || 'all';
+
+  let list = getSortedFriends();
+  if (lang !== 'all') {
+    const lf = LANG_FILTERS.find(f => f.id === lang);
+    if (lf?.test) list = list.filter(f => lf.test(f.name));
+  }
+  if (q) list = list.filter(f =>
+    f.name.toLowerCase().includes(q) ||
+    (f.aliases||[]).some(a => a.toLowerCase().includes(q))
+  );
+
+  const type = mode === 'single' ? 'radio' : 'checkbox';
+  grid.innerHTML = list.length
+    ? list.map(f => `
+      <div class="tc">
+        <input type="${type}" name="${name}" id="${name}_${f.id}" value="${f.id}"
+          ${selected.includes(f.id) ? 'checked' : ''}>
+        <label for="${name}_${f.id}">${escapeHtml(f.name)}${(f.aliases||[]).length?` <span style="font-size:.65rem;color:var(--muted)">${f.aliases.join('/')}</span>`:''}</label>
+      </div>`).join('')
+    : '<div style="font-size:.78rem;color:var(--muted)">沒有符合的好友</div>';
+}
+
+function renderLangFilter(langBarId, containerId, searchId, selected, mode, name) {
+  const el = document.getElementById(langBarId); if (!el) return;
+  const grid = document.getElementById(containerId);
+  const cur  = grid?.dataset.lang || 'all';
+  el.innerHTML = LANG_FILTERS.map(f =>
+    `<button class="btn${cur===f.id?' active':''}" onclick="
+      document.getElementById('${containerId}').dataset.lang='${f.id}';
+      renderLangFilter('${langBarId}','${containerId}','${searchId}',
+        Array.from(document.querySelectorAll('[name=${name}]:checked')).map(x=>x.value),
+        '${mode}','${name}');
+      renderFriendPicker('${containerId}','${searchId}',
+        Array.from(document.querySelectorAll('[name=${name}]:checked')).map(x=>x.value),
+        '${mode}','${name}')
+    " style="padding:3px 8px;font-size:.7rem">${f.label}</button>`
+  ).join('');
+}
+
 function debounce(fn, delay = 300) {
   let timer = null;
   return function(...args) {
@@ -1990,7 +2053,15 @@ function applyAI() {
   }
   if (d.friendName) {
     ensureFriendExists(d.friendName);
-    setTimeout(() => { document.getElementById('fSourceFriend').value = d.friendName; }, 50);
+    const _fid = getFriendId(d.friendName);
+    setTimeout(() => {
+      const sfGrid = document.getElementById('sourceFriendGrid');
+      if (sfGrid) {
+        sfGrid.dataset.lang = 'all';
+        renderFriendPicker('sourceFriendGrid','sourceFriendSearch', _fid?[_fid]:[], 'single','sourceFriend');
+        renderLangFilter('sourceFriendLangBar','sourceFriendGrid','sourceFriendSearch', _fid?[_fid]:[], 'single','sourceFriend');
+      }
+    }, 50);
     // 只在目前狀態是 pending 時才改成 kept，不覆蓋已設定的 sent
     const curStatus = document.getElementById('fStatus').value;
     if (curStatus === 'pending') {
@@ -2040,7 +2111,7 @@ function clearCardForm() {
   document.getElementById('fDupes').value      = '1';
   document.getElementById('fStatus').value     = 'pending';
   document.getElementById('fSentDate').value   = '';
-  document.getElementById('fSourceFriend').value = '';
+  const sfGridClear = document.getElementById('sourceFriendGrid'); if(sfGridClear) { sfGridClear.dataset.lang='all'; renderFriendPicker('sourceFriendGrid','sourceFriendSearch',[],'single','sourceFriend'); renderLangFilter('sourceFriendLangBar','sourceFriendGrid','sourceFriendSearch',[],'single','sourceFriend'); }
   document.getElementById('fObtMethod').value  = methods[0] || '';
   document.getElementById('fCountry').value    = '';
   renderFavoriteSelect();
@@ -2064,7 +2135,9 @@ function fillCardForm(c) {
   document.getElementById('fName').value        = c.name || '';
   document.getElementById('fObtDate').value    = normalizeDate(c.obtainedDate);
   document.getElementById('fObtMethod').value  = c.obtainedMethod || '';
-  document.getElementById('fSourceFriend').value = getFriendName(c.sourceFriend) || '';
+  const _sfId = resolveFriendId(c.sourceFriend);
+  const _sfGrid = document.getElementById('sourceFriendGrid');
+  if (_sfGrid) { _sfGrid.dataset.lang = 'all'; renderFriendPicker('sourceFriendGrid','sourceFriendSearch',_sfId?[_sfId]:[],'single','sourceFriend'); renderLangFilter('sourceFriendLangBar','sourceFriendGrid','sourceFriendSearch',_sfId?[_sfId]:[],'single','sourceFriend'); }
   document.getElementById('fDupes').value      = c.dupes || '1';
   document.getElementById('fStatus').value     = c.status || 'pending';
   document.getElementById('fSentDate').value   = normalizeDate(c.sentDate);
@@ -2101,7 +2174,7 @@ function copyLastCard() {
   if (!cards.length) return;
   const c = cards[0];
   document.getElementById('fObtMethod').value  = c.obtainedMethod || '';
-  document.getElementById('fSourceFriend').value = getFriendName(c.sourceFriend) || '';
+  const _sfId2 = resolveFriendId(c.sourceFriend); const _sfGrid2 = document.getElementById('sourceFriendGrid'); if(_sfGrid2){_sfGrid2.dataset.lang='all';renderFriendPicker('sourceFriendGrid','sourceFriendSearch',_sfId2?[_sfId2]:[],'single','sourceFriend');}
   document.getElementById('fCountry').value    = c.region || '';
   (c.tags||[]).forEach(t => { const cb = document.querySelector(`#tagGrid input[value="${escapeHtml(t)}"]`); if(cb) cb.checked = true; });
 }
@@ -2127,7 +2200,7 @@ async function saveCard() {
   const status    = document.getElementById('fStatus').value;
   const sentDate  = document.getElementById('fSentDate').value;
   const recipIds  = status === 'sent'
-    ? Array.from(document.querySelectorAll('#recipFriendGrid input:checked')).map(cb => getFriendId(cb.value))
+    ? Array.from(document.querySelectorAll('[name=recipFriend]:checked')).map(cb => cb.value)
     : [];
 
   // 防呆：已送出但沒選送給誰
@@ -2146,7 +2219,7 @@ async function saveCard() {
     region:         document.getElementById('fCountry').value,
     obtainedDate:   document.getElementById('fObtDate').value,
     obtainedMethod: document.getElementById('fObtMethod').value,
-    sourceFriend:   getFriendId(document.getElementById('fSourceFriend').value),
+    sourceFriend:   (document.querySelector('[name=sourceFriend]:checked')?.value || ''),
     rarity:         document.querySelector('input[name="rare"]:checked')?.value || '',
     dupes:          document.getElementById('fDupes').value || '1',
     notes:          document.getElementById('fNotes').value.trim(),
@@ -2284,34 +2357,30 @@ function hideToast() {
 //  FRIEND SELECTS
 // ═══════════════════════════════════════════════
 function renderFriendSelects() {
-  const sorted = getSortedFriends();
-  const opts = '<option value="">（無）</option>' + sorted.map(f => `<option value="${escapeHtml(f.name)}">${escapeHtml(f.name)}</option>`).join('');
-  const sf = document.getElementById('fSourceFriend');
-  if (sf) { const v = sf.value; sf.innerHTML = opts; sf.value = v; }
+  // 來源好友
+  const sfSelected = Array.from(document.querySelectorAll('[name=sourceFriend]:checked')).map(x => x.value);
+  const sfGrid = document.getElementById('sourceFriendGrid');
+  if (sfGrid) { sfGrid.dataset.lang = sfGrid.dataset.lang || 'all'; }
+  renderFriendPicker('sourceFriendGrid', 'sourceFriendSearch', sfSelected, 'single', 'sourceFriend');
+  renderLangFilter('sourceFriendLangBar', 'sourceFriendGrid', 'sourceFriendSearch', sfSelected, 'single', 'sourceFriend');
+  // 送給誰
   renderRecipFriendGrid();
 }
 
 function renderRecipFriendGrid(selectedNames) {
   const grid = document.getElementById('recipFriendGrid'); if (!grid) return;
-  const cur = selectedNames !== undefined ? selectedNames :
-    Array.from(grid.querySelectorAll('input:checked')).map(cb => cb.value);
-  const sorted = getSortedFriends();
-  if (!sorted.length) {
-    grid.innerHTML = '<div style="font-size:.75rem;color:var(--muted)">尚無好友，請先新增好友</div>';
-    return;
-  }
-  grid.innerHTML = sorted.map(f =>
-    `<div class="tc">
-      <input type="checkbox" id="recip_${f.id}" value="${escapeHtml(f.name)}" ${cur.includes(f.name)?'checked':''}
-        onchange="updateRecipCount()">
-      <label for="recip_${f.id}" style="padding:5px 12px;font-size:.8rem">${escapeHtml(f.name)}</label>
-    </div>`
-  ).join('');
+  // 把名字轉成 ID
+  const cur = selectedNames !== undefined
+    ? selectedNames.map(n => getFriendId(n))
+    : Array.from(grid.querySelectorAll('input:checked')).map(cb => cb.value);
+  if (!grid.dataset.lang) grid.dataset.lang = 'all';
+  renderFriendPicker('recipFriendGrid', null, cur, 'multi', 'recipFriend');
+  renderLangFilter('recipFriendLangBar', 'recipFriendGrid', null, cur, 'multi', 'recipFriend');
   updateRecipCount();
 }
 
 function updateRecipCount() {
-  const cnt = document.querySelectorAll('#recipFriendGrid input:checked').length;
+  const cnt = document.querySelectorAll('[name=recipFriend]:checked').length;
   const el = document.getElementById('recipCount');
   if (el) el.textContent = cnt > 0 ? `已選 ${cnt} 人` : '';
 }
@@ -2673,10 +2742,11 @@ function saveFriend() {
       openCardModal(savedId);
       setTimeout(() => {
         if (target === 'source') {
-          const sel = document.getElementById('fSourceFriend');
-          if (sel) sel.value = name;
+          const fid = getFriendId(name);
+          const sfGrid = document.getElementById('sourceFriendGrid');
+          if (sfGrid) { sfGrid.dataset.lang='all'; renderFriendPicker('sourceFriendGrid','sourceFriendSearch',fid?[fid]:[],'single','sourceFriend'); renderLangFilter('sourceFriendLangBar','sourceFriendGrid','sourceFriendSearch',fid?[fid]:[],'single','sourceFriend'); }
         } else {
-          const cur = Array.from(document.querySelectorAll('#recipFriendGrid input:checked')).map(cb => cb.value);
+          const cur = Array.from(document.querySelectorAll('[name=recipFriend]:checked')).map(cb => cb.value);
           renderRecipFriendGrid([...cur, name]);
         }
       }, 80);
@@ -3609,20 +3679,16 @@ function renderPendingReplies() {
 function openAddPendingModal(preselectedFriendId = null) {
   document.getElementById('fPendingNote').value = '';
   document.getElementById('pendingFriendSearch').value = '';
-  renderPendingFriendGrid(preselectedFriendId);
+  const pfGrid = document.getElementById('pendingFriendGrid');
+  if (pfGrid) pfGrid.dataset.lang = 'all';
+  renderFriendPicker('pendingFriendGrid','pendingFriendSearch', preselectedFriendId ? [preselectedFriendId] : [], 'single', 'pendingFriend');
+  renderLangFilter('pendingFriendLangBar','pendingFriendGrid','pendingFriendSearch', preselectedFriendId ? [preselectedFriendId] : [], 'single', 'pendingFriend');
   document.getElementById('pendingOverlay').classList.add('open');
 }
 
 function renderPendingFriendGrid(preselectedId = null) {
-  const q = (document.getElementById('pendingFriendSearch')?.value || '').toLowerCase();
-  const grid = document.getElementById('pendingFriendGrid'); if (!grid) return;
-  const sorted = getSortedFriends().filter(f => !q || f.name.toLowerCase().includes(q));
-  grid.innerHTML = sorted.map(f =>
-    `<div class="tc">
-      <input type="radio" name="pendingFriend" id="pf_${f.id}" value="${f.id}" ${preselectedId===f.id?'checked':''}>
-      <label for="pf_${f.id}">${escapeHtml(f.name)}</label>
-    </div>`
-  ).join('');
+  const sel = preselectedId ? [preselectedId] : Array.from(document.querySelectorAll('[name=pendingFriend]:checked')).map(x => x.value);
+  renderFriendPicker('pendingFriendGrid','pendingFriendSearch', sel, 'single', 'pendingFriend');
 }
 
 function savePendingReply() {
