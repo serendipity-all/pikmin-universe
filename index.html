@@ -668,7 +668,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
       <div class="fg"><label class="fl">🎯 取得方式</label><select class="fsel" id="fObtMethod"></select></div>
     </div>
     <div class="fg">
-      <label class="fl">🤝 來源好友（誰送我的）</label>
+      <label class="fl">🤝 來源好友（誰送我的）<span id="sourceFriendDisplay" style="font-size:.75rem;font-weight:400;margin-left:8px;color:var(--muted)">尚未選擇</span></label>
       <div id="sourceFriendLangBar" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px"></div>
       <div class="search-box" style="margin-bottom:6px">
         <span class="si">🔍</span>
@@ -1101,14 +1101,23 @@ function renderFriendPicker(containerId, searchId, selected = [], mode = 'single
   );
 
   const type = mode === 'single' ? 'radio' : 'checkbox';
+  const onchangeFn = containerId === 'recipFriendGrid'
+    ? 'onchange="updateRecipCount()"'
+    : containerId === 'sourceFriendGrid'
+      ? 'onchange="updateSourceFriendDisplay()"'
+      : '';
   grid.innerHTML = list.length
     ? list.map(f => `
       <div class="tc">
         <input type="${type}" name="${name}" id="${name}_${f.id}" value="${f.id}"
-          ${selected.includes(f.id) ? 'checked' : ''}>
+          ${selected.includes(f.id) ? 'checked' : ''} ${onchangeFn}>
         <label for="${name}_${f.id}">${escapeHtml(f.name)}${(f.aliases||[]).length?` <span style="font-size:.65rem;color:var(--muted)">${f.aliases.join('/')}</span>`:''}</label>
       </div>`).join('')
     : '<div style="font-size:.78rem;color:var(--muted)">沒有符合的好友</div>';
+
+  // 渲染後即時更新顯示
+  if (containerId === 'recipFriendGrid') updateRecipCount();
+  if (containerId === 'sourceFriendGrid') updateSourceFriendDisplay();
 }
 
 function renderLangFilter(langBarId, containerId, searchId, selected, mode, name) {
@@ -2101,6 +2110,11 @@ function openCardModal(id = null) {
     const c = cards.find(x => x.id === id);
     if (c) fillCardForm(c);
   }
+  // 重置語言篩選
+  ['sourceFriendGrid','recipFriendGrid'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.dataset.lang = 'all';
+  });
   document.getElementById('cardOverlay').classList.add('open');
   initImageListeners();
 }
@@ -2111,7 +2125,13 @@ function clearCardForm() {
   document.getElementById('fDupes').value      = '1';
   document.getElementById('fStatus').value     = 'pending';
   document.getElementById('fSentDate').value   = '';
-  const sfGridClear = document.getElementById('sourceFriendGrid'); if(sfGridClear) { sfGridClear.dataset.lang='all'; renderFriendPicker('sourceFriendGrid','sourceFriendSearch',[],'single','sourceFriend'); renderLangFilter('sourceFriendLangBar','sourceFriendGrid','sourceFriendSearch',[],'single','sourceFriend'); }
+  const sfGridClear = document.getElementById('sourceFriendGrid');
+  if (sfGridClear) {
+    sfGridClear.dataset.lang = 'all';
+    renderFriendPicker('sourceFriendGrid','sourceFriendSearch',[],'single','sourceFriend');
+    renderLangFilter('sourceFriendLangBar','sourceFriendGrid','sourceFriendSearch',[],'single','sourceFriend');
+  }
+  updateSourceFriendDisplay();
   document.getElementById('fObtMethod').value  = methods[0] || '';
   document.getElementById('fCountry').value    = '';
   renderFavoriteSelect();
@@ -2383,6 +2403,20 @@ function updateRecipCount() {
   const cnt = document.querySelectorAll('[name=recipFriend]:checked').length;
   const el = document.getElementById('recipCount');
   if (el) el.textContent = cnt > 0 ? `已選 ${cnt} 人` : '';
+}
+
+function updateSourceFriendDisplay() {
+  const el = document.getElementById('sourceFriendDisplay');
+  if (!el) return;
+  const checked = document.querySelector('[name=sourceFriend]:checked');
+  if (checked) {
+    const name = getFriendName(checked.value);
+    el.textContent = `已選：${name}`;
+    el.style.color = 'var(--g)';
+  } else {
+    el.textContent = '尚未選擇';
+    el.style.color = 'var(--muted)';
+  }
 }
 
 // ═══════════════════════════════════════════════
