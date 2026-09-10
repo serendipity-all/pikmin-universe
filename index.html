@@ -840,6 +840,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
       <div style="display:flex;gap:4px">
         <button class="btn" onclick="dpSelectAll(true)" style="padding:4px 10px;font-size:.72rem">☑ 全選</button>
         <button class="btn" onclick="dpSelectAll(false)" style="padding:4px 10px;font-size:.72rem">☐ 取消</button>
+        <button class="btn" onclick="openDrivePickerModal(drivePickerMode, true)" style="padding:4px 10px;font-size:.72rem" title="重新掃描">🔄</button>
       </div>
     </div>
     <div id="dpPager" style="display:none;align-items:center;gap:6px;margin-bottom:8px;font-size:.78rem;color:var(--muted)">
@@ -3408,7 +3409,7 @@ async function importScannedPhotos() {
 // ═══════════════════════════════════════════════
 //  DRIVE PICKER MODAL（輔助照片）
 // ═══════════════════════════════════════════════
-async function openDrivePickerModal(mode = 'aux') {
+async function openDrivePickerModal(mode = 'aux', forceRefresh = false) {
   if (!CFG.scriptUrl) { alert('請先設定 GAS 網址'); return; }
   drivePickerMode = mode;
   dpFilter = 'all'; dpPage = 0; dpPhotos = [];
@@ -3421,28 +3422,46 @@ async function openDrivePickerModal(mode = 'aux') {
   if (confirmBtn) confirmBtn.textContent = mode === 'aux' ? '✅ 加入輔助照片' : '✅ 設為主照片';
   document.getElementById('drivePickerOverlay').classList.add('open');
 
-  // 優先使用快取（明信片和快照分開快取）
-  const cacheKey = drivePickerMode === 'snap' ? 'pkm_scan_cache_snap' : 'pkm_scan_cache';
-  const cached = sessionStorage.getItem(cacheKey);
-  if (cached) {
-    try {
-      dpPhotos = JSON.parse(cached);
-      scannedPhotos = drivePickerMode !== 'snap' ? dpPhotos : scannedPhotos;
-      renderDpList();
-      return;
-    } catch(e) { sessionStorage.removeItem(cacheKey); }
+  const cacheKey = mode === 'snap' ? 'pkm_scan_cache_snap' : 'pkm_scan_cache';
+  if (!forceRefresh) {
+    const cached = sessionStorage.getItem(cacheKey);
+    if (cached) {
+      try {
+        dpPhotos = JSON.parse(cached);
+        if (mode !== 'snap') scannedPhotos = dpPhotos;
+        renderDpList();
+        return;
+      } catch(e) { sessionStorage.removeItem(cacheKey); }
+    }
+  } else {
+    sessionStorage.removeItem(cacheKey);
   }
 
-  // 無快取才掃描
+  const folderId = mode === 'snap' ? (CFG.snapshotFolderId || '') : (CFG.cardFolderId || '');
+  document.getElementById('drivePickerStatus').textContent = '讀取資料夾…';
+  const folderRes = await callGAS('listSubfolders', { folderId });
+  const folders = folderRes?.folders || [];
+  let selectedFolderIds = null;
+
+  if (folders.length > 0) {
+    const lastSelKey = mode === 'snap' ? 'pkm_scan_folders_snap' : 'pkm_scan_folders';
+    const lastSel = JSON.parse(sessionStorage.getItem(lastSelKey) || 'null');
+    document.getElementById('drivePickerOverlay').classList.remove('open');
+    const selected = await showFolderSelector(folders, lastSel);
+    document.getElementById('drivePickerOverlay').classList.add('open');
+    if (selected === null) { closeModal('drivePickerOverlay'); return; }
+    selectedFolderIds = selected.length > 0 ? selected : null;
+    sessionStorage.setItem(lastSelKey, JSON.stringify(selected));
+  }
+
   document.getElementById('drivePickerStatus').textContent = '掃描 Drive 中…';
-  const folderId = drivePickerMode === 'snap' ? (CFG.snapshotFolderId || '') : (CFG.cardFolderId || '');
-  const res = await callGAS('scan', { folderId });
+  const res = await callGAS('scan', { folderId, folderIds: selectedFolderIds });
   if (!res?.success) {
     document.getElementById('drivePickerStatus').textContent = '掃描失敗：' + (res?.error||'錯誤');
     return;
   }
   dpPhotos = res.photos || [];
-  if (drivePickerMode !== 'snap') scannedPhotos = dpPhotos;
+  if (mode !== 'snap') scannedPhotos = dpPhotos;
   try { sessionStorage.setItem(cacheKey, JSON.stringify(dpPhotos)); } catch(e) {}
   renderDpList();
 }
