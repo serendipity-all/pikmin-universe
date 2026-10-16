@@ -805,13 +805,25 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
       <h4>已選擇的照片</h4>
       <div class="photo-list" id="snapPhotoList"></div>
     </div>
-    <div class="fg"><label class="fl">📝 名稱</label><input type="text" class="fi" id="fSnapName" placeholder="輸入快照名稱"></div>
+    <div class="fg"><label class="fl">📝 名稱</label><input type="text" class="fi" id="fSnapName" placeholder="輸入快照名稱（選填）"></div>
     <div class="fg"><label class="fl">📅 日期</label><input type="date" class="fi" id="fSnapDate"></div>
     <div class="fg">
       <label class="fl">🏷️ 類型（可多選）</label>
       <div class="tag-grid" id="snapTypeGrid"></div>
     </div>
-    <div class="fg"><label class="fl">💬 備註</label><textarea class="fta" id="fSnapNotes" placeholder="記下這個快照的故事…"></textarea></div>
+    <div class="fg"><label class="fl">👥 跟誰一起（選填）</label><input type="text" class="fi" id="fSnapCompanions" placeholder="例：小花、花花"></div>
+    <div class="frow">
+      <div class="fg" style="flex:1"><label class="fl">📅 起始日（選填）</label><input type="date" class="fi" id="fSnapStartDate"></div>
+      <div class="fg" style="flex:1"><label class="fl">📅 結束日（選填）</label><input type="date" class="fi" id="fSnapEndDate"></div>
+    </div>
+    <div class="fg"><label class="fl">💬 備註（選填）</label><textarea class="fta" id="fSnapNotes" placeholder="記下這個快照的故事…"></textarea></div>
+    <!-- AI 辨識 -->
+    <button class="ai-btn" id="snapAiBtnEl" onclick="snapAiScan()" disabled>🤖 AI 辨識快照類型</button>
+    <div id="snapAiStatus" style="font-size:.72rem;color:var(--muted);text-align:center;margin-top:3px;min-height:16px"></div>
+    <div class="ai-box" id="snapAiBox" style="display:none">
+      <div id="snapAiText"></div>
+      <button class="apply-btn" onclick="applySnapAI()">✅ 套用建議</button>
+    </div>
   </div>
   <div class="mfoot">
     <button class="btn-cancel" onclick="closeModal('snapOverlay')">取消</button>
@@ -988,7 +1000,7 @@ let favorites= JSON.parse(localStorage.getItem('pkm_favorites') || '[{"value":"�
 let friendTags = JSON.parse(localStorage.getItem('pkm_friend_tags') || '[{"value":"美菇美片","label":"美菇美片","icon":"🍄"},{"value":"好戰友","label":"好戰友","icon":"⚔️"},{"value":"不見了","label":"不見了","icon":"👻"}]');
 let snapshots      = JSON.parse(localStorage.getItem('pkm_snapshots')       || '[]');
 let pendingReplies = JSON.parse(localStorage.getItem('pkm_pending_replies') || '[]');
-let snapTypes  = JSON.parse(localStorage.getItem('pkm_snap_types') || '[{"value":"散步","label":"散步","icon":"🚶"},{"value":"皮皮日常","label":"皮皮日常","icon":"🐾"}]');
+let snapTypes  = JSON.parse(localStorage.getItem('pkm_snap_types') || '[{"value":"步行挑戰","label":"步行挑戰","icon":"🚶"},{"value":"種花挑戰","label":"種花挑戰","icon":"🌸"},{"value":"Party walk","label":"Party walk","icon":"🎉"},{"value":"社群日","label":"社群日","icon":"🌍"},{"value":"其他","label":"其他","icon":"📷"}]');
 
 // ── UI 狀態 ──
 let editingCardId   = null;
@@ -2000,6 +2012,9 @@ async function aiScan() {
 
       if (!res) {
         throw new Error('GAS 無回應（可能逾時或網路問題）');
+      }
+      if (!res.success && res.error === 'RATE_LIMIT_STOP') {
+        throw new Error('⚠️ 每分鐘請求次數已達上限，請稍後再試');
       }
       if (!res.success && attempt === 0 && (res.error?.includes('quota') || res.error?.includes('overloaded'))) {
         btn.textContent = '⏳ 重試中…';
@@ -3315,15 +3330,32 @@ async function batchAIScan() {
 
   const CONCURRENT = 5;
   let done = 0;
+  let stopped = false;
   btn.textContent = `⏳ AI 辨識中… 0/${selected.length}`;
   selected.forEach(({ idx }) => { const el = document.getElementById(`scanAIResult_${idx}`); if(el) el.textContent='⏳ 等待…'; });
 
   for (let i = 0; i < selected.length; i += CONCURRENT) {
-    await Promise.all(selected.slice(i, i+CONCURRENT).map(async ({ p, idx }) => {
+    if (stopped) break;
+    const batch = selected.slice(i, i + CONCURRENT);
+    // 批次內依序處理（每分鐘限制時需要能中途停止）
+    for (const { p, idx } of batch) {
+      if (stopped) break;
       const el = document.getElementById(`scanAIResult_${idx}`);
       if (el) el.textContent = '辨識中…';
       try {
-        const res = await callGAS('aiScan', { fileId: p.fileId, methods, tags: tagMap });
+        const res = await callGASLong('aiScan', { fileId: p.fileId, methods, tags: tagMap });
+        if (res?.error === 'RATE_LIMIT_STOP') {
+          // 每分鐘限制重試2次仍失敗 → 停止所有後續請求
+          stopped = true;
+          if (el) el.textContent = '⏸️ 已停止';
+          // 標記所有尚未處理的
+          selected.slice(selected.indexOf(selected.find(s => s.idx === idx)) + 1)
+            .forEach(({ idx: ridx }) => {
+              const rel = document.getElementById(`scanAIResult_${ridx}`);
+              if (rel && rel.textContent === '⏳ 等待…') rel.textContent = '⏸️ 未執行';
+            });
+          break;
+        }
         if (res?.success && res.data) {
           if (res.data.isExpeditionSnapshot) {
             if (el) el.textContent = '⚠️ 探險快照！請人工處理，已略過';
@@ -3338,12 +3370,18 @@ async function batchAIScan() {
           }
         } else { if (el) el.textContent = '❌ ' + (res?.error||'失敗'); }
       } catch(e) { if (el) el.textContent = '❌ ' + e.message; }
-      done++; btn.textContent = `⏳ AI 辨識中… ${done}/${selected.length}`;
-    }));
+      done++;
+      btn.textContent = `⏳ AI 辨識中… ${done}/${selected.length}`;
+    }
   }
   btn.disabled = false;
-  btn.textContent = `🤖 批次 AI 辨識（完成 ${done}/${selected.length}）`;
-  setTimeout(() => { btn.textContent = '🤖 批次 AI 辨識'; }, 3000);
+  if (stopped) {
+    btn.textContent = '🤖 批次 AI 辨識';
+    alert(`⚠️ 每分鐘請求次數已達上限，已停止剩餘辨識（完成 ${done}/${selected.length} 筆）。\n請稍後再手動重新啟動批次辨識。`);
+  } else {
+    btn.textContent = `🤖 批次 AI 辨識（完成 ${done}/${selected.length}）`;
+    setTimeout(() => { btn.textContent = '🤖 批次 AI 辨識'; }, 3000);
+  }
 }
 
 async function importScannedPhotos() {
@@ -3837,6 +3875,8 @@ function openSnapDetail(id) {
       <tr><td style="color:var(--gd);font-weight:700;padding:4px 0;width:70px">名稱</td><td>${escapeHtml(s.name||'—')}</td></tr>
       <tr><td style="color:var(--gd);font-weight:700;padding:4px 0">日期</td><td>${s.date||'—'}</td></tr>
       <tr><td style="color:var(--gd);font-weight:700;padding:4px 0">類型</td><td>${typeLabels||'—'}</td></tr>
+      ${s.companions?`<tr><td style="color:var(--gd);font-weight:700;padding:4px 0">跟誰</td><td>${escapeHtml(s.companions)}</td></tr>`:''}
+      ${(s.startDate||s.endDate)?`<tr><td style="color:var(--gd);font-weight:700;padding:4px 0">期間</td><td>${s.startDate||'?'} → ${s.endDate||'?'}</td></tr>`:''}
       ${s.notes?`<tr><td style="color:var(--gd);font-weight:700;padding:4px 0">備註</td><td>${escapeHtml(s.notes)}</td></tr>`:''}
     </table>`;
   document.getElementById('detailEditBtn').onclick = () => { closeModal('detailOverlay'); openSnapshotModal(id); };
@@ -3848,18 +3888,26 @@ function openSnapshotModal(id = null) {
   document.getElementById('snapModalTitle').textContent = id ? '編輯快照' : '新增快照';
   currentSnapImg = null;
   document.getElementById('snapUpPrompt').style.display = '';
-  document.getElementById('fSnapName').value  = '';
-  document.getElementById('fSnapDate').value  = new Date().toISOString().split('T')[0];
-  document.getElementById('fSnapNotes').value = '';
+  document.getElementById('fSnapName').value       = '';
+  document.getElementById('fSnapDate').value       = new Date().toISOString().split('T')[0];
+  document.getElementById('fSnapNotes').value      = '';
+  document.getElementById('fSnapCompanions').value = '';
+  document.getElementById('fSnapStartDate').value  = '';
+  document.getElementById('fSnapEndDate').value    = '';
+  document.getElementById('snapAiBox').style.display = 'none';
+  document.getElementById('snapAiBtnEl').disabled  = true;
   renderSnapTypeGrid([]);
   renderSnapPhotoGallery();
 
   if (id) {
     const s = snapshots.find(x => x.id === id);
     if (s) {
-      document.getElementById('fSnapName').value  = s.name  || '';
-      document.getElementById('fSnapDate').value  = normalizeDate(s.date) || '';
-      document.getElementById('fSnapNotes').value = s.notes || '';
+      document.getElementById('fSnapName').value       = s.name  || '';
+      document.getElementById('fSnapDate').value       = normalizeDate(s.date) || '';
+      document.getElementById('fSnapNotes').value      = s.notes || '';
+      document.getElementById('fSnapCompanions').value = s.companions || '';
+      document.getElementById('fSnapStartDate').value  = normalizeDate(s.startDate) || '';
+      document.getElementById('fSnapEndDate').value    = normalizeDate(s.endDate) || '';
       renderSnapTypeGrid(s.types || []);
       if (s.mainImg) {
         currentSnapImg = { ...s.mainImg, fromDrive: true };
@@ -3899,8 +3947,11 @@ function renderSnapPhotoGallery() {
   list.innerHTML = `<div class="photo-item">
     ${src ? `<img src="${src}" alt="">` : '<div style="background:#eee;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:1.5rem">🖼️</div>'}
     <span class="photo-main-badge">主</span>
-    <div class="photo-acts"><button class="photo-act" onclick="currentSnapImg=null;document.getElementById('snapUpPrompt').style.display='';renderSnapPhotoGallery()">✕</button></div>
+    <div class="photo-acts"><button class="photo-act" onclick="currentSnapImg=null;document.getElementById('snapUpPrompt').style.display='';document.getElementById('snapAiBtnEl').disabled=true;renderSnapPhotoGallery()">✕</button></div>
   </div>`;
+  // 啟用 AI 按鈕
+  const aiBtn = document.getElementById('snapAiBtnEl');
+  if (aiBtn) aiBtn.disabled = false;
 }
 
 function renderSnapTypeGrid(selected = []) {
@@ -3917,10 +3968,13 @@ async function saveSnapshot() {
   saveBtn.disabled = true; saveBtn.textContent = '⏳ 儲存中…';
 
   const formData = {
-    name:  document.getElementById('fSnapName').value.trim(),
-    date:  document.getElementById('fSnapDate').value,
-    types: Array.from(document.querySelectorAll('#snapTypeGrid input:checked')).map(cb => cb.value),
-    notes: document.getElementById('fSnapNotes').value.trim(),
+    name:       document.getElementById('fSnapName').value.trim(),
+    date:       document.getElementById('fSnapDate').value,
+    types:      Array.from(document.querySelectorAll('#snapTypeGrid input:checked')).map(cb => cb.value),
+    notes:      document.getElementById('fSnapNotes').value.trim(),
+    companions: document.getElementById('fSnapCompanions').value.trim(),
+    startDate:  document.getElementById('fSnapStartDate').value,
+    endDate:    document.getElementById('fSnapEndDate').value,
   };
 
   // 上傳照片到 Drive（快照資料夾）
@@ -3936,11 +3990,14 @@ async function saveSnapshot() {
   }
 
   const data = {
-    id:        editingSnapshotId || Date.now().toString(),
-    name:      formData.name,
-    date:      formData.date,
-    types:     formData.types,
-    notes:     formData.notes,
+    id:         editingSnapshotId || Date.now().toString(),
+    name:       formData.name,
+    date:       formData.date,
+    types:      formData.types,
+    notes:      formData.notes,
+    companions: formData.companions,
+    startDate:  formData.startDate,
+    endDate:    formData.endDate,
     mainImg:   currentSnapImg ? {
       url:      isBase64(currentSnapImg.url) ? '' : (currentSnapImg.url || ''),
       fileId:   currentSnapImg.fileId   || '',
@@ -3972,7 +4029,69 @@ function deleteSnapshot(id) {
   saveAndSync(); renderSnapshots();
 }
 
-// ── 快照類型管理 ──
+// ── 快照 AI 辨識 ──
+let snapAiSuggestion = null;
+
+async function snapAiScan() {
+  if (!currentSnapImg) { alert('請先選擇照片'); return; }
+  const btn = document.getElementById('snapAiBtnEl');
+  btn.disabled = true; btn.textContent = '⏳ 辨識中…';
+  document.getElementById('snapAiBox').style.display = 'none';
+  snapAiSuggestion = null;
+
+  const payload = currentSnapImg.fromDrive && currentSnapImg.fileId
+    ? { fileId: currentSnapImg.fileId }
+    : { base64: currentSnapImg.originalBase64 };
+
+  try {
+    const res = await callGASLong('aiScanSnap', payload);
+    if (!res?.success) throw new Error(res?.error || '辨識失敗');
+    snapAiSuggestion = res.data;
+    const d = snapAiSuggestion;
+    document.getElementById('snapAiText').innerHTML = `
+      <strong>🤖 AI 辨識結果</strong><br>
+      🏷️ 類型：<b>${d.type||'—'}</b><br>
+      ${d.companions ? `👥 跟誰：<b>${d.companions}</b><br>` : ''}
+      ${d.startDate  ? `📅 起始日：<b>${d.startDate}</b><br>` : ''}
+      ${d.endDate    ? `📅 結束日：<b>${d.endDate}</b><br>` : ''}
+      ${d.notes      ? `💬 備註：<b>${d.notes}</b><br>` : ''}
+      💭 <i>${d.reason||''}</i>`;
+    document.getElementById('snapAiBox').style.display = 'block';
+  } catch(err) {
+    document.getElementById('snapAiText').innerHTML = `<strong style="color:var(--r)">❌ 辨識失敗</strong><br><span style="font-size:.78rem">${escapeHtml(err.message)}</span>`;
+    document.getElementById('snapAiBox').style.display = 'block';
+  } finally {
+    btn.disabled = false; btn.textContent = '🤖 AI 辨識快照類型';
+  }
+}
+
+function applySnapAI() {
+  if (!snapAiSuggestion) return;
+  const d = snapAiSuggestion;
+  // 套用類型
+  if (d.type) {
+    const typeVal = snapTypes.find(t => t.value === d.type || t.label === d.type)?.value;
+    if (typeVal) {
+      document.querySelectorAll('#snapTypeGrid input').forEach(cb => {
+        cb.checked = cb.value === typeVal;
+      });
+    }
+  }
+  if (d.companions) document.getElementById('fSnapCompanions').value = d.companions;
+  if (d.startDate)  document.getElementById('fSnapStartDate').value  = d.startDate;
+  if (d.endDate)    document.getElementById('fSnapEndDate').value    = d.endDate;
+  if (d.notes) {
+    const notesEl = document.getElementById('fSnapNotes');
+    if (notesEl.value.trim()) {
+      if (confirm('備註欄已有內容，是否附加 AI 辨識結果？')) {
+        notesEl.value = notesEl.value.trim() + '\n' + d.notes;
+      }
+    } else {
+      notesEl.value = d.notes;
+    }
+  }
+  document.getElementById('snapAiBox').style.display = 'none';
+}
 function renderSnapTypeList() {
   const el = document.getElementById('snapTypeList'); if (!el) return;
   el.innerHTML = !snapTypes.length ? '<div style="font-size:.78rem;color:var(--muted)">尚無類型</div>' :
