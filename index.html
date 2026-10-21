@@ -955,6 +955,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
     <button class="btn-cancel" onclick="closeModal('scanOverlay')">關閉</button>
     <button class="btn-save" id="scanImportBtn" onclick="importScannedPhotos()" style="display:none">📥 匯入選取</button>
     <button class="btn-save" id="scanAIBtn" onclick="batchAIScan()" style="display:none;background:linear-gradient(135deg,var(--b),#2255bb)">🤖 批次 AI 辨識</button>
+    <button class="btn" id="scanAIAbortBtn" onclick="abortBatchAI()" style="display:none;background:linear-gradient(135deg,var(--r),#aa1111);color:#fff;padding:8px 16px">⏹ 中止</button>
   </div>
 </div>
 </div>
@@ -3319,6 +3320,13 @@ function renderScanList() {
   }).join('');
 }
 
+let _batchAIAborted = false;
+function abortBatchAI() {
+  _batchAIAborted = true;
+  const abortBtn = document.getElementById('scanAIAbortBtn');
+  if (abortBtn) { abortBtn.textContent = '⏹ 中止中…'; abortBtn.disabled = true; }
+}
+
 async function batchAIScan() {
   const btn = document.getElementById('scanAIBtn');
   btn.disabled = true;
@@ -3331,6 +3339,9 @@ async function batchAIScan() {
   const CONCURRENT = 5;
   let done = 0;
   let stopped = false;
+  _batchAIAborted = false;
+  const abortBtn = document.getElementById('scanAIAbortBtn');
+  if (abortBtn) abortBtn.style.display = '';
   btn.textContent = `⏳ AI 辨識中… 0/${selected.length}`;
   selected.forEach(({ idx }) => { const el = document.getElementById(`scanAIResult_${idx}`); if(el) el.textContent='⏳ 等待…'; });
 
@@ -3339,7 +3350,7 @@ async function batchAIScan() {
     const batch = selected.slice(i, i + CONCURRENT);
     // 批次內依序處理（每分鐘限制時需要能中途停止）
     for (const { p, idx } of batch) {
-      if (stopped) break;
+      if (stopped || _batchAIAborted) break;
       const el = document.getElementById(`scanAIResult_${idx}`);
       if (el) el.textContent = '辨識中…';
       try {
@@ -3375,7 +3386,16 @@ async function batchAIScan() {
     }
   }
   btn.disabled = false;
-  if (stopped) {
+  if (abortBtn) abortBtn.style.display = 'none';
+  if (_batchAIAborted) {
+    btn.textContent = '🤖 批次 AI 辨識';
+    // 標記剩餘未執行的
+    selected.forEach(({ idx }) => {
+      const el = document.getElementById(`scanAIResult_${idx}`);
+      if (el && el.textContent === '⏳ 等待…') el.textContent = '⏸️ 未執行';
+    });
+    showToast(`⏹ 已中止（完成 ${done}/${selected.length} 筆）`);
+  } else if (stopped) {
     btn.textContent = '🤖 批次 AI 辨識';
     alert(`⚠️ 每分鐘請求次數已達上限，已停止剩餘辨識（完成 ${done}/${selected.length} 筆）。\n請稍後再手動重新啟動批次辨識。`);
   } else {
