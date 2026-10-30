@@ -2,10 +2,10 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="app-version" content="3.0.0-dev (island theme + island view)">
+<meta name="app-version" content="3.0.0-dev (island theme + island view + app icon)">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>🌸 Pikmin 明信片收藏 v3</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌸</text></svg>">
+<title>Pikmin 明信片收藏 v3</title>
+<link rel="icon" id="appFavicon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2064%2064%27%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%2230%22%20fill%3D%22%23BFD9F5%22%2F%3E%3Cg%20transform%3D%22rotate%28-8%2032%2032%29%22%3E%3Crect%20x%3D%2211%22%20y%3D%2219%22%20width%3D%2242%22%20height%3D%2228%22%20rx%3D%224%22%20fill%3D%22%23FFFFFF%22%20stroke%3D%22%231F3A3D%22%20stroke-width%3D%223%22%2F%3E%3Crect%20x%3D%2242%22%20y%3D%2223%22%20width%3D%227%22%20height%3D%228%22%20fill%3D%22%23F8D2B0%22%20stroke%3D%22%231F3A3D%22%20stroke-width%3D%221.5%22%2F%3E%3Cpath%20d%3D%22M22%2041%20C22%2033%2028%2028%2038%2028%20C38%2036%2032%2041%2022%2041Z%22%20fill%3D%22%232E7D3A%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
@@ -333,13 +333,26 @@ header{background:transparent;box-shadow:none}
   .isl-face{padding:0 10px;gap:3px}
 }
 /* ===== v3.0 島嶼檢視結束 ===== */
+
+/* ===== v3.0 網站圖示 ===== */
+.logo{width:40px;height:40px;background:none;border:none;box-shadow:none;border-radius:0;font-size:0}
+.logo svg,.logo img{width:40px;height:40px;display:block}
+.icon-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:12px}
+.icon-opt{position:relative}
+.icon-pick{width:100%;display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 6px 8px;background:#fff;border:2px solid var(--border);border-radius:16px;cursor:pointer;font-family:inherit;color:var(--text);box-shadow:0 4px 0 var(--edge);transition:transform .12s}
+.icon-pick:hover{transform:translateY(-2px)}
+.icon-pick[aria-pressed="true"]{border-color:var(--g);background:#f1faee;box-shadow:0 4px 0 var(--g)}
+.icon-name{font-size:.78rem;font-weight:700;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.icon-state{font-size:.68rem;font-weight:700;color:var(--gd);min-height:1em}
+.icon-del{position:absolute;top:-8px;right:-8px;width:28px;height:28px;border-radius:50%;border:2px solid #fff;background:#c0392b;color:#fff;font-size:.72rem;line-height:1;padding:0;cursor:pointer;box-shadow:0 2px 0 rgba(0,0,0,.2)}
+/* ===== v3.0 網站圖示結束 ===== */
 </style>
 </head>
 <body>
 
 <!-- HEADER -->
 <header>
-  <div class="logo">🌸</div>
+  <div class="logo" id="appLogo"><svg width="40" height="40" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="#BFD9F5"/><g transform="rotate(-8 32 32)"><rect x="11" y="19" width="42" height="28" rx="4" fill="#FFFFFF" stroke="#1F3A3D" stroke-width="3"/><rect x="42" y="23" width="7" height="8" fill="#F8D2B0" stroke="#1F3A3D" stroke-width="1.5"/><path d="M22 41 C22 33 28 28 38 28 C38 36 32 41 22 41Z" fill="#2E7D3A"/></g></svg></div>
   <span class="h-title">Pikmin 明信片</span>
   <nav class="h-nav">
     <button class="ntab active" onclick="showPage('library',this)">📚 收藏庫</button>
@@ -596,6 +609,7 @@ header{background:transparent;box-shadow:none}
       <button class="cfg-tab" onclick="showCfgTab('tags',this)">🏷️ 標籤</button>
       <button class="cfg-tab" onclick="showCfgTab('methods',this)">🎯 方式</button>
       <button class="cfg-tab" onclick="showCfgTab('countries',this)">🌍 國家</button>
+      <button class="cfg-tab" onclick="showCfgTab('look',this)">🎨 外觀</button>
       <button class="cfg-tab" onclick="showCfgTab('data',this)">💾 資料</button>
     </div>
 
@@ -687,6 +701,20 @@ header{background:transparent;box-shadow:none}
     </div>
 
     <!-- 資料管理 -->
+    <div class="cfg-panel" id="cfgTab-look">
+      <div class="settings-section">
+        <h3>🎨 網站圖示</h3>
+        <p style="font-size:.78rem;color:var(--muted);margin-bottom:14px;line-height:1.7">選一個圖示，會同時用在瀏覽器分頁和頁面左上角。也可以上傳自己的圖片，系統會自動縮成 64×64（保留完整圖形、不裁切）。</p>
+        <div id="appIconGrid" class="icon-grid"></div>
+        <div style="display:flex;gap:10px;align-items:center;margin-top:16px;flex-wrap:wrap">
+          <button class="btn" onclick="document.getElementById('appIconFile').click()">＋ 上傳圖片</button>
+          <input type="file" id="appIconFile" accept="image/*" style="display:none" onchange="addCustomIconFromFile(this)">
+          <span id="appIconMsg" role="status" style="font-size:.76rem;color:var(--muted)"></span>
+        </div>
+        <p style="font-size:.72rem;color:var(--muted);margin-top:12px;line-height:1.7">自訂圖示約可存 3～8 張（依圖片複雜度），選擇與圖片會跟著雲端同步，換裝置也看得到。</p>
+      </div>
+    </div>
+
     <div class="cfg-panel" id="cfgTab-data">
       <div class="settings-section">
         <h3>🎮 快照類型管理</h3>
@@ -1427,7 +1455,9 @@ function buildSyncPayload() {
       countries,
       favorites,
       friendTags,
-      snapTypes
+      snapTypes,
+      appIcon,
+      appIcons
     }
   };
 }
@@ -1565,7 +1595,7 @@ function migrateFriendNamesToIds() {
 }
 
 function exportJSON() {
-  const data = { cards: buildSyncPayload().cards, friends, snapshots, pendingReplies, methods, tags: tagMap, countries, favorites, friendTags, snapTypes, exportedAt: new Date().toISOString() };
+  const data = { cards: buildSyncPayload().cards, friends, snapshots, pendingReplies, methods, tags: tagMap, countries, favorites, friendTags, snapTypes, appIcon, appIcons, exportedAt: new Date().toISOString() };
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
   a.download = `pikmin_backup_${new Date().toISOString().slice(0,10)}.json`;
@@ -1593,6 +1623,7 @@ function importJSON(e) {
       if (data.snapshots)      { snapshots      = data.snapshots;      localStorage.setItem('pkm_snapshots',       JSON.stringify(snapshots));      }
       if (data.pendingReplies) { pendingReplies = data.pendingReplies; localStorage.setItem('pkm_pending_replies', JSON.stringify(pendingReplies)); }
       if (data.snapTypes)  { snapTypes  = data.snapTypes;  localStorage.setItem('pkm_snap_types',  JSON.stringify(snapTypes));  }
+      if (data.appIcon || data.appIcons) loadAppIconFromSettings({ appIcon: data.appIcon, appIcons: data.appIcons });
       saveLocal();
       localStorage.setItem('pkm_methods',   JSON.stringify(methods));
       localStorage.setItem('pkm_tags',      JSON.stringify(tagMap));
@@ -1612,6 +1643,7 @@ function importJSON(e) {
 // ═══════════════════════════════════════════════
 window.onload = async () => {
   loadSettings();
+  applyAppIcon();
   renderMethodSelect();
   renderFavoriteSelect();
   renderFriendSelects();
@@ -1641,6 +1673,7 @@ window.onload = async () => {
           if (res.settings.favorites && res.settings.favorites.length) { favorites = res.settings.favorites; localStorage.setItem('pkm_favorites', JSON.stringify(favorites)); }
           if (res.settings.friendTags && res.settings.friendTags.length) { friendTags = res.settings.friendTags; localStorage.setItem('pkm_friend_tags', JSON.stringify(friendTags)); }
           if (res.settings.snapTypes  && res.settings.snapTypes.length)  { snapTypes  = res.settings.snapTypes;  localStorage.setItem('pkm_snap_types',  JSON.stringify(snapTypes));  }
+          loadAppIconFromSettings(res.settings);
         }
         saveLocal();
         _cloudDataLoaded = true;
@@ -1698,6 +1731,7 @@ function showCfgTab(id, btn) {
   document.querySelectorAll('.cfg-tab').forEach(b => b.classList.remove('active'));
   document.getElementById('cfgTab-' + id).classList.add('active');
   if (btn) btn.classList.add('active');
+  if (id === 'look') renderIconPicker();
 }
 
 function saveSettings() {
@@ -2551,6 +2585,42 @@ function updateSourceFriendDisplay() {
 let friendFilter = 'all';
 let friendSort   = 'name'; // name | recvMost | sentMost | newest | oldest
 
+// 每位好友「收到／送出」明信片的紀錄清單（新→舊）。只掃一次 cards，避免排序時重複過濾。
+// 每筆紀錄 = { d:日期, f:檔名, id }。
+//  · 收到：日期相同時用照片原始檔名判斷先後（iPhone 檔名遞增，約等於取得順序）
+//  · 送出：檔名代表「何時拿到」而非「何時寄出」，不參與比較，只看送出日期
+function buildFriendDateLists(role) {
+  const map = new Map();
+  const add = (fid, d, f, id) => {
+    if (!fid || !d) return;
+    const k = String(fid);
+    if (!map.has(k)) map.set(k, []);
+    map.get(k).push({ d: String(d), f: String(f || ''), id: String(id) });
+  };
+  cards.forEach(c => {
+    if (role === 'recv') add(resolveFriendId(c.sourceFriend), c.obtainedDate, c.mainImg?.filename, c.id);
+    else getRecipIds(c).map(resolveFriendId).forEach(fid => add(fid, c.sentDate, '', c.id));
+  });
+  map.forEach(arr => arr.sort((x, y) => dateEntryCmp(y, x) || String(y.id).localeCompare(String(x.id))));
+  return map;
+}
+// 兩筆紀錄的先後：先比日期，同日再比檔名（數字依大小比，IMG_999 < IMG_1000）。回傳 >0 表示 x 較晚。
+function dateEntryCmp(x, y) {
+  return x.d.localeCompare(y.d) || x.f.localeCompare(y.f, undefined, { numeric: true });
+}
+// 逐筆比較兩份清單：最新一筆較晚者排前；完全分不出先後（同日且檔名相同或都沒有）就比上一筆，以此類推；沒有紀錄的排最後。
+function compareDateListsDesc(a, b) {
+  const n = Math.max(a.length, b.length);
+  for (let i = 0; i < n; i++) {
+    const x = a[i], y = b[i];
+    if (!x) return 1;
+    if (!y) return -1;
+    const c = dateEntryCmp(y, x);
+    if (c) return c;
+  }
+  return 0;
+}
+
 function getSortedFriends() {
   const withStats = friends.map(f => {
     const recv = cards.filter(c => resolveFriendId(c.sourceFriend) === String(f.id)).length;
@@ -2563,16 +2633,12 @@ function getSortedFriends() {
     case 'newest':   return [...withStats].sort((a,b) => String(b.id).localeCompare(String(a.id)));
     case 'oldest':   return [...withStats].sort((a,b) => String(a.id).localeCompare(String(b.id)));
     case 'updated':  return [...withStats].sort((a,b) => (b.updatedAt||'').localeCompare(a.updatedAt||''));
-    case 'lastSent': return [...withStats].sort((a,b) => {
-      const aDate = Math.max(...cards.filter(c => getRecipIds(c).map(resolveFriendId).includes(String(a.id))).map(c => c.sentDate||'').filter(Boolean).map(d => d), '');
-      const bDate = Math.max(...cards.filter(c => getRecipIds(c).map(resolveFriendId).includes(String(b.id))).map(c => c.sentDate||'').filter(Boolean).map(d => d), '');
-      return String(bDate).localeCompare(String(aDate));
-    });
-    case 'lastRecv': return [...withStats].sort((a,b) => {
-      const aDate = Math.max(...cards.filter(c => resolveFriendId(c.sourceFriend) === String(a.id)).map(c => c.obtainedDate||'').filter(Boolean).map(d => d), '');
-      const bDate = Math.max(...cards.filter(c => resolveFriendId(c.sourceFriend) === String(b.id)).map(c => c.obtainedDate||'').filter(Boolean).map(d => d), '');
-      return String(bDate).localeCompare(String(aDate));
-    });
+    case 'lastSent': case 'lastRecv': {
+      const m = buildFriendDateLists(friendSort === 'lastSent' ? 'sent' : 'recv');
+      const nameCmp = (x, y) => String(x.name||'').localeCompare(String(y.name||''), undefined, {sensitivity:'base'});
+      return [...withStats].sort((x, y) =>
+        compareDateListsDesc(m.get(String(x.id)) || [], m.get(String(y.id)) || []) || nameCmp(x, y));
+    }
     default: return [...withStats].sort((a,b) => String(a.name||'').localeCompare(String(b.name||''), undefined, {sensitivity:'base'}));
   }
 }
@@ -3064,6 +3130,117 @@ function getDuplicateCardNames() {
 // ═══════════════════════════════════════════════
 //  LIBRARY RENDER
 // ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════
+//  APP ICON（v3.0）— 網站圖示（分頁圖示＋頁首標誌）
+//  內建 6 個原創圖示；可上傳自訂圖片（縮成 64×64 PNG）。
+//  選擇與自訂圖片存在 Settings（key：appIcon、appIcons），沿用既有同步機制，GAS 不需更動。
+// ═══════════════════════════════════════════════
+const ICON_PRESETS = [
+  { id:'sprout', name:'嫩芽', body:`<circle cx="32" cy="32" r="30" fill="#2E7D3A"/><path d="M32 38 C32 26 40 18 52 18 C52 30 44 38 32 38Z" fill="#B9E3A4"/><path d="M32 42 C32 32 26 26 14 26 C14 36 20 42 32 42Z" fill="#DDF3CC"/><path d="M32 36 V52" stroke="#B9E3A4" stroke-width="4" stroke-linecap="round" fill="none"/><path d="M22 52 H42" stroke="#B9E3A4" stroke-width="4" stroke-linecap="round" fill="none"/>` },
+  { id:'bud', name:'花苞', body:`<circle cx="32" cy="32" r="30" fill="#FFE9A8"/><path d="M32 12 C41 20 41 31 32 38 C23 31 23 20 32 12Z" fill="#E0566E"/><path d="M32 38 C25 37 21 33 19 27 C25 27 30 30 32 38Z" fill="#2E7D3A"/><path d="M32 38 C39 37 43 33 45 27 C39 27 34 30 32 38Z" fill="#2E7D3A"/><path d="M32 38 V54" stroke="#2E7D3A" stroke-width="4" stroke-linecap="round" fill="none"/>` },
+  { id:'postcard', name:'明信片', body:`<circle cx="32" cy="32" r="30" fill="#BFD9F5"/><g transform="rotate(-8 32 32)"><rect x="11" y="19" width="42" height="28" rx="4" fill="#FFFFFF" stroke="#1F3A3D" stroke-width="3"/><rect x="42" y="23" width="7" height="8" fill="#F8D2B0" stroke="#1F3A3D" stroke-width="1.5"/><path d="M22 41 C22 33 28 28 38 28 C38 36 32 41 22 41Z" fill="#2E7D3A"/></g>` },
+  { id:'hex', name:'六角島', body:`<polygon points="32,12 52.8,24 52.8,48 32,60 11.2,48 11.2,24" fill="#8CC77A"/><polygon points="32,4 52.8,16 52.8,40 32,52 11.2,40 11.2,16" fill="#B9E3A4"/><path d="M32 36 V27" stroke="#2E7D3A" stroke-width="3" stroke-linecap="round" fill="none"/><path d="M32 28 C32 22 36 18 42 18 C42 24 38 28 32 28Z" fill="#2E7D3A"/><path d="M32 31 C32 26 28 22 22 22 C22 28 26 31 32 31Z" fill="#2E7D3A"/>` },
+  { id:'postmark', name:'郵戳', body:`<circle cx="32" cy="32" r="28" fill="#FFF8E0" stroke="#2E7D3A" stroke-width="4"/><circle cx="32" cy="32" r="21" fill="none" stroke="#2E7D3A" stroke-width="1.5"/><path d="M23 36 C23 27 30 22 41 22 C41 31 34 36 23 36Z" fill="#2E7D3A"/><path d="M20 46 q3 -3 6 0 t6 0 t6 0 t6 0" fill="none" stroke="#2E7D3A" stroke-width="2" stroke-linecap="round"/>` },
+  { id:'pin', name:'地點', body:`<path d="M32 6 C20.5 6 12 14.5 12 25 C12 39 32 58 32 58 C32 58 52 39 52 25 C52 14.5 43.5 6 32 6Z" fill="#E8743B"/><circle cx="32" cy="25" r="11" fill="#FFFFFF"/><path d="M26 30 C26 23 30 19 38 19 C38 26 34 30 26 30Z" fill="#2E7D3A"/>` }
+];
+const ICON_DEFAULT = 'postcard';
+const ICON_CUSTOM_MAX_CHARS = 40000; // Google 試算表單一儲存格上限約 5 萬字，保守留餘裕
+function loadJsonSafe(key, fallback) { try { const v = JSON.parse(localStorage.getItem(key)); return v == null ? fallback : v; } catch(e) { return fallback; } }
+const isSafeIconUrl = u => typeof u === 'string' && /^data:image\/(png|jpeg|webp|gif);base64,/.test(u);
+let appIcon  = localStorage.getItem('pkm_app_icon') || ICON_DEFAULT;
+let appIcons = (loadJsonSafe('pkm_app_icons', []) || []).filter(i => i && i.id && isSafeIconUrl(i.url));
+
+function findAppIcon(id) {
+  return ICON_PRESETS.find(i => i.id === id) || appIcons.find(i => i.id === id) || ICON_PRESETS.find(i => i.id === ICON_DEFAULT);
+}
+function iconHtml(icon, size) {
+  return icon.body
+    ? `<svg width="${size}" height="${size}" viewBox="0 0 64 64" aria-hidden="true">${icon.body}</svg>`
+    : `<img src="${escapeHtml(icon.url)}" width="${size}" height="${size}" alt="" style="object-fit:contain;display:block">`;
+}
+function iconFaviconUrl(icon) {
+  if (icon.url) return icon.url;
+  return 'data:image/svg+xml,' + encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'>${icon.body}</svg>`);
+}
+function applyAppIcon() {
+  const icon = findAppIcon(appIcon);
+  const old = document.getElementById('appFavicon');
+  if (old) { // 換成新的 <link>，各瀏覽器更新分頁圖示最可靠
+    const n = document.createElement('link');
+    n.rel = 'icon'; n.id = 'appFavicon'; n.type = icon.url ? 'image/png' : 'image/svg+xml'; n.href = iconFaviconUrl(icon);
+    old.replaceWith(n);
+  }
+  const logo = document.getElementById('appLogo');
+  if (logo) logo.innerHTML = iconHtml(icon, 40);
+}
+function persistAppIcon() {
+  try { localStorage.setItem('pkm_app_icon', appIcon); localStorage.setItem('pkm_app_icons', JSON.stringify(appIcons)); } catch(e) {}
+  saveAndSync();
+}
+function selectAppIcon(id) { appIcon = id; persistAppIcon(); applyAppIcon(); renderIconPicker(); }
+function deleteCustomIcon(id) {
+  const it = appIcons.find(i => i.id === id); if (!it) return;
+  if (!confirm(`確定刪除自訂圖示「${it.name}」？`)) return;
+  appIcons = appIcons.filter(i => i.id !== id);
+  if (appIcon === id) appIcon = ICON_DEFAULT;
+  persistAppIcon(); applyAppIcon(); renderIconPicker();
+}
+function renderIconPicker() {
+  const el = document.getElementById('appIconGrid'); if (!el) return;
+  const all = [...ICON_PRESETS, ...appIcons];
+  const cur = findAppIcon(appIcon).id;
+  el.innerHTML = all.map(i => {
+    const on = i.id === cur, custom = !i.body;
+    return `<div class="icon-opt">
+      <button type="button" class="icon-pick" aria-pressed="${on}" onclick="selectAppIcon('${i.id}')">
+        ${iconHtml(i, 48)}
+        <span class="icon-name">${escapeHtml(i.name)}</span>
+        <span class="icon-state">${on ? '✓ 使用中' : '&nbsp;'}</span>
+      </button>
+      ${custom ? `<button type="button" class="icon-del" aria-label="刪除自訂圖示 ${escapeHtml(i.name)}" onclick="deleteCustomIcon('${i.id}')">✕</button>` : ''}
+    </div>`;
+  }).join('');
+}
+function addCustomIconFromFile(input) {
+  const file = input.files && input.files[0]; input.value = '';
+  const msg = document.getElementById('appIconMsg'); const say = t => { if (msg) msg.textContent = t; };
+  if (!file) return;
+  if (!/^image\//.test(file.type)) { say('請選擇圖片檔'); return; }
+  const reader = new FileReader();
+  reader.onerror = () => say('檔案讀取失敗');
+  reader.onload = () => {
+    const im = new Image();
+    im.onerror = () => say('這個圖片無法讀取');
+    im.onload = () => {
+      const S = 64, cv = document.createElement('canvas'); cv.width = cv.height = S;
+      const iw = im.naturalWidth || im.width || S, ih = im.naturalHeight || im.height || S;
+      const r = Math.min(S / iw, S / ih), w = iw * r, h = ih * r; // contain：完整保留、置中、不裁切
+      cv.getContext('2d').drawImage(im, (S - w) / 2, (S - h) / 2, w, h);
+      const url = cv.toDataURL('image/png');
+      const name = (file.name || '自訂').replace(/\.[^.]+$/, '').slice(0, 12) || '自訂';
+      const item = { id: 'c' + Date.now(), name, url };
+      const next = [...appIcons, item];
+      if (JSON.stringify(next).length > ICON_CUSTOM_MAX_CHARS) { say('自訂圖示已達儲存上限，請先刪除幾個再試'); return; }
+      appIcons = next; appIcon = item.id;
+      persistAppIcon(); applyAppIcon(); renderIconPicker();
+      say(`已新增並套用：${name}`);
+    };
+    im.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+// 從雲端／匯入的設定套用（沒有對應 key 就不動本機設定；圖片網址只接受 data:image，避免外部網址）
+function loadAppIconFromSettings(st) {
+  if (!st) return;
+  let changed = false;
+  if (Array.isArray(st.appIcons)) { appIcons = st.appIcons.filter(i => i && i.id && i.name && isSafeIconUrl(i.url)); changed = true; }
+  if (typeof st.appIcon === 'string' && st.appIcon) { appIcon = st.appIcon; changed = true; }
+  if (!changed) return;
+  try { localStorage.setItem('pkm_app_icon', appIcon); localStorage.setItem('pkm_app_icons', JSON.stringify(appIcons)); } catch(e) {}
+  applyAppIcon(); renderIconPicker();
+}
+applyAppIcon();
+
 // ═══════════════════════════════════════════════
 //  ISLAND VIEW（v3.0）— 六角島嶼檢視
 //  明信片庫：每座島＝一個取得國家（卡片的 region 欄位）
