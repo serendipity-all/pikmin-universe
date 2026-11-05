@@ -2,10 +2,11 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
+<meta name="app-version" content="3.0.0-dev (island theme + island view + app icon)">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>🌸 Pikmin 明信片收藏</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌸</text></svg>">
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<title>Pikmin 明信片收藏 v3</title>
+<link rel="icon" id="appFavicon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2064%2064%27%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%2230%22%20fill%3D%22%23BFD9F5%22%2F%3E%3Cg%20transform%3D%22rotate%28-8%2032%2032%29%22%3E%3Crect%20x%3D%2211%22%20y%3D%2219%22%20width%3D%2242%22%20height%3D%2228%22%20rx%3D%224%22%20fill%3D%22%23FFFFFF%22%20stroke%3D%22%231F3A3D%22%20stroke-width%3D%223%22%2F%3E%3Crect%20x%3D%2242%22%20y%3D%2223%22%20width%3D%227%22%20height%3D%228%22%20fill%3D%22%23F8D2B0%22%20stroke%3D%22%231F3A3D%22%20stroke-width%3D%221.5%22%2F%3E%3Cpath%20d%3D%22M22%2041%20C22%2033%2028%2028%2038%2028%20C38%2036%2032%2041%2022%2041Z%22%20fill%3D%22%232E7D3A%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 :root{--g:#4a9a4a;--gl:#7cc56e;--gd:#2d6b2d;--y:#f5c518;--r:#e05555;--b:#4d8ef0;--pu:#9966cc;--or:#f08040;--sky:#d4eef7;--sky2:#a8d8ea;--bg:#edf7e7;--card:#fffef5;--text:#1e3414;--muted:#5a7a4a;--border:#c5e0b0;--sh:rgba(45,107,45,.13)}
@@ -234,13 +235,129 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
   .mfoot{padding:10px 14px;gap:6px}
   .mfoot .btn-save,.mfoot .btn-cancel{padding:7px 14px;font-size:.8rem}
 }
+
+/* ===== v3.0 島嶼風格主題（覆蓋層；刪除此區塊即還原為 v2.0 外觀）===== */
+:root{--g:#2e7d3a;--gl:#6dbe6a;--gd:#1f5c2a;--bg:#cfeaf2;--card:#fff;--text:#1f3a3d;--muted:#3f5f63;--border:#bfe0e8;--sh:rgba(31,58,61,.14);--edge:#a9d3df;--mist:#eaf6f9}
+body{background-image:none}
+
+/* 頂部：白色膠囊 */
+header{background:transparent;box-shadow:none}
+.h-title{background:#fff;color:var(--text);text-shadow:none;padding:9px 20px;border-radius:28px;box-shadow:0 4px 0 var(--edge);font-size:1.05rem}
+.h-nav{background:#fff;padding:4px;border-radius:28px;box-shadow:0 4px 0 var(--edge);gap:2px;margin-left:8px}
+.ntab{background:transparent;color:var(--text);border-radius:22px;padding:9px 16px;font-size:.8rem}
+.ntab:hover{background:var(--mist);color:var(--gd)}
+.ntab.active{background:var(--g);color:#fff;box-shadow:none}
+.sp{background:#fff;border:none;border-radius:16px;padding:4px 12px;box-shadow:0 3px 0 var(--edge)}
+.sp .n{color:var(--gd)}
+.sp .l{color:var(--muted)}
+#syncBar{margin:6px 20px 4px;border:none;border-radius:14px;background:rgba(255,255,255,.75);padding:6px 14px}
+
+/* 按鈕：扁平加下緣厚度 */
+.btn{border:2px solid var(--border);border-radius:22px;padding:8px 16px;font-weight:700;color:var(--text);background:#fff}
+.btn:hover{border-color:var(--g);color:var(--gd)}
+.btn.active{background:var(--g);border-color:var(--g);color:#fff}
+.btn.primary,.btn-save{background:var(--g);border:none;color:#fff;box-shadow:0 4px 0 rgba(0,0,0,.2);transition:transform .12s,box-shadow .12s}
+.btn.primary:hover,.btn-save:not(:disabled):hover{transform:translateY(-1px);box-shadow:0 5px 0 rgba(0,0,0,.2);color:#fff}
+.btn.primary:active,.btn-save:not(:disabled):active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.2)}
+.btn-save{border-radius:14px}
+.btn-cancel{border:2px solid var(--border);border-radius:14px;color:var(--text)}
+.view-toggle{border:2px solid var(--border);border-radius:22px}
+.search-box input{background:var(--mist);border:2px solid var(--border);border-radius:24px;padding:9px 14px 9px 36px}
+.search-box input:focus{border-color:var(--g);background:#fff}
+
+/* 卡片：圓角加下緣陰影，像桌遊板塊 */
+.pcard,.prow,.friend-card,.friend-grid-card,.stat-card,.settings-section,.filter-panel{border:2px solid var(--border);box-shadow:0 5px 0 var(--edge)}
+.pcard,.friend-grid-card{border-radius:18px}
+.stat-card,.settings-section,.filter-panel{border-radius:18px}
+.prow{border-radius:16px;box-shadow:0 4px 0 var(--edge)}
+.pcard:hover,.friend-grid-card:hover{transform:translateY(-3px);box-shadow:0 8px 0 var(--edge)}
+.pcard-img,.pcard-noimg,.prow-img,.prow-noimg{background:var(--mist)}
+.pcard-actions{background:var(--mist)}
+.photo-gallery,.scan-item{background:var(--mist)}
+.upload-area:hover{background:var(--mist)}
+
+/* 彈窗 */
+.overlay{background:rgba(31,58,61,.5)}
+.modal{border-radius:24px;border:3px solid #fff;box-shadow:0 10px 0 rgba(31,58,61,.18),0 24px 48px rgba(31,58,61,.25)}
+.mhead{background:var(--g)}
+.mfoot{border-top:2px solid var(--mist)}
+.fi,.fta,.fsel,.setting-row input{background:#f6fbfd;border:2px solid var(--border);border-radius:12px}
+.fi:focus,.fta:focus,.fsel:focus,.setting-row input:focus{border-color:var(--g);background:#fff}
+
+/* 好友卡頭部的漸層是 JS 依 ID 行內算出的色相，這裡整體降低飽和度以配合粉彩主題 */
+.friend-grid-header{filter:saturate(.62)}
+
+/* 設定頁分頁 */
+.cfg-tabs{background:#fff;border-radius:22px;box-shadow:0 4px 0 var(--edge)}
+.cfg-tab{border-radius:16px}
+.cfg-tab.active{background:var(--g);box-shadow:none}
+::-webkit-scrollbar-thumb{background:var(--edge)}
+
+@media(min-width:601px){
+  header{height:auto;min-height:68px;padding:12px 24px 6px;gap:12px}
+}
+@media(max-width:600px){
+  .h-title{padding:6px 12px;font-size:.9rem}
+  .h-nav{border-radius:20px}
+  .ntab{padding:6px 9px;font-size:.68rem}
+  #syncBar{margin:4px 12px}
+}
+/* ===== v3.0 主題結束 ===== */
+
+/* ===== v3.0 島嶼檢視 ===== */
+.isl-map{--hw:140px;--hh:162px;display:flex;flex-direction:column;align-items:center;padding:10px 0 26px}
+.isl-row{display:flex;justify-content:center;gap:8px}
+.isl-row+.isl-row{margin-top:calc(var(--hh)*-.25 + 8px)}
+.isl-hex{position:relative;width:var(--hw);height:calc(var(--hh) + 9px);flex:none;border:0;background:none;padding:0;cursor:pointer;font-family:inherit;color:var(--text);transition:transform .15s}
+.isl-hex:hover,.isl-hex:focus-visible{transform:translateY(-6px);outline:none}
+.isl-halo,.isl-edge,.isl-face{position:absolute;left:0;width:100%;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%)}
+.isl-halo{top:-5px;left:-5px;width:calc(100% + 10px);height:calc(var(--hh) + 10px);background:#fff;opacity:0;transition:opacity .15s}
+.isl-hex:hover .isl-halo,.isl-hex:focus-visible .isl-halo{opacity:1}
+.isl-edge{top:9px;height:var(--hh);background:var(--edge)}
+.isl-face{top:0;height:var(--hh);background:var(--face);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:0 14px;box-sizing:border-box}
+.isl-card{width:46px;height:32px;flex:none;background:#fff;border-radius:4px;transform:rotate(-6deg);box-shadow:0 2px 0 rgba(0,0,0,.14);overflow:hidden}
+.isl-card img{width:100%;height:100%;object-fit:cover;display:block}
+.isl-avatar{width:38px;height:38px;flex:none;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1.05rem;box-shadow:0 2px 0 rgba(0,0,0,.14)}
+.isl-name{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.95rem;font-weight:900;line-height:1.2}
+.isl-count{font-size:.74rem;font-weight:700;line-height:1.2}
+.isl-hint{font-size:.78rem;color:var(--muted);background:rgba(255,255,255,.75);border-radius:14px;padding:8px 14px;margin-bottom:6px}
+.isl-bar{display:flex;align-items:center;gap:10px;background:#fff;border:2px solid var(--border);border-radius:22px;box-shadow:0 4px 0 var(--edge);padding:8px 14px;margin-bottom:14px;font-weight:700}
+@media(max-width:600px){
+  .isl-map{--hw:104px;--hh:120px}
+  .isl-card{width:36px;height:25px}
+  .isl-avatar{width:30px;height:30px;font-size:.9rem}
+  .isl-name{font-size:.8rem}
+  .isl-count{font-size:.66rem}
+  .isl-face{padding:0 10px;gap:3px}
+}
+/* ===== v3.0 島嶼檢視結束 ===== */
+
+/* ===== v3.0 網站圖示 ===== */
+.logo{width:40px;height:40px;background:none;border:none;box-shadow:none;border-radius:0;font-size:0}
+.logo svg,.logo img{width:40px;height:40px;display:block}
+.icon-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:12px}
+.icon-opt{position:relative}
+.icon-pick{width:100%;display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 6px 8px;background:#fff;border:2px solid var(--border);border-radius:16px;cursor:pointer;font-family:inherit;color:var(--text);box-shadow:0 4px 0 var(--edge);transition:transform .12s}
+.icon-pick:hover{transform:translateY(-2px)}
+.icon-pick[aria-pressed="true"]{border-color:var(--g);background:#f1faee;box-shadow:0 4px 0 var(--g)}
+.icon-name{font-size:.78rem;font-weight:700;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.icon-state{font-size:.68rem;font-weight:700;color:var(--gd);min-height:1em}
+.icon-del{position:absolute;top:-8px;right:-8px;width:28px;height:28px;border-radius:50%;border:2px solid #fff;background:#c0392b;color:#fff;font-size:.72rem;line-height:1;padding:0;cursor:pointer;box-shadow:0 2px 0 rgba(0,0,0,.2)}
+/* ===== v3.0 網站圖示結束 ===== */
+
+/* ===== v3.0 效能與版面修正 ===== */
+/* 一次畫出上千張卡片時，逐張淡入動畫與「畫面外的卡片也要繪製」很耗效能 */
+.pcard,.prow{animation:none}
+.pcard{content-visibility:auto;contain-intrinsic-size:auto 400px}
+.prow{content-visibility:auto;contain-intrinsic-size:auto 76px}
+/* ===== v3.0 效能與版面修正結束 ===== */
 </style>
 </head>
 <body>
 
 <!-- HEADER -->
 <header>
-  <div class="logo">🌸</div>
+  <div class="logo" id="appLogo"><svg width="40" height="40" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="#BFD9F5"/><g transform="rotate(-8 32 32)"><rect x="11" y="19" width="42" height="28" rx="4" fill="#FFFFFF" stroke="#1F3A3D" stroke-width="3"/><rect x="42" y="23" width="7" height="8" fill="#F8D2B0" stroke="#1F3A3D" stroke-width="1.5"/><path d="M22 41 C22 33 28 28 38 28 C38 36 32 41 22 41Z" fill="#2E7D3A"/></g></svg></div>
   <span class="h-title">Pikmin 明信片</span>
   <nav class="h-nav">
     <button class="ntab active" onclick="showPage('library',this)">📚 收藏庫</button>
@@ -285,15 +402,16 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
     <div class="toolbar">
       <div class="search-box">
         <span class="si">🔍</span>
-        <input type="text" id="searchInput" placeholder="搜尋名稱、地點、好友、備註、檔名…" oninput="debouncedRenderLibrary()">
+        <input type="text" id="searchInput" placeholder="搜尋名稱、地點、好友、備註、檔名…" oninput="libOnSearch()">
         <span id="searchCount" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:.7rem;color:var(--muted);pointer-events:none"></span>
       </div>
       <div class="view-toggle">
+        <button id="vIsland" onclick="setView('island')">🏝️ 島嶼</button>
         <button id="vGrid" class="active" onclick="setView('grid')">⊞ 卡片</button>
         <button id="vList" onclick="setView('list')">☰ 列表</button>
       </div>
       <button class="btn" onclick="toggleFilterPanel()">🔧 篩選 <span id="filterCount"></span></button>
-      <select id="cardSortSelect" onchange="renderLibrary()" style="padding:6px 10px;border:2px solid var(--border);border-radius:12px;font-size:.78rem;font-family:inherit;background:#fff">
+      <select id="cardSortSelect" onchange="libLeaveIsland();renderLibrary()" style="padding:6px 10px;border:2px solid var(--border);border-radius:12px;font-size:.78rem;font-family:inherit;background:#fff">
         <option value="newest">🆕 加入順序（新→舊）</option>
         <option value="oldest">📅 加入順序（舊→新）</option>
         <option value="updated">✏️ 最近編輯</option>
@@ -317,6 +435,9 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
       </div>
       <div class="filter-rows" id="filterRows"></div>
     </div>
+    <div id="libCountryBar" class="isl-bar" style="display:none"></div>
+    <div id="islandHint" class="isl-hint" style="display:none"></div>
+    <div id="islandMap" class="isl-map" style="display:none"></div>
     <div id="cardGrid" class="card-grid"></div>
   </div>
 
@@ -350,14 +471,14 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
       <div class="toolbar">
         <div class="search-box">
           <span class="si">🔍</span>
-          <input type="text" id="friendSearch" placeholder="搜尋好友…" oninput="debouncedRenderFriends()">
+          <input type="text" id="friendSearch" placeholder="搜尋好友…" oninput="friendsOnSearch()">
         </div>
         <div style="display:flex;gap:4px">
           <button class="btn active" id="frdFilterAll"  onclick="setFriendFilter('all',this)"  style="padding:5px 10px;font-size:.74rem">全部</button>
           <button class="btn" id="frdFilterRecv" onclick="setFriendFilter('recv',this)" style="padding:5px 10px;font-size:.74rem">📬 有收</button>
           <button class="btn" id="frdFilterSent" onclick="setFriendFilter('sent',this)" style="padding:5px 10px;font-size:.74rem">💌 有送</button>
         </div>
-        <select onchange="friendSort=this.value;renderFriends()" style="padding:5px 10px;border:2px solid var(--border);border-radius:10px;font-size:.74rem;font-family:inherit;background:#fff;color:var(--text);cursor:pointer">
+        <select id="friendSortSelect" onchange="friendsLeaveIsland();friendSort=this.value;renderFriends()" style="padding:5px 10px;border:2px solid var(--border);border-radius:10px;font-size:.74rem;font-family:inherit;background:#fff;color:var(--text);cursor:pointer">
         <option value="name">🔤 姓名排序</option>
         <option value="recvMost">📬 收最多</option>
         <option value="sentMost">💌 送最多</option>
@@ -367,6 +488,10 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
         <option value="lastSent">💌 最近送出</option>
         <option value="lastRecv">📬 最近收到</option>
       </select>
+      <div class="view-toggle">
+        <button id="fvIsland" onclick="setFriendMode('island')">🏝️ 島嶼</button>
+        <button id="fvGrid" onclick="setFriendMode('grid')">⊞ 格狀</button>
+      </div>
       <button class="btn primary" onclick="openFriendModal()">＋ 新增好友</button>
       </div>
       <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
@@ -387,6 +512,8 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
           <div id="friendStatSent" style="font-family:'Nunito',sans-serif;font-weight:900;font-size:1.8rem;color:var(--or)">0</div>
         </div>
       </div>
+      <div id="friendIslandMap" class="isl-map" style="display:none"></div>
+      <div id="friendIslandMore" style="display:none;text-align:center;margin:4px 0 24px"></div>
       <div id="friendList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px"></div>
     </div>
 
@@ -487,6 +614,7 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
       <button class="cfg-tab" onclick="showCfgTab('tags',this)">🏷️ 標籤</button>
       <button class="cfg-tab" onclick="showCfgTab('methods',this)">🎯 方式</button>
       <button class="cfg-tab" onclick="showCfgTab('countries',this)">🌍 國家</button>
+      <button class="cfg-tab" onclick="showCfgTab('look',this)">🎨 外觀</button>
       <button class="cfg-tab" onclick="showCfgTab('data',this)">💾 資料</button>
     </div>
 
@@ -578,6 +706,20 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
     </div>
 
     <!-- 資料管理 -->
+    <div class="cfg-panel" id="cfgTab-look">
+      <div class="settings-section">
+        <h3>🎨 網站圖示</h3>
+        <p style="font-size:.78rem;color:var(--muted);margin-bottom:14px;line-height:1.7">選一個圖示，會同時用在瀏覽器分頁和頁面左上角。也可以上傳自己的圖片，系統會自動縮成 64×64（保留完整圖形、不裁切）。</p>
+        <div id="appIconGrid" class="icon-grid"></div>
+        <div style="display:flex;gap:10px;align-items:center;margin-top:16px;flex-wrap:wrap">
+          <button class="btn" onclick="document.getElementById('appIconFile').click()">＋ 上傳圖片</button>
+          <input type="file" id="appIconFile" accept="image/*" style="display:none" onchange="addCustomIconFromFile(this)">
+          <span id="appIconMsg" role="status" style="font-size:.76rem;color:var(--muted)"></span>
+        </div>
+        <p style="font-size:.72rem;color:var(--muted);margin-top:12px;line-height:1.7">自訂圖示約可存 3～8 張（依圖片複雜度），選擇與圖片會跟著雲端同步，換裝置也看得到。</p>
+      </div>
+    </div>
+
     <div class="cfg-panel" id="cfgTab-data">
       <div class="settings-section">
         <h3>🎮 快照類型管理</h3>
@@ -1048,6 +1190,15 @@ function getImgUrl(img) {
   if (img.url && !isBase64(img.url)) return img.url;
   return '';
 }
+// Drive 圖片網址（lh3.googleusercontent.com/d/<id>）預設回傳「原圖」。列表上只需要小圖，
+// 加上 =w<寬> 只取需要的大小，手機流量與解碼量差很多。縮圖載入失敗時自動退回原圖，最壞情況與以前相同。
+function thumbSrc(url, w) {
+  const m = /^(https:\/\/lh3\.googleusercontent\.com\/d\/[^\/?=#]+)$/.exec(String(url || ''));
+  return m ? `${m[1]}=w${w}` : String(url || '');
+}
+function thumbAttrs(url, w) {
+  return `src="${escapeHtml(thumbSrc(url, w))}" data-full="${escapeHtml(url)}" onerror="this.onerror=null;this.src=this.dataset.full" decoding="async"`;
+}
 /** 從 currentMainImg/AuxImgs 取得顯示 URL（可含 base64 預覽） */
 function getPreviewUrl(img) {
   if (!img) return '';
@@ -1318,7 +1469,9 @@ function buildSyncPayload() {
       countries,
       favorites,
       friendTags,
-      snapTypes
+      snapTypes,
+      appIcon,
+      appIcons
     }
   };
 }
@@ -1456,7 +1609,7 @@ function migrateFriendNamesToIds() {
 }
 
 function exportJSON() {
-  const data = { cards: buildSyncPayload().cards, friends, snapshots, pendingReplies, methods, tags: tagMap, countries, favorites, friendTags, snapTypes, exportedAt: new Date().toISOString() };
+  const data = { cards: buildSyncPayload().cards, friends, snapshots, pendingReplies, methods, tags: tagMap, countries, favorites, friendTags, snapTypes, appIcon, appIcons, exportedAt: new Date().toISOString() };
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
   a.download = `pikmin_backup_${new Date().toISOString().slice(0,10)}.json`;
@@ -1484,6 +1637,7 @@ function importJSON(e) {
       if (data.snapshots)      { snapshots      = data.snapshots;      localStorage.setItem('pkm_snapshots',       JSON.stringify(snapshots));      }
       if (data.pendingReplies) { pendingReplies = data.pendingReplies; localStorage.setItem('pkm_pending_replies', JSON.stringify(pendingReplies)); }
       if (data.snapTypes)  { snapTypes  = data.snapTypes;  localStorage.setItem('pkm_snap_types',  JSON.stringify(snapTypes));  }
+      if (data.appIcon || data.appIcons) loadAppIconFromSettings({ appIcon: data.appIcon, appIcons: data.appIcons });
       saveLocal();
       localStorage.setItem('pkm_methods',   JSON.stringify(methods));
       localStorage.setItem('pkm_tags',      JSON.stringify(tagMap));
@@ -1503,6 +1657,7 @@ function importJSON(e) {
 // ═══════════════════════════════════════════════
 window.onload = async () => {
   loadSettings();
+  applyAppIcon();
   renderMethodSelect();
   renderFavoriteSelect();
   renderFriendSelects();
@@ -1532,6 +1687,7 @@ window.onload = async () => {
           if (res.settings.favorites && res.settings.favorites.length) { favorites = res.settings.favorites; localStorage.setItem('pkm_favorites', JSON.stringify(favorites)); }
           if (res.settings.friendTags && res.settings.friendTags.length) { friendTags = res.settings.friendTags; localStorage.setItem('pkm_friend_tags', JSON.stringify(friendTags)); }
           if (res.settings.snapTypes  && res.settings.snapTypes.length)  { snapTypes  = res.settings.snapTypes;  localStorage.setItem('pkm_snap_types',  JSON.stringify(snapTypes));  }
+          loadAppIconFromSettings(res.settings);
         }
         saveLocal();
         _cloudDataLoaded = true;
@@ -1589,6 +1745,7 @@ function showCfgTab(id, btn) {
   document.querySelectorAll('.cfg-tab').forEach(b => b.classList.remove('active'));
   document.getElementById('cfgTab-' + id).classList.add('active');
   if (btn) btn.classList.add('active');
+  if (id === 'look') renderIconPicker();
 }
 
 function saveSettings() {
@@ -2442,6 +2599,42 @@ function updateSourceFriendDisplay() {
 let friendFilter = 'all';
 let friendSort   = 'name'; // name | recvMost | sentMost | newest | oldest
 
+// 每位好友「收到／送出」明信片的紀錄清單（新→舊）。只掃一次 cards，避免排序時重複過濾。
+// 每筆紀錄 = { d:日期, f:檔名, id }。
+//  · 收到：日期相同時用照片原始檔名判斷先後（iPhone 檔名遞增，約等於取得順序）
+//  · 送出：檔名代表「何時拿到」而非「何時寄出」，不參與比較，只看送出日期
+function buildFriendDateLists(role) {
+  const map = new Map();
+  const add = (fid, d, f, id) => {
+    if (!fid || !d) return;
+    const k = String(fid);
+    if (!map.has(k)) map.set(k, []);
+    map.get(k).push({ d: String(d), f: String(f || ''), id: String(id) });
+  };
+  cards.forEach(c => {
+    if (role === 'recv') add(resolveFriendId(c.sourceFriend), c.obtainedDate, c.mainImg?.filename, c.id);
+    else getRecipIds(c).map(resolveFriendId).forEach(fid => add(fid, c.sentDate, '', c.id));
+  });
+  map.forEach(arr => arr.sort((x, y) => dateEntryCmp(y, x) || String(y.id).localeCompare(String(x.id))));
+  return map;
+}
+// 兩筆紀錄的先後：先比日期，同日再比檔名（數字依大小比，IMG_999 < IMG_1000）。回傳 >0 表示 x 較晚。
+function dateEntryCmp(x, y) {
+  return x.d.localeCompare(y.d) || x.f.localeCompare(y.f, undefined, { numeric: true });
+}
+// 逐筆比較兩份清單：最新一筆較晚者排前；完全分不出先後（同日且檔名相同或都沒有）就比上一筆，以此類推；沒有紀錄的排最後。
+function compareDateListsDesc(a, b) {
+  const n = Math.max(a.length, b.length);
+  for (let i = 0; i < n; i++) {
+    const x = a[i], y = b[i];
+    if (!x) return 1;
+    if (!y) return -1;
+    const c = dateEntryCmp(y, x);
+    if (c) return c;
+  }
+  return 0;
+}
+
 function getSortedFriends() {
   const withStats = friends.map(f => {
     const recv = cards.filter(c => resolveFriendId(c.sourceFriend) === String(f.id)).length;
@@ -2454,21 +2647,18 @@ function getSortedFriends() {
     case 'newest':   return [...withStats].sort((a,b) => String(b.id).localeCompare(String(a.id)));
     case 'oldest':   return [...withStats].sort((a,b) => String(a.id).localeCompare(String(b.id)));
     case 'updated':  return [...withStats].sort((a,b) => (b.updatedAt||'').localeCompare(a.updatedAt||''));
-    case 'lastSent': return [...withStats].sort((a,b) => {
-      const aDate = Math.max(...cards.filter(c => getRecipIds(c).map(resolveFriendId).includes(String(a.id))).map(c => c.sentDate||'').filter(Boolean).map(d => d), '');
-      const bDate = Math.max(...cards.filter(c => getRecipIds(c).map(resolveFriendId).includes(String(b.id))).map(c => c.sentDate||'').filter(Boolean).map(d => d), '');
-      return String(bDate).localeCompare(String(aDate));
-    });
-    case 'lastRecv': return [...withStats].sort((a,b) => {
-      const aDate = Math.max(...cards.filter(c => resolveFriendId(c.sourceFriend) === String(a.id)).map(c => c.obtainedDate||'').filter(Boolean).map(d => d), '');
-      const bDate = Math.max(...cards.filter(c => resolveFriendId(c.sourceFriend) === String(b.id)).map(c => c.obtainedDate||'').filter(Boolean).map(d => d), '');
-      return String(bDate).localeCompare(String(aDate));
-    });
+    case 'lastSent': case 'lastRecv': {
+      const m = buildFriendDateLists(friendSort === 'lastSent' ? 'sent' : 'recv');
+      const nameCmp = (x, y) => String(x.name||'').localeCompare(String(y.name||''), undefined, {sensitivity:'base'});
+      return [...withStats].sort((x, y) =>
+        compareDateListsDesc(m.get(String(x.id)) || [], m.get(String(y.id)) || []) || nameCmp(x, y));
+    }
     default: return [...withStats].sort((a,b) => String(a.name||'').localeCompare(String(b.name||''), undefined, {sensitivity:'base'}));
   }
 }
 
 function setFriendFilter(f, btn) {
+  friendsLeaveIsland();
   friendFilter = f;
   document.querySelectorAll('[id^="frdFilter"]').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
@@ -2495,6 +2685,9 @@ function renderFriends() {
 
   const el = document.getElementById('friendList');
   if (!el) return;
+
+  syncFriendView();
+  if (friendMode === 'island') { renderFriendIslands(list); return; }
 
   if (!list.length) {
     el.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="ei">👥</div><p>尚無好友</p></div>';
@@ -2626,7 +2819,7 @@ function renderFriendDetailCards() {
         onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
       <div style="width:100%;aspect-ratio:1;background:linear-gradient(135deg,#e8f5e0,var(--sky));position:relative;overflow:hidden">
         ${imgUrl
-          ? `<img src="${escapeHtml(imgUrl)}" style="width:100%;height:100%;object-fit:contain" alt="" loading="lazy">`
+          ? `<img ${thumbAttrs(imgUrl, 320)} style="width:100%;height:100%;object-fit:contain" alt="" loading="lazy">`
           : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:1.8rem;opacity:.4">🌸</div>`}
         <span style="position:absolute;top:4px;right:4px;font-size:.75rem">${badge}</span>
       </div>
@@ -2822,6 +3015,7 @@ function quickAddFriend(target) {
 //  FILTERS
 // ═══════════════════════════════════════════════
 function toggleFilterPanel() {
+  libLeaveIsland();
   document.getElementById('filterPanel').classList.toggle('open');
 }
 
@@ -2924,6 +3118,7 @@ function applyFilters(list) {
 }
 
 function toggleDuplicateFilter() {
+  libLeaveIsland();
   showDuplicatesOnly = !showDuplicatesOnly;
   showUnnamedOnly = false;
   document.getElementById('dupFilterBtn').classList.toggle('active', showDuplicatesOnly);
@@ -2932,6 +3127,7 @@ function toggleDuplicateFilter() {
 }
 
 function toggleUnnamedFilter() {
+  libLeaveIsland();
   showUnnamedOnly = !showUnnamedOnly;
   showDuplicatesOnly = false;
   document.getElementById('unnamedFilterBtn').classList.toggle('active', showUnnamedOnly);
@@ -2948,15 +3144,264 @@ function getDuplicateCardNames() {
 // ═══════════════════════════════════════════════
 //  LIBRARY RENDER
 // ═══════════════════════════════════════════════
-let currentView_g = 'grid';
+// ═══════════════════════════════════════════════
+//  APP ICON（v3.0）— 網站圖示（分頁圖示＋頁首標誌）
+//  內建 6 個原創圖示；可上傳自訂圖片（縮成 64×64 PNG）。
+//  選擇與自訂圖片存在 Settings（key：appIcon、appIcons），沿用既有同步機制，GAS 不需更動。
+// ═══════════════════════════════════════════════
+const ICON_PRESETS = [
+  { id:'sprout', name:'嫩芽', body:`<circle cx="32" cy="32" r="30" fill="#2E7D3A"/><path d="M32 38 C32 26 40 18 52 18 C52 30 44 38 32 38Z" fill="#B9E3A4"/><path d="M32 42 C32 32 26 26 14 26 C14 36 20 42 32 42Z" fill="#DDF3CC"/><path d="M32 36 V52" stroke="#B9E3A4" stroke-width="4" stroke-linecap="round" fill="none"/><path d="M22 52 H42" stroke="#B9E3A4" stroke-width="4" stroke-linecap="round" fill="none"/>` },
+  { id:'bud', name:'花苞', body:`<circle cx="32" cy="32" r="30" fill="#FFE9A8"/><path d="M32 12 C41 20 41 31 32 38 C23 31 23 20 32 12Z" fill="#E0566E"/><path d="M32 38 C25 37 21 33 19 27 C25 27 30 30 32 38Z" fill="#2E7D3A"/><path d="M32 38 C39 37 43 33 45 27 C39 27 34 30 32 38Z" fill="#2E7D3A"/><path d="M32 38 V54" stroke="#2E7D3A" stroke-width="4" stroke-linecap="round" fill="none"/>` },
+  { id:'postcard', name:'明信片', body:`<circle cx="32" cy="32" r="30" fill="#BFD9F5"/><g transform="rotate(-8 32 32)"><rect x="11" y="19" width="42" height="28" rx="4" fill="#FFFFFF" stroke="#1F3A3D" stroke-width="3"/><rect x="42" y="23" width="7" height="8" fill="#F8D2B0" stroke="#1F3A3D" stroke-width="1.5"/><path d="M22 41 C22 33 28 28 38 28 C38 36 32 41 22 41Z" fill="#2E7D3A"/></g>` },
+  { id:'hex', name:'六角島', body:`<polygon points="32,12 52.8,24 52.8,48 32,60 11.2,48 11.2,24" fill="#8CC77A"/><polygon points="32,4 52.8,16 52.8,40 32,52 11.2,40 11.2,16" fill="#B9E3A4"/><path d="M32 36 V27" stroke="#2E7D3A" stroke-width="3" stroke-linecap="round" fill="none"/><path d="M32 28 C32 22 36 18 42 18 C42 24 38 28 32 28Z" fill="#2E7D3A"/><path d="M32 31 C32 26 28 22 22 22 C22 28 26 31 32 31Z" fill="#2E7D3A"/>` },
+  { id:'postmark', name:'郵戳', body:`<circle cx="32" cy="32" r="28" fill="#FFF8E0" stroke="#2E7D3A" stroke-width="4"/><circle cx="32" cy="32" r="21" fill="none" stroke="#2E7D3A" stroke-width="1.5"/><path d="M23 36 C23 27 30 22 41 22 C41 31 34 36 23 36Z" fill="#2E7D3A"/><path d="M20 46 q3 -3 6 0 t6 0 t6 0 t6 0" fill="none" stroke="#2E7D3A" stroke-width="2" stroke-linecap="round"/>` },
+  { id:'pin', name:'地點', body:`<path d="M32 6 C20.5 6 12 14.5 12 25 C12 39 32 58 32 58 C32 58 52 39 52 25 C52 14.5 43.5 6 32 6Z" fill="#E8743B"/><circle cx="32" cy="25" r="11" fill="#FFFFFF"/><path d="M26 30 C26 23 30 19 38 19 C38 26 34 30 26 30Z" fill="#2E7D3A"/>` }
+];
+const ICON_DEFAULT = 'postcard';
+const ICON_CUSTOM_MAX_CHARS = 40000; // Google 試算表單一儲存格上限約 5 萬字，保守留餘裕
+function loadJsonSafe(key, fallback) { try { const v = JSON.parse(localStorage.getItem(key)); return v == null ? fallback : v; } catch(e) { return fallback; } }
+const isSafeIconUrl = u => typeof u === 'string' && /^data:image\/(png|jpeg|webp|gif);base64,/.test(u);
+let appIcon  = localStorage.getItem('pkm_app_icon') || ICON_DEFAULT;
+let appIcons = (loadJsonSafe('pkm_app_icons', []) || []).filter(i => i && i.id && isSafeIconUrl(i.url));
 
-function setView(v) {
+function findAppIcon(id) {
+  return ICON_PRESETS.find(i => i.id === id) || appIcons.find(i => i.id === id) || ICON_PRESETS.find(i => i.id === ICON_DEFAULT);
+}
+function iconHtml(icon, size) {
+  return icon.body
+    ? `<svg width="${size}" height="${size}" viewBox="0 0 64 64" aria-hidden="true">${icon.body}</svg>`
+    : `<img src="${escapeHtml(icon.url)}" width="${size}" height="${size}" alt="" style="object-fit:contain;display:block">`;
+}
+function iconFaviconUrl(icon) {
+  if (icon.url) return icon.url;
+  return 'data:image/svg+xml,' + encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'>${icon.body}</svg>`);
+}
+function applyAppIcon() {
+  const icon = findAppIcon(appIcon);
+  const old = document.getElementById('appFavicon');
+  if (old) { // 換成新的 <link>，各瀏覽器更新分頁圖示最可靠
+    const n = document.createElement('link');
+    n.rel = 'icon'; n.id = 'appFavicon'; n.type = icon.url ? 'image/png' : 'image/svg+xml'; n.href = iconFaviconUrl(icon);
+    old.replaceWith(n);
+  }
+  const logo = document.getElementById('appLogo');
+  if (logo) logo.innerHTML = iconHtml(icon, 40);
+}
+function persistAppIcon() {
+  try { localStorage.setItem('pkm_app_icon', appIcon); localStorage.setItem('pkm_app_icons', JSON.stringify(appIcons)); } catch(e) {}
+  saveAndSync();
+}
+function selectAppIcon(id) { appIcon = id; persistAppIcon(); applyAppIcon(); renderIconPicker(); }
+function deleteCustomIcon(id) {
+  const it = appIcons.find(i => i.id === id); if (!it) return;
+  if (!confirm(`確定刪除自訂圖示「${it.name}」？`)) return;
+  appIcons = appIcons.filter(i => i.id !== id);
+  if (appIcon === id) appIcon = ICON_DEFAULT;
+  persistAppIcon(); applyAppIcon(); renderIconPicker();
+}
+function renderIconPicker() {
+  const el = document.getElementById('appIconGrid'); if (!el) return;
+  const all = [...ICON_PRESETS, ...appIcons];
+  const cur = findAppIcon(appIcon).id;
+  el.innerHTML = all.map(i => {
+    const on = i.id === cur, custom = !i.body;
+    return `<div class="icon-opt">
+      <button type="button" class="icon-pick" aria-pressed="${on}" onclick="selectAppIcon('${i.id}')">
+        ${iconHtml(i, 48)}
+        <span class="icon-name">${escapeHtml(i.name)}</span>
+        <span class="icon-state">${on ? '✓ 使用中' : '&nbsp;'}</span>
+      </button>
+      ${custom ? `<button type="button" class="icon-del" aria-label="刪除自訂圖示 ${escapeHtml(i.name)}" onclick="deleteCustomIcon('${i.id}')">✕</button>` : ''}
+    </div>`;
+  }).join('');
+}
+function addCustomIconFromFile(input) {
+  const file = input.files && input.files[0]; input.value = '';
+  const msg = document.getElementById('appIconMsg'); const say = t => { if (msg) msg.textContent = t; };
+  if (!file) return;
+  if (!/^image\//.test(file.type)) { say('請選擇圖片檔'); return; }
+  const reader = new FileReader();
+  reader.onerror = () => say('檔案讀取失敗');
+  reader.onload = () => {
+    const im = new Image();
+    im.onerror = () => say('這個圖片無法讀取');
+    im.onload = () => {
+      const S = 64, cv = document.createElement('canvas'); cv.width = cv.height = S;
+      const iw = im.naturalWidth || im.width || S, ih = im.naturalHeight || im.height || S;
+      const r = Math.min(S / iw, S / ih), w = iw * r, h = ih * r; // contain：完整保留、置中、不裁切
+      cv.getContext('2d').drawImage(im, (S - w) / 2, (S - h) / 2, w, h);
+      const url = cv.toDataURL('image/png');
+      const name = (file.name || '自訂').replace(/\.[^.]+$/, '').slice(0, 12) || '自訂';
+      const item = { id: 'c' + Date.now(), name, url };
+      const next = [...appIcons, item];
+      if (JSON.stringify(next).length > ICON_CUSTOM_MAX_CHARS) { say('自訂圖示已達儲存上限，請先刪除幾個再試'); return; }
+      appIcons = next; appIcon = item.id;
+      persistAppIcon(); applyAppIcon(); renderIconPicker();
+      say(`已新增並套用：${name}`);
+    };
+    im.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+// 從雲端／匯入的設定套用（沒有對應 key 就不動本機設定；圖片網址只接受 data:image，避免外部網址）
+function loadAppIconFromSettings(st) {
+  if (!st) return;
+  let changed = false;
+  if (Array.isArray(st.appIcons)) { appIcons = st.appIcons.filter(i => i && i.id && i.name && isSafeIconUrl(i.url)); changed = true; }
+  if (typeof st.appIcon === 'string' && st.appIcon) { appIcon = st.appIcon; changed = true; }
+  if (!changed) return;
+  try { localStorage.setItem('pkm_app_icon', appIcon); localStorage.setItem('pkm_app_icons', JSON.stringify(appIcons)); } catch(e) {}
+  applyAppIcon(); renderIconPicker();
+}
+applyAppIcon();
+
+// ═══════════════════════════════════════════════
+//  ISLAND VIEW（v3.0）— 六角島嶼檢視
+//  明信片庫：每座島＝一個取得國家（卡片的 region 欄位）
+//  好友頁　：每座島＝一位好友（前 12 位，可按「更多」）
+//  島的順序跟著格狀模式的篩選與排序走；篩選／排序／搜尋只在格狀模式操作
+// ═══════════════════════════════════════════════
+const ISLAND_SETS = [
+  { face:'#b9e3a4', edge:'#8cc77a' }, { face:'#f4e3a8', edge:'#d9c27a' },
+  { face:'#f6c4cf', edge:'#de9dae' }, { face:'#bfd9f5', edge:'#8fb4de' },
+  { face:'#d8c9f0', edge:'#b3a0d6' }, { face:'#f8d2b0', edge:'#dea97e' }
+];
+const ISLAND_NONE = { face:'#e3edef', edge:'#c3d3d6' };
+function islandHash(str) { let h = 0; for (const ch of String(str)) h = (h * 31 + ch.codePointAt(0)) >>> 0; return h; }
+function defaultIslandMode() { return window.innerWidth <= 600 ? 'grid' : 'island'; }
+function loadMode(key, allowed) { try { const m = localStorage.getItem(key); if (allowed.includes(m)) return m; } catch(e) {} return null; }
+function saveMode(key, v) { try { localStorage.setItem(key, v); } catch(e) {} }
+
+// 把一組六角磚排成蜂巢：偶數列放 perRow 個、奇數列放 perRow-1 個，置中後自然交錯
+function buildHexMap(el, tiles) {
+  const hw  = window.innerWidth <= 600 ? 104 : 140;
+  const gap = 8;
+  const W   = el.clientWidth || (el.parentElement && el.parentElement.clientWidth) || (window.innerWidth - 40);
+  const perRow = Math.max(2, Math.floor((W + gap) / (hw + gap)));
+  const rows = []; let i = 0, r = 0;
+  while (i < tiles.length) {
+    const n = (r % 2 === 0) ? perRow : Math.max(1, perRow - 1);
+    rows.push(tiles.slice(i, i + n)); i += n; r++;
+  }
+  return rows.map(row => `<div class="isl-row">${row.map(t =>
+    `<button type="button" class="isl-hex" style="--face:${t.face};--edge:${t.edge}" ${t.attrs||''} aria-label="${escapeHtml(t.label)}" title="${escapeHtml(t.label)}"><span class="isl-halo"></span><span class="isl-edge"></span><span class="isl-face">${t.inner}</span></button>`
+  ).join('')}</div>`).join('');
+}
+
+// ── 明信片庫：國家島嶼 ──
+let libCountry = null; // null＝不限國家；否則為國家 key（'__none__'＝未分類）
+const libCountryKey  = c => (String(c.region || '').trim() || '__none__');
+const libCountryName = k => k === '__none__' ? '未分類' : k;
+let currentView_g = loadMode('pkm_lib_mode', ['island','grid','list']) || defaultIslandMode();
+
+// persist=false 表示這是自動切換（例如搜尋時跳到格狀），不覆蓋使用者偏好的預設檢視
+function setView(v, opts) {
+  const o = Object.assign({ keepCountry:false, persist:true }, opts || {});
   currentView_g = v;
-  document.getElementById('vGrid').classList.toggle('active', v==='grid');
-  document.getElementById('vList').classList.toggle('active', v==='list');
-  document.getElementById('cardGrid').className = v==='grid' ? 'card-grid' : 'card-list';
+  if (!o.keepCountry) libCountry = null;
+  if (o.persist) saveMode('pkm_lib_mode', v);
   renderLibrary();
 }
+function libLeaveIsland()   { if (currentView_g === 'island') setView('grid', { persist:false }); }
+function libOnSearch()      { libLeaveIsland(); debouncedRenderLibrary(); }
+function libBackToIslands() { setView('island', { persist:false }); }
+function libIslandClick(btn){ libCountry = btn.dataset.key; setView('grid', { keepCountry:true, persist:false }); }
+
+function syncLibViewUI(count, q) {
+  const m = currentView_g;
+  const ids = { island:'vIsland', grid:'vGrid', list:'vList' };
+  Object.keys(ids).forEach(k => { const b = document.getElementById(ids[k]); if (b) b.classList.toggle('active', m === k); });
+  const grid = document.getElementById('cardGrid'), map = document.getElementById('islandMap');
+  const hint = document.getElementById('islandHint'), bar = document.getElementById('libCountryBar');
+  if (grid) { grid.style.display = m === 'island' ? 'none' : ''; grid.className = m === 'list' ? 'card-list' : 'card-grid'; }
+  if (map)  map.style.display = m === 'island' ? '' : 'none';
+  if (hint) {
+    hint.style.display = m === 'island' ? '' : 'none';
+    if (m === 'island') {
+      const sel = document.getElementById('cardSortSelect');
+      const label = (sel && sel.selectedOptions[0] ? sel.selectedOptions[0].textContent : '').replace(/^\S+\s*/, '');
+      const filtered = !!q || filterConditions.some(c => c.value) || showDuplicatesOnly || showUnnamedOnly;
+      hint.textContent = `🏝️ 每座島是一個取得國家，依「${label}」排列${filtered ? '（已套用搜尋／篩選）' : ''}。調整搜尋、篩選或排序會切換到卡片檢視。`;
+    }
+  }
+  if (bar) {
+    const show = libCountry !== null && m !== 'island';
+    bar.style.display = show ? '' : 'none';
+    if (show) bar.innerHTML = `<span>🏝️ ${escapeHtml(libCountryName(libCountry))}</span><span style="font-weight:500;color:var(--muted)">${count} 張</span><button class="btn" onclick="libBackToIslands()" style="margin-left:auto">↩ 返回島嶼</button>`;
+  }
+}
+
+function renderLibraryIslands(list) {
+  const el = document.getElementById('islandMap'); if (!el) return;
+  if (!list.length) { el.innerHTML = '<div class="empty-state"><div class="ei">🏝️</div><p>沒有符合的明信片</p></div>'; return; }
+  // list 已是篩選＋排序後的結果：每個國家第一次出現的位置，就是這座島的順位
+  const groups = new Map();
+  list.forEach(c => { const k = libCountryKey(c); if (!groups.has(k)) groups.set(k, []); groups.get(k).push(c); });
+  let items = [...groups.entries()].map(([key, arr]) => ({ key, arr }));
+  items = items.filter(i => i.key !== '__none__').concat(items.filter(i => i.key === '__none__')); // 未分類固定放最後
+  const tiles = items.map(({ key, arr }) => {
+    const name  = libCountryName(key);
+    const col   = key === '__none__' ? ISLAND_NONE : ISLAND_SETS[islandHash(key) % ISLAND_SETS.length];
+    const cover = arr.map(c => getImgUrl(c.mainImg)).find(Boolean);
+    const card  = `<span class="isl-card">${cover ? `<img ${thumbAttrs(cover, 140)} alt="" loading="lazy">` : ''}</span>`;
+    return { face:col.face, edge:col.edge, label:`${name}，${arr.length} 張`,
+      attrs:`data-key="${escapeHtml(key)}" onclick="libIslandClick(this)"`,
+      inner:`${card}<span class="isl-name">${escapeHtml(name)}</span><span class="isl-count">${arr.length} 張</span>` };
+  });
+  el.innerHTML = buildHexMap(el, tiles);
+}
+
+// ── 好友頁：好友島嶼 ──
+let friendMode = loadMode('pkm_friend_mode', ['island','grid']) || defaultIslandMode();
+let friendIslandLimit = 12;
+function setFriendMode(m, persist) {
+  friendMode = m;
+  if (persist !== false) saveMode('pkm_friend_mode', m);
+  if (m === 'island') friendIslandLimit = 12;
+  renderFriends();
+}
+function friendsLeaveIsland() { if (friendMode === 'island') setFriendMode('grid', false); }
+function friendsOnSearch()    { friendsLeaveIsland(); debouncedRenderFriends(); }
+function friendIslandMore()   { friendIslandLimit += 12; renderFriends(); }
+
+function syncFriendView() {
+  const isl = friendMode === 'island';
+  const listEl = document.getElementById('friendList'), map = document.getElementById('friendIslandMap'), more = document.getElementById('friendIslandMore');
+  if (listEl) listEl.style.display = isl ? 'none' : 'grid';
+  if (map)  map.style.display  = isl ? '' : 'none';
+  if (more) more.style.display = isl ? '' : 'none';
+  const bi = document.getElementById('fvIsland'), bg = document.getElementById('fvGrid');
+  if (bi) bi.classList.toggle('active', isl);
+  if (bg) bg.classList.toggle('active', !isl);
+}
+
+function renderFriendIslands(list) {
+  const map = document.getElementById('friendIslandMap'), more = document.getElementById('friendIslandMore');
+  if (!map || !more) return;
+  if (!list.length) { map.innerHTML = '<div class="empty-state"><div class="ei">👥</div><p>尚無好友</p></div>'; more.innerHTML = ''; return; }
+  const shown = list.slice(0, friendIslandLimit);
+  const tiles = shown.map(f => {
+    const name    = String(f.name || '');
+    const initial = name ? (name.match(/./u)?.[0] || '?') : '?';
+    const hue     = (name.charCodeAt(0) || 0) * 37 % 360;
+    return { face:`hsl(${hue},62%,84%)`, edge:`hsl(${hue},45%,64%)`, label:`${name}，收 ${f.recv} 張、送 ${f.sent} 張`,
+      attrs:`onclick="openFriendDetail('${f.id}')"`,
+      inner:`<span class="isl-avatar">${escapeHtml(initial)}</span><span class="isl-name">${escapeHtml(name)}</span><span class="isl-count">收 ${f.recv} · 送 ${f.sent}</span>` };
+  });
+  map.innerHTML = buildHexMap(map, tiles);
+  const rest = list.length - shown.length;
+  const sel = document.getElementById('friendSortSelect');
+  const label = (sel && sel.selectedOptions[0] ? sel.selectedOptions[0].textContent : '').replace(/^\S+\s*/, '');
+  more.innerHTML = `<div class="isl-hint" style="display:inline-block">顯示 ${shown.length} / ${list.length} 位，依「${label}」排列。調整搜尋、篩選或排序會切換到格狀檢視。</div>`
+    + (rest > 0 ? `<div style="margin-top:10px;display:flex;justify-content:center"><button class="btn" onclick="friendIslandMore()">＋ 更多（還有 ${rest} 位）</button></div>` : '');
+}
+
+// 視窗大小改變時，重新計算蜂巢每列的數量
+window.addEventListener('resize', debounce(() => {
+  if (document.getElementById('page-library')?.classList.contains('active') && currentView_g === 'island') renderLibrary();
+  if (document.getElementById('page-friends')?.classList.contains('active') && friendMode === 'island'
+      && document.getElementById('friendsSubList')?.style.display !== 'none') renderFriends();
+}, 250));
 
 function renderLibrary() {
   const q = (document.getElementById('searchInput')?.value||'').toLowerCase();
@@ -2991,13 +3436,20 @@ function renderLibrary() {
   else if (sort === 'region')      list.sort((a,b) => String(a.region||'').localeCompare(String(b.region||''), undefined, {sensitivity:'base'}));
   else if (sort === 'filename')    list.sort((a,b) => String(a.mainImg?.filename||'').localeCompare(String(b.mainImg?.filename||''), undefined, {sensitivity:'base'}));
 
+  const islandMode = currentView_g === 'island';
+  // 從島嶼點進來的國家篩選（只在卡片／列表檢視生效）
+  if (libCountry !== null && !islandMode) list = list.filter(c => libCountryKey(c) === libCountry);
+
   const countEl = document.getElementById('searchCount');
   if (countEl) countEl.textContent = q ? `${list.length} 筆` : '';
   const grid = document.getElementById('cardGrid');
-  if (!list.length) {
+  syncLibViewUI(list.length, q);
+  if (islandMode) {
+    renderLibraryIslands(list);
+  } else if (!list.length) {
     grid.innerHTML = '<div class="empty-state"><div class="ei">🌸</div><p>尚無明信片</p></div>';
   } else {
-    grid.innerHTML = list.map(c => currentView_g==='grid' ? cardGridHTML(c) : cardListHTML(c)).join('');
+    grid.innerHTML = list.map(c => currentView_g==='list' ? cardListHTML(c) : cardGridHTML(c)).join('');
   }
 
   // 更新統計 pills
@@ -3012,7 +3464,7 @@ function cardGridHTML(c) {
   const tags = (c.tags||[]).map(t=>`<span class="ptag pt-type">${tagMap[t]||'#'} ${t}</span>`).join('');
   const imgUrl = getImgUrl(c.mainImg);
   const imgHtml = imgUrl
-    ? `<img class="pcard-img" src="${escapeHtml(imgUrl)}" alt="" loading="lazy">`
+    ? `<img class="pcard-img" ${thumbAttrs(imgUrl, 600)} alt="" loading="lazy">`
     : `<div class="pcard-noimg"><span>🌸</span><p>無照片</p>${(c.auxImgs||[]).length?`<div class="photo-count">+${c.auxImgs.length}</div>`:''}</div>`;
   return `<div class="pcard" onclick="openDetail('${c.id}')">
     ${imgHtml}
@@ -3040,7 +3492,7 @@ function cardListHTML(c) {
   const ri = getFavIcon(c.rarity);
   const imgUrl = getImgUrl(c.mainImg);
   const imgHtml = imgUrl
-    ? `<img class="prow-img" src="${escapeHtml(imgUrl)}" alt="" loading="lazy">`
+    ? `<img class="prow-img" ${thumbAttrs(imgUrl, 160)} alt="" loading="lazy">`
     : `<div class="prow-noimg">🌸</div>`;
   return `<div class="prow" onclick="openDetail('${c.id}')">
     ${imgHtml}
@@ -3748,7 +4200,7 @@ function renderPendingReplies() {
       const imgUrl = refCard ? getImgUrl(refCard.mainImg) : null;
       return `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:${isDone?'#f0f0f0':'#fff'};border-radius:8px;border:1.5px solid ${urgent?'var(--or)':'var(--border)'}">
         ${imgUrl
-          ? `<img src="${escapeHtml(imgUrl)}" style="width:44px;height:44px;object-fit:contain;border-radius:7px;flex-shrink:0;background:#eee;cursor:pointer" title="${escapeHtml(refCard.cardName||'')}" onclick="openDetail('${refCard.id}')" loading="lazy">`
+          ? `<img ${thumbAttrs(imgUrl, 132)} style="width:44px;height:44px;object-fit:contain;border-radius:7px;flex-shrink:0;background:#eee;cursor:pointer" title="${escapeHtml(refCard.cardName||'')}" onclick="openDetail('${refCard.id}')" loading="lazy">`
           : refCard
             ? `<div style="width:44px;height:44px;border-radius:7px;flex-shrink:0;background:linear-gradient(135deg,#e8f5e0,var(--sky));display:flex;align-items:center;justify-content:center;font-size:1.1rem;cursor:pointer" onclick="openDetail('${refCard.id}')">🌸</div>`
             : '<div style="width:44px;height:44px;flex-shrink:0"></div>'
@@ -3870,7 +4322,7 @@ function renderSnapshots() {
     const typeLabels = (s.types||[]).map(v => { const t = snapTypes.find(x=>x.value===v); return t ? `<span class="ptag pt-type">${t.icon} ${t.label}</span>` : ''; }).join('');
     return `<div class="pcard" onclick="openSnapDetail('${s.id}')">
       ${imgUrl
-        ? `<img class="pcard-img" src="${escapeHtml(imgUrl)}" alt="" loading="lazy">`
+        ? `<img class="pcard-img" ${thumbAttrs(imgUrl, 600)} alt="" loading="lazy">`
         : `<div class="pcard-noimg"><span>🎮</span></div>`}
       <div class="pcard-body">
         <div class="pcard-name">${escapeHtml(s.name||'（未命名）')}</div>
