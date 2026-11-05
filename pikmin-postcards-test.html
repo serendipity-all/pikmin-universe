@@ -2,9 +2,9 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="app-version" content="3.0.0-dev (island theme + island view + app icon)">
+<meta name="app-version" content="3.1.0-dev (auto scan)">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Pikmin 明信片收藏 v3</title>
+<title>Pikmin 明信片收藏 v3.1</title>
 <link rel="icon" id="appFavicon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2064%2064%27%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%2230%22%20fill%3D%22%23BFD9F5%22%2F%3E%3Cg%20transform%3D%22rotate%28-8%2032%2032%29%22%3E%3Crect%20x%3D%2211%22%20y%3D%2219%22%20width%3D%2242%22%20height%3D%2228%22%20rx%3D%224%22%20fill%3D%22%23FFFFFF%22%20stroke%3D%22%231F3A3D%22%20stroke-width%3D%223%22%2F%3E%3Crect%20x%3D%2242%22%20y%3D%2223%22%20width%3D%227%22%20height%3D%228%22%20fill%3D%22%23F8D2B0%22%20stroke%3D%22%231F3A3D%22%20stroke-width%3D%221.5%22%2F%3E%3Cpath%20d%3D%22M22%2041%20C22%2033%2028%2028%2038%2028%20C38%2036%2032%2041%2022%2041Z%22%20fill%3D%22%232E7D3A%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -239,8 +239,6 @@ header{background:linear-gradient(135deg,var(--gd),var(--g) 55%,var(--gl));heigh
 /* ===== v3.0 島嶼風格主題（覆蓋層；刪除此區塊即還原為 v2.0 外觀）===== */
 :root{--g:#2e7d3a;--gl:#6dbe6a;--gd:#1f5c2a;--bg:#cfeaf2;--card:#fff;--text:#1f3a3d;--muted:#3f5f63;--border:#bfe0e8;--sh:rgba(31,58,61,.14);--edge:#a9d3df;--mist:#eaf6f9}
 body{background-image:none}
-body::before{content:"";z-index:-1;position:fixed;right:7%;top:96px;width:190px;height:48px;border-radius:40px;background:#fff;opacity:.5;pointer-events:none;box-shadow:-80px 36px 0 -8px #fff}
-body::after{content:"";z-index:-1;position:fixed;left:5%;bottom:70px;width:170px;height:44px;border-radius:40px;background:#fff;opacity:.45;pointer-events:none;box-shadow:90px -30px 0 -6px #fff}
 
 /* 頂部：白色膠囊 */
 header{background:transparent;box-shadow:none}
@@ -348,13 +346,19 @@ header{background:transparent;box-shadow:none}
 /* ===== v3.0 網站圖示結束 ===== */
 
 /* ===== v3.0 效能與版面修正 ===== */
-/* 裝飾用的雲在窄螢幕會穿過半透明的列，看起來像破圖，只在寬螢幕顯示 */
-@media(max-width:1024px){body::before,body::after{display:none}}
 /* 一次畫出上千張卡片時，逐張淡入動畫與「畫面外的卡片也要繪製」很耗效能 */
 .pcard,.prow{animation:none}
 .pcard{content-visibility:auto;contain-intrinsic-size:auto 400px}
 .prow{content-visibility:auto;contain-intrinsic-size:auto 76px}
 /* ===== v3.0 效能與版面修正結束 ===== */
+
+/* ===== v3.1 新照片自動檢查 ===== */
+/* 同步列原本有 #syncBar button 的樣式（優先度較高），所以這裡的選擇器也加上 #syncBar */
+.auto-scan{display:inline-flex;align-items:center;gap:10px;margin-left:14px;font-size:.78rem;color:var(--muted)}
+#syncBar .auto-scan-pill{display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:0 14px;border:0;border-radius:16px;background:var(--g);color:#fff;font-size:.8rem;font-weight:700;box-shadow:0 3px 0 rgba(0,0,0,.2)}
+#syncBar .auto-scan-pill small{font-size:.68rem;font-weight:500;opacity:.9}
+#syncBar .auto-scan-link{padding:6px 2px;color:var(--muted);font-size:.74rem;font-weight:500;text-decoration:underline}
+/* ===== v3.1 新照片自動檢查結束 ===== */
 </style>
 </head>
 <body>
@@ -383,6 +387,7 @@ header{background:transparent;box-shadow:none}
 <div id="syncBar">
   <span class="sdot" id="syncDot"></span>
   <span id="syncMsg">離線模式</span>
+  <span id="autoScanMsg" class="auto-scan" role="status"></span>
   <div class="sync-actions">
     <button onclick="syncAll()">↻ 同步到 Google</button>
     <button onclick="openScanModal()">📁 掃描 Drive 新照片</button>
@@ -631,6 +636,20 @@ header{background:transparent;box-shadow:none}
           <input type="text" id="cfgScriptUrl" placeholder="https://script.google.com/macros/s/…/exec">
         </div>
         <button class="btn primary" onclick="saveSettings()" style="margin-top:8px">💾 儲存設定</button>
+      </div>
+      <div class="settings-section">
+        <h3>📥 新照片自動檢查</h3>
+        <p style="font-size:.78rem;color:var(--muted);margin-bottom:12px;line-height:1.7">開啟 app 時，自動檢查雲端硬碟「最新的月份資料夾」有沒有還沒建檔的新照片，不會重複掃描舊的資料夾。月份資料夾的名稱要以 4 位數的年月開頭，例如 <b>2611</b>（26 年 11 月）。名稱結尾是 <b>_done</b>、<b>_archived</b>、<b>_skip</b> 的資料夾會被略過。</p>
+        <label style="display:flex;align-items:center;gap:8px;font-size:.85rem;font-weight:700;margin-bottom:10px"><input type="checkbox" id="cfgAutoScan" onchange="saveAutoScanSettings()"> 開啟 app 時自動檢查新照片</label>
+        <div class="setting-row">
+          <label>檢查最新幾個月份</label>
+          <select id="cfgAutoScanMonths" class="fsel" onchange="saveAutoScanSettings()">
+            <option value="1">1 個（只看最新的）</option>
+            <option value="2">2 個</option>
+            <option value="3">3 個</option>
+          </select>
+        </div>
+        <p style="font-size:.72rem;color:var(--muted);margin-top:8px;line-height:1.7">剛跨月、上個月的資料夾還有沒處理完的照片時，可以暫時改成 2 個。這組設定只存在這個裝置的瀏覽器。</p>
       </div>
     </div>
 
@@ -1711,6 +1730,7 @@ window.onload = async () => {
   renderLibrary();
   renderFriendSelects();
   renderSettingsFriendList();
+  if (_cloudDataLoaded) runAutoScan();   // 背景進行，不擋住畫面
 };
 
 function updateSetupCard() {
@@ -1734,6 +1754,7 @@ function showPage(id, btn) {
 // ═══════════════════════════════════════════════
 function loadSettings() {
   document.getElementById('cfgScriptUrl').value = CFG.scriptUrl || '';
+  loadAutoScanSettings();
   renderMethodTags();
   renderTagManagement();
   renderCountryManagement();
@@ -3149,6 +3170,106 @@ function getDuplicateCardNames() {
 //  LIBRARY RENDER
 // ═══════════════════════════════════════════════
 // ═══════════════════════════════════════════════
+//  AUTO SCAN（v3.1）— 開啟 app 時檢查「最新月份資料夾」有沒有新照片
+//  規則：資料夾名稱開頭是 YYMM（例如 2611）才算月份資料夾；只掃最新的 N 個月份，
+//  舊的月份完全不重掃，避免載入變慢。名稱結尾 _done／_archived／_skip 的資料夾一律略過。
+//  只使用 GAS 既有的 listSubfolders 與 scan（scan 可指定 folderIds），不需更動 GAS。
+// ═══════════════════════════════════════════════
+const SKIP_FOLDER_SUFFIX = ['_done', '_archived', '_skip'];
+const isSkippedFolderName = n => SKIP_FOLDER_SUFFIX.some(sfx => String(n || '').endsWith(sfx));
+// 名稱開頭是「兩位數年＋兩位數月（01–12）」且後面不再接數字，回傳數字 YYMM；否則 null
+function monthFolderKey(name) {
+  const m = /^(\d{2})(0[1-9]|1[0-2])(?!\d)/.exec(String(name || '').trim());
+  return m ? Number(m[1] + m[2]) : null;
+}
+// 取最新的 n 個「月份」；同一個月份若有多個資料夾（例如 2611 與 2611_日本）會全部納入
+function pickLatestMonthFolders(folders, n) {
+  const ok = (folders || [])
+    .filter(f => f && !isSkippedFolderName(f.name))
+    .map(f => ({ ...f, key: monthFolderKey(f.name) }))
+    .filter(f => f.key !== null);
+  const keys = [...new Set(ok.map(f => f.key))].sort((a, b) => b - a).slice(0, n);
+  return ok.filter(f => keys.includes(f.key)).sort((a, b) => b.key - a.key || String(a.name).localeCompare(String(b.name)));
+}
+const autoScanOn     = () => { try { return localStorage.getItem('pkm_auto_scan') !== 'off'; } catch(e) { return true; } };
+const autoScanMonths = () => { try { return Math.min(3, Math.max(1, parseInt(localStorage.getItem('pkm_auto_scan_months'), 10) || 1)); } catch(e) { return 1; } };
+let autoScan = { state: 'idle', folders: [], photos: [], error: '' };  // state：idle／checking／done／nofolder／error
+
+async function runAutoScan(force) {
+  if (!CFG.scriptUrl || !CFG.cardFolderId) return;
+  if (!force && !autoScanOn()) { renderAutoScanBadge(); return; }
+  if (autoScan.state === 'checking') return;
+  autoScan = { state: 'checking', folders: [], photos: [], error: '' };
+  renderAutoScanBadge();
+  const fres = await callGAS('listSubfolders', { folderId: CFG.cardFolderId });
+  if (!fres || !fres.success) {
+    autoScan = { state: 'error', folders: [], photos: [], error: (fres && fres.error) || '無法讀取資料夾' };
+    renderAutoScanBadge(); return;
+  }
+  const picked = pickLatestMonthFolders(fres.folders, autoScanMonths());
+  if (!picked.length) { autoScan = { state: 'nofolder', folders: [], photos: [], error: '' }; renderAutoScanBadge(); return; }
+  const sres = await callGAS('scan', { folderId: CFG.cardFolderId, folderIds: picked.map(f => f.id) });
+  if (!sres || !sres.success) {
+    autoScan = { state: 'error', folders: [], photos: [], error: (sres && sres.error) || '掃描失敗' };
+    renderAutoScanBadge(); return;
+  }
+  autoScan = { state: 'done', folders: picked.map(f => f.name), photos: sres.photos || [], error: '' };
+  renderAutoScanBadge();
+}
+
+function renderAutoScanBadge() {
+  const el = document.getElementById('autoScanMsg'); if (!el) return;
+  const s = autoScan;
+  if (!CFG.scriptUrl || (s.state === 'idle' && !autoScanOn())) { el.innerHTML = ''; return; }
+  const recheck = `<button type="button" class="auto-scan-link" onclick="runAutoScan(true)">↻ 重新檢查</button>`;
+  const label = escapeHtml((s.folders || []).join('、'));
+  if (s.state === 'checking') {
+    el.innerHTML = '<span>🔍 檢查新照片…</span>';
+  } else if (s.state === 'done') {
+    const n = s.photos.filter(p => !isPhotoInUse(p.fileId)).length;   // 建檔後會隨 renderLibrary 即時更新
+    el.innerHTML = n > 0
+      ? `<button type="button" class="auto-scan-pill" onclick="openAutoScanResults()">📥 新照片 ${n} 張<small>${label}</small></button>${recheck}`
+      : `<span>✓ ${label} 沒有新照片</span>${recheck}`;
+  } else if (s.state === 'nofolder') {
+    el.innerHTML = `<span title="月份資料夾的名稱要以 4 位數的年月開頭，例如 2611">ⓘ 找不到月份資料夾（例如 2611）</span>${recheck}`;
+  } else if (s.state === 'error') {
+    el.innerHTML = `<span>⚠️ 新照片檢查失敗</span>${recheck}`;
+  } else {
+    el.innerHTML = '';
+  }
+}
+
+// 直接用自動檢查的結果開啟掃描視窗（不再讀取資料夾），並只列出尚未建檔的
+function openAutoScanResults() {
+  if (autoScan.state !== 'done') return;
+  scanFilter = 'new'; scanPage = 0;
+  scannedPhotos = autoScan.photos.slice();
+  document.getElementById('scanList').innerHTML = '';
+  document.getElementById('scanImportBtn').style.display = 'none';
+  document.getElementById('scanAIBtn').style.display = 'none';
+  document.getElementById('scanToolbar').style.display = 'none';
+  document.getElementById('scanPager').style.display = 'none';
+  document.getElementById('scanOverlay').classList.add('open');
+  renderScanModal();
+  setScanFilter('new');
+}
+
+function loadAutoScanSettings() {
+  const c = document.getElementById('cfgAutoScan'), m = document.getElementById('cfgAutoScanMonths');
+  if (c) c.checked = autoScanOn();
+  if (m) m.value = String(autoScanMonths());
+}
+function saveAutoScanSettings() {
+  const c = document.getElementById('cfgAutoScan'), m = document.getElementById('cfgAutoScanMonths');
+  try {
+    localStorage.setItem('pkm_auto_scan', c && c.checked ? 'on' : 'off');
+    localStorage.setItem('pkm_auto_scan_months', m ? m.value : '1');
+  } catch(e) {}
+  autoScan = { state: 'idle', folders: [], photos: [], error: '' };
+  if (autoScanOn()) runAutoScan(); else renderAutoScanBadge();
+}
+
+// ═══════════════════════════════════════════════
 //  APP ICON（v3.0）— 網站圖示（分頁圖示＋頁首標誌）
 //  內建 6 個原創圖示；可上傳自訂圖片（縮成 64×64 PNG）。
 //  選擇與自訂圖片存在 Settings（key：appIcon、appIcons），沿用既有同步機制，GAS 不需更動。
@@ -3448,6 +3569,7 @@ function renderLibrary() {
   if (countEl) countEl.textContent = q ? `${list.length} 筆` : '';
   const grid = document.getElementById('cardGrid');
   syncLibViewUI(list.length, q);
+  renderAutoScanBadge();
   if (islandMode) {
     renderLibraryIslands(list);
   } else if (!list.length) {
@@ -3659,6 +3781,7 @@ async function openScanModal(forceRefresh = false) {
 }
 
 function showFolderSelector(folders, lastSel) {
+  folders = (folders || []).filter(f => !isSkippedFolderName(f.name));
   return new Promise(resolve => {
     // 建立選擇器 UI
     const overlay = document.createElement('div');
