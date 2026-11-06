@@ -426,6 +426,8 @@ header{background:transparent;box-shadow:none}
         <option value="updated">✏️ 最近編輯</option>
         <option value="sentDate">💌 最近送出</option>
         <option value="obtainedDate">📬 最近收到</option>
+        <option value="obtainedGift">🎁 最近收到・好友送優先</option>
+        <option value="obtainedInvite">🍄 最近收到・好友揪打菇優先</option>
         <option value="cardName">🔤 明信片名稱</option>
         <option value="region">🌍 取得地區</option>
         <option value="filename">📁 照片檔名</option>
@@ -487,6 +489,12 @@ header{background:transparent;box-shadow:none}
           <button class="btn" id="frdFilterRecv" onclick="setFriendFilter('recv',this)" style="padding:5px 10px;font-size:.74rem">📬 有收</button>
           <button class="btn" id="frdFilterSent" onclick="setFriendFilter('sent',this)" style="padding:5px 10px;font-size:.74rem">💌 有送</button>
         </div>
+        <div role="group" aria-label="收到類型" style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+          <span style="font-size:.72rem;color:var(--muted);font-weight:700">收到類型</span>
+          <button class="btn active" id="frdScopeAll"    onclick="setFriendScope('all',this)"    style="padding:5px 10px;font-size:.74rem">全部</button>
+          <button class="btn"        id="frdScopeGift"   onclick="setFriendScope('gift',this)"   style="padding:5px 10px;font-size:.74rem">🎁 好友送</button>
+          <button class="btn"        id="frdScopeInvite" onclick="setFriendScope('invite',this)" style="padding:5px 10px;font-size:.74rem">🍄 好友揪打菇</button>
+        </div>
         <select id="friendSortSelect" onchange="friendsLeaveIsland();friendSort=this.value;renderFriends()" style="padding:5px 10px;border:2px solid var(--border);border-radius:10px;font-size:.74rem;font-family:inherit;background:#fff;color:var(--text);cursor:pointer">
         <option value="name">🔤 姓名排序</option>
         <option value="recvMost">📬 收最多</option>
@@ -513,7 +521,7 @@ header{background:transparent;box-shadow:none}
           <div id="friendStatActive" style="font-family:'Nunito',sans-serif;font-weight:900;font-size:1.8rem;color:var(--pu)">0</div>
         </div>
         <div class="stat-card" style="flex:1;min-width:100px;padding:12px;text-align:center">
-          <div style="font-size:.68rem;color:var(--muted)">收到明信片</div>
+          <div id="friendStatRecvLabel" style="font-size:.68rem;color:var(--muted)">收到明信片</div>
           <div id="friendStatRecv" style="font-family:'Nunito',sans-serif;font-weight:900;font-size:1.8rem;color:var(--b)">0</div>
         </div>
         <div class="stat-card" style="flex:1;min-width:100px;padding:12px;text-align:center">
@@ -565,6 +573,8 @@ header{background:transparent;box-shadow:none}
       <div style="display:flex;gap:6px;margin-bottom:10px">
         <button class="btn active" id="fdFilterAll"  onclick="setFdFilter('all',this)"  style="padding:4px 12px;font-size:.74rem">全部</button>
         <button class="btn" id="fdFilterRecv" onclick="setFdFilter('recv',this)" style="padding:4px 12px;font-size:.74rem">📬 收到</button>
+        <button class="btn" id="fdFilterGift" onclick="setFdFilter('gift',this)" style="padding:4px 12px;font-size:.74rem">🎁 好友送</button>
+        <button class="btn" id="fdFilterInvite" onclick="setFdFilter('invite',this)" style="padding:4px 12px;font-size:.74rem">🍄 揪打菇</button>
         <button class="btn" id="fdFilterSent" onclick="setFdFilter('sent',this)" style="padding:4px 12px;font-size:.74rem">💌 送出</button>
       </div>
       <!-- 明信片列表 -->
@@ -1143,6 +1153,7 @@ const DP_PAGE_SIZE = 30;
 const FILTER_FIELDS = [
   {v:'status',      l:'狀態',           type:'select',  opts:['sent','pending','kept'], labels:['已送出','未送出','自留']},
   {v:'obtainedMethod',l:'取得方式',      type:'dynamic', src:'methods'},
+  {v:'recvKind',  l:'收到類型',       type:'select',  opts:['gift','invite','self'], labels:['🎁 好友送','🍄 好友揪打菇','🌱 自己打菇']},
   {v:'sourceFriend',l:'來源好友（誰送的）',type:'dynamic',src:'friends'},
   {v:'recipFriend', l:'送給誰',         type:'dynamic', src:'friends'},
   {v:'cardName',    l:'明信片名稱',      type:'text'},
@@ -2637,7 +2648,7 @@ function buildFriendDateLists(role) {
     map.get(k).push({ d: String(d), f: String(f || ''), id: String(id) });
   };
   cards.forEach(c => {
-    if (role === 'recv') add(resolveFriendId(c.sourceFriend), c.obtainedDate, c.mainImg?.filename, c.id);
+    if (role === 'recv') { if (friendScopeMatch(c)) add(resolveFriendId(c.sourceFriend), c.obtainedDate, c.mainImg?.filename, c.id); }
     else getRecipIds(c).map(resolveFriendId).forEach(fid => add(fid, c.sentDate, '', c.id));
   });
   map.forEach(arr => arr.sort((x, y) => dateEntryCmp(y, x) || String(y.id).localeCompare(String(x.id))));
@@ -2660,11 +2671,53 @@ function compareDateListsDesc(a, b) {
   return 0;
 }
 
+// ═══════════════════════════════════════════════
+//  收到類型（v3.1）：把「收到」細分為「好友送」與「好友揪打菇」
+//  好友送　　 ＝ 取得方式為「好友送」（來源好友就是送我的人）
+//  好友揪打菇 ＝ 取得方式為「打菇」且有選來源好友（朋友揪我去打菇，卡片是我自己拿到的）
+//  自己打菇　 ＝ 取得方式為「打菇」且沒有來源好友
+//  其他　　　 ＝ 有來源好友、但取得方式是其他（只在好友統計的「全部」裡計入）
+//  以取得方式的名稱判斷（包含「好友送」／「打菇」字樣），所以改名時要保留這兩個詞。
+// ═══════════════════════════════════════════════
+function recvKindOf(c) {
+  const m = String(c.obtainedMethod || '');
+  const hasFriend = !!resolveFriendId(c.sourceFriend);
+  if (m.includes('好友送')) return 'gift';
+  if (m.includes('打菇'))   return hasFriend ? 'invite' : 'self';
+  return hasFriend ? 'other' : '';
+}
+let friendRecvScope = 'all';   // 好友頁的「收到類型」：all／gift／invite
+const FRIEND_SCOPE_LABEL = {
+  all:    { stat: '收到明信片', card: '收到',   icon: '📬', tile: '收' },
+  gift:   { stat: '好友送',     card: '好友送', icon: '🎁', tile: '🎁' },
+  invite: { stat: '好友揪打菇', card: '揪打菇', icon: '🍄', tile: '🍄' },
+};
+const friendScopeMatch = c => friendRecvScope === 'all' || recvKindOf(c) === friendRecvScope;
+function setFriendScope(sc, btn) {
+  friendsLeaveIsland();
+  friendRecvScope = sc;
+  document.querySelectorAll('[id^="frdScope"]').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderFriends();
+}
+
 function getSortedFriends() {
+  // 一次掃描所有卡片，統計每位好友收到（依類型）與送出的張數
+  const recvBy = new Map(), sentBy = new Map();
+  cards.forEach(c => {
+    const fid = resolveFriendId(c.sourceFriend);
+    if (fid) {
+      const r = recvBy.get(fid) || { gift: 0, invite: 0, other: 0 };
+      const k = recvKindOf(c); r[k === 'gift' ? 'gift' : k === 'invite' ? 'invite' : 'other']++;
+      recvBy.set(fid, r);
+    }
+    new Set(getRecipIds(c).map(resolveFriendId)).forEach(rid => { if (rid) sentBy.set(rid, (sentBy.get(rid) || 0) + 1); });
+  });
   const withStats = friends.map(f => {
-    const recv = cards.filter(c => resolveFriendId(c.sourceFriend) === String(f.id)).length;
-    const sent = cards.filter(c => getRecipIds(c).map(resolveFriendId).includes(String(f.id))).length;
-    return { ...f, recv, sent };
+    const r = recvBy.get(String(f.id)) || { gift: 0, invite: 0, other: 0 };
+    const recvAll = r.gift + r.invite + r.other;
+    const recv = friendRecvScope === 'gift' ? r.gift : friendRecvScope === 'invite' ? r.invite : recvAll;   // 依「收到類型」
+    return { ...f, recv, recvAll, recvGift: r.gift, recvInvite: r.invite, recvOther: r.other, sent: sentBy.get(String(f.id)) || 0 };
   });
   switch (friendSort) {
     case 'recvMost': return [...withStats].sort((a,b) => b.recv - a.recv);
@@ -2694,13 +2747,14 @@ function renderFriends() {
   const q = (document.getElementById('friendSearch')?.value || '').toLowerCase();
   const sorted = getSortedFriends();
 
-  const activeCount = sorted.filter(f => f.recv + f.sent > 0).length;
+  const activeCount = sorted.filter(f => f.recvAll + f.sent > 0).length;   // 「有互動」不受收到類型影響
   const totalRecv   = sorted.reduce((s,f) => s + f.recv, 0);
   const totalSent   = sorted.reduce((s,f) => s + f.sent, 0);
   const setEl = (id,v) => { const e=document.getElementById(id); if(e) e.textContent=v; };
   setEl('friendStatTotal',  friends.length);
   setEl('friendStatActive', activeCount);
   setEl('friendStatRecv',   totalRecv);
+  setEl('friendStatRecvLabel', FRIEND_SCOPE_LABEL[friendRecvScope].stat);
   setEl('friendStatSent',   totalSent);
 
   let list = sorted;
@@ -2733,13 +2787,14 @@ function renderFriends() {
         <div class="friend-grid-stats">
           <div class="friend-grid-stat">
             <span class="n" style="color:var(--b)">${f.recv}</span>
-            <span class="l">📬 收到</span>
+            <span class="l">${FRIEND_SCOPE_LABEL[friendRecvScope].icon} ${FRIEND_SCOPE_LABEL[friendRecvScope].card}</span>
           </div>
           <div class="friend-grid-stat">
             <span class="n" style="color:var(--or)">${f.sent}</span>
             <span class="l">💌 送出</span>
           </div>
         </div>
+        ${friendRecvScope === 'all' && f.recvAll > 0 ? `<div style="font-size:.66rem;color:var(--muted);text-align:center;margin-bottom:4px">🎁 ${f.recvGift} · 🍄 ${f.recvInvite}${f.recvOther ? ` · 其他 ${f.recvOther}` : ''}</div>` : ''}
         ${f.note ? `<div style="font-size:.68rem;color:var(--muted);text-align:center;margin-bottom:4px;font-style:italic">${escapeHtml(f.note)}</div>` : ''}
         ${(f.tags||[]).length ? `<div style="display:flex;flex-wrap:wrap;gap:3px;justify-content:center;margin-top:2px">${(f.tags||[]).map(t=>{const ft=friendTags.find(x=>x.value===t);return ft?`<span style="font-size:.68rem;background:rgba(74,154,74,.12);border-radius:8px;padding:1px 7px">${ft.icon} ${ft.label}</span>`:''}).join('')}</div>` : ''}
       </div>
@@ -2797,6 +2852,10 @@ function openFriendDetail(id) {
       : '';
   }
   document.getElementById('fdStatRecv').textContent     = recv.length;
+  const nGift = recv.filter(c => recvKindOf(c) === 'gift').length, nInvite = recv.filter(c => recvKindOf(c) === 'invite').length;
+  const bg = document.getElementById('fdFilterGift'), bi = document.getElementById('fdFilterInvite');
+  if (bg) bg.textContent = `🎁 好友送 ${nGift}`;
+  if (bi) bi.textContent = `🍄 揪打菇 ${nInvite}`;
   document.getElementById('fdStatSent').textContent     = sent.length;
   document.getElementById('fdStatTotal').textContent    = total;
 
@@ -2816,6 +2875,8 @@ function renderFriendDetailCards() {
 
   let list;
   if (fdFilter === 'recv') list = recvCards;
+  else if (fdFilter === 'gift')   list = recvCards.filter(c => recvKindOf(c) === 'gift');
+  else if (fdFilter === 'invite') list = recvCards.filter(c => recvKindOf(c) === 'invite');
   else if (fdFilter === 'sent') list = sentCards;
   else {
     // 全部（合併去重）
@@ -2838,7 +2899,9 @@ function renderFriendDetailCards() {
     const isRecv = resolveFriendId(c.sourceFriend) === f.id;
     const isSent = getRecipIds(c).map(resolveFriendId).includes(f.id);
     const imgUrl = getImgUrl(c.mainImg);
-    const badge  = isRecv && isSent ? '📬💌' : isRecv ? '📬' : '💌';
+    const rk = isRecv ? recvKindOf(c) : '';
+    const rIcon = rk === 'gift' ? '🎁' : rk === 'invite' ? '🍄' : '📬';   // 好友送／好友揪打菇／其他
+    const badge  = isRecv && isSent ? rIcon + '💌' : isRecv ? rIcon : '💌';
     return `<div style="background:var(--card);border:2px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:transform .18s;box-shadow:0 2px 8px var(--sh)"
         onclick="showFriendSubPage('list');openDetail('${c.id}')"
         onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
@@ -3129,6 +3192,7 @@ function applyFilters(list) {
       if (field === 'tags')       return (card.tags||[]).includes(val);
       if (field === 'recipFriend') return getRecipIds(card).map(resolveFriendId).includes(getFriendId(val));
       if (field === 'sourceFriend') return resolveFriendId(card.sourceFriend) === getFriendId(val);
+      if (field === 'recvKind')   return recvKindOf(card) === val;
       if (field === 'hasAuxImgs') {
         const has = (card.auxImgs||[]).filter(a => a.url && !isBase64(a.url)).length > 0;
         return val === 'yes' ? has : !has;
@@ -3509,9 +3573,9 @@ function renderFriendIslands(list) {
     const name    = String(f.name || '');
     const initial = name ? (name.match(/./u)?.[0] || '?') : '?';
     const hue     = (name.charCodeAt(0) || 0) * 37 % 360;
-    return { face:`hsl(${hue},62%,84%)`, edge:`hsl(${hue},45%,64%)`, label:`${name}，收 ${f.recv} 張、送 ${f.sent} 張`,
+    return { face:`hsl(${hue},62%,84%)`, edge:`hsl(${hue},45%,64%)`, label:`${name}，${FRIEND_SCOPE_LABEL[friendRecvScope].card} ${f.recv} 張、送 ${f.sent} 張`,
       attrs:`onclick="openFriendDetail('${f.id}')"`,
-      inner:`<span class="isl-avatar">${escapeHtml(initial)}</span><span class="isl-name">${escapeHtml(name)}</span><span class="isl-count">收 ${f.recv} · 送 ${f.sent}</span>` };
+      inner:`<span class="isl-avatar">${escapeHtml(initial)}</span><span class="isl-name">${escapeHtml(name)}</span><span class="isl-count">${FRIEND_SCOPE_LABEL[friendRecvScope].tile} ${f.recv} · 送 ${f.sent}</span>` };
   });
   map.innerHTML = buildHexMap(map, tiles);
   const rest = list.length - shown.length;
@@ -3557,6 +3621,10 @@ function renderLibrary() {
   else if (sort === 'updated')     list.sort((a,b) => (b.updatedAt||b.createdAt||'').localeCompare(a.updatedAt||a.createdAt||''));
   else if (sort === 'sentDate')    list.sort((a,b) => (b.sentDate||'').localeCompare(a.sentDate||''));
   else if (sort === 'obtainedDate')list.sort((a,b) => (b.obtainedDate||'').localeCompare(a.obtainedDate||''));
+  else if (sort === 'obtainedGift' || sort === 'obtainedInvite') {   // 指定類型排前面，各組內再依收到日期新→舊（不會隱藏其他卡片）
+    const want = sort === 'obtainedGift' ? 'gift' : 'invite';
+    list.sort((a,b) => ((recvKindOf(b) === want) - (recvKindOf(a) === want)) || (b.obtainedDate||'').localeCompare(a.obtainedDate||''));
+  }
   else if (sort === 'cardName')    list.sort((a,b) => String(a.cardName||'').localeCompare(String(b.cardName||''), undefined, {sensitivity:'base'}));
   else if (sort === 'region')      list.sort((a,b) => String(a.region||'').localeCompare(String(b.region||''), undefined, {sensitivity:'base'}));
   else if (sort === 'filename')    list.sort((a,b) => String(a.mainImg?.filename||'').localeCompare(String(b.mainImg?.filename||''), undefined, {sensitivity:'base'}));
@@ -4307,8 +4375,9 @@ function renderPendingReplies() {
     const hue = ((fid.charCodeAt ? fid.charCodeAt(0) : 0) * 37) % 360;
 
     // 取該好友送我的明信片，依 obtainedDate → filename → id 排序（新→舊）
+    // 「好友揪打菇」是朋友揪我去打菇、卡片是我自己拿到的，不是對方送的，所以排除
     const recvCards = cards
-      .filter(c => resolveFriendId(c.sourceFriend) === fid)
+      .filter(c => resolveFriendId(c.sourceFriend) === fid && recvKindOf(c) !== 'invite')
       .sort((a, b) => {
         const dateA = a.obtainedDate || '';
         const dateB = b.obtainedDate || '';
